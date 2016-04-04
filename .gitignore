@@ -1,3 +1,6 @@
 .Rproj.user
 .Rhistory
 .RData
+example.xlsx
+tests/testthat/readxl
+tests/testthat/*.xlsx
