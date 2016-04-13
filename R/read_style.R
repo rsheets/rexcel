@@ -5,7 +5,7 @@ xlsx_read_style <- function(path) {
   theme <- xlsx_read_theme(path)
   index <- xlsx_indexed_cols()
 
-  fonts <- xlsx_read_style_fonts(xml, ns)
+  fonts <- xlsx_read_style_fonts(xml, ns, theme, index)
   fills <- xlsx_read_style_fills(xml, ns, theme, index)
   borders <- xlsx_read_style_borders(xml, ns)
 
@@ -45,7 +45,9 @@ xlsx_read_theme <- function(path) {
   ## found the support for this in the actual spec yet and have seen a
   ## few variants on the ordering listed there incl dk1/lt1/dk2/lt2/accent...
 
-  nms <- c("lt1", "dk1", "lt2", "dk2", paste0("accent", 1:6))
+  nms <- c("lt1", "dk1", "lt2", "dk2",
+           paste0("accent", 1:6),
+           "hlink", "folHlink")
   f <- function(x, xml, ns) {
     tmp <- xml2::xml_find_one(xml, paste0(".//a:", x), ns)
     nd <- xml2::xml_children(tmp)[[1L]]
@@ -60,32 +62,88 @@ xlsx_read_theme <- function(path) {
 ## TODO: expand this out to include all attributes that might be
 ## present in the XML based on the schema rather than using just what
 ## is here.
-xlsx_read_style_fonts <- function(xml, ns) {
-  fonts <- xml2::xml_find_one(xml, "d1:fonts", ns)
-  fonts_f <- xml2::xml_children(fonts)
+xlsx_read_style_fonts <- function(xml, ns, theme, index) {
+  fonts <- xml2::xml_children(xml2::xml_find_one(xml, "d1:fonts", ns))
+  dat <- lapply(fonts, xlsx_read_style_font, ns, theme, index)
+  do.call("rbind", dat, quote=TRUE)
+}
 
-  pos <- sort(unique(unlist(lapply(fonts_f, function(el)
-    xml2::xml_name(kids <- xml2::xml_children(el))))))
-  known <- c("sz", "color", "scheme", "family", "b", "i", "u", "name",
-             ## These we ignore:
-             "charset")
-  unk <- setdiff(pos, known)
-  if (length(unk) > 0L) {
-    message("Skipping unhandled font tags: ", paste(unk, collapse=", "))
+## Getting the definition of this from the spec is proving difficult:
+##
+## On p. 1759, 18.8.22 font just says "CT_Font is in A.2"
+##
+## The link is broken, but p. 3930, l 3797 looks good.  Beware of the
+## similar but different CT_Font probably for Word's XML.
+##
+## Possible tags (all optional but at most one of each present)
+##
+##   name (CT_FontName)
+##   charset (CT_IntProperty)
+##   family (CT_FontFamily)
+##   b, i, strike, outline, shadow, condense, extend (CT_BooleanProperty)
+##   color (CT_Color)
+##   sz (CT_FontSize)
+##   u (CT_UnderlineProperty)
+##   vertAlign (CT_VerticalAlignFontProperty) - not actually vertical alignment
+##   scheme (CT_FontScheme)
+##
+## Looks like horizontal alignment comes through with the xf element
+## in cellxfs, but I think I ignore that at the moment.  Seems like an
+## odd place tbh.
+xlsx_read_style_font <- function(x, ns, theme, index) {
+  name <- xml2::xml_text(xml2::xml_find_one(x, "d1:name/@val", ns))
+  ## ignoring charset
+  family <- xlsx_st_font_family(xml2::xml_find_one(x, "d1:family", ns))
+
+  b <- xlsx_ct_boolean_property(xml2::xml_find_one(x, "d1:b", ns))
+  i <- xlsx_ct_boolean_property(xml2::xml_find_one(x, "d1:i", ns))
+  strike <- xlsx_ct_boolean_property(xml2::xml_find_one(x, "d1:strike", ns))
+  outline <- xlsx_ct_boolean_property(xml2::xml_find_one(x, "d1:outline", ns))
+  shadow <- xlsx_ct_boolean_property(xml2::xml_find_one(x, "d1:shadow", ns))
+  condense <- xlsx_ct_boolean_property(xml2::xml_find_one(x, "d1:condense", ns))
+  extend <- xlsx_ct_boolean_property(xml2::xml_find_one(x, "d1:extend", ns))
+
+  color <- xlsx_ct_color(xml2::xml_find_one(x, "d1:color", ns), theme, index)
+  sz <- as.integer(xml2::xml_text(xml2::xml_find_one(x, "d1:sz/@val", ns)))
+
+  u <- xlsx_ct_underline_property(xml2::xml_find_one(x, "d1:u", ns))
+  ## This one here is either baseline, superscript or subscript.  So probably not terribly useful and fairly confuse-able with _actual_ vertical alignment.
+
+  ## vertAlign <- xml2::xml_text(xml2::xml_find_one(x, "d1:vertAlign/@val", ns))
+  scheme <- xml2::xml_text(xml2::xml_find_one(x, "d1:scheme/@val", ns))
+
+  tibble::data_frame(name, family,
+                     b, i, strike, outline, shadow, condense, extend,
+                     color, sz, u, scheme)
+
+}
+
+xlsx_st_font_family <- function(f, missing=NA_character_) {
+  pos <- c(NA_character_, "Roman", "Swiss", "Modern", "Script", "Decorative",
+           rep("<<reserved>>", 9))
+  if (inherits(f, "xml_missing")) {
+    missing
+  } else {
+    pos[[as.integer(xml2::xml_attr(f, "val")) + 1L]]
   }
+}
 
-  sz <- xml2::xml_text(xml2::xml_find_one(fonts_f, "d1:sz/@val", ns))
-  col <- xml2::xml_text(xml2::xml_find_one(fonts_f, "d1:color/@theme", ns))
-  scheme <- xml2::xml_text(xml2::xml_find_one(fonts_f, "d1:scheme/@val", ns))
-  family <- xml2::xml_text(xml2::xml_find_one(fonts_f, "d1:family/@val", ns))
-  name <- xml2::xml_text(xml2::xml_find_one(fonts_f, "d1:name/@val", ns))
-  b <- xml2::xml_find_lgl(fonts_f, "boolean(d1:b)", ns)
-  i <- xml2::xml_find_lgl(fonts_f, "boolean(d1:i)", ns)
-  u <- xml2::xml_find_lgl(fonts_f, "boolean(d1:u)", ns)
+xlsx_ct_boolean_property <- function(b, missing=FALSE) {
+  if (inherits(b, "xml_missing")) {
+    missing
+  } else {
+    val <- xml2::xml_attr(b, "val")
+    if (is.na(val)) TRUE else as.logical(as.integer(val))
+  }
+}
 
-  data.frame(name=name, family=family, scheme=scheme, col=col,
-             size=as.integer(sz), bold=b, italic=i, underline=u,
-             stringsAsFactors=FALSE)
+xlsx_ct_underline_property <- function(u, missing="none") {
+  if (inherits(u, "xml_missing")) {
+    missing
+  } else {
+    val <- xml2::xml_attr(u, "val")
+    if (is.na(val)) "single" else val
+  }
 }
 
 xlsx_read_style_fills <- function(xml, ns, theme, index) {
@@ -114,8 +172,8 @@ xlsx_read_style_pattern_fill <- function(x, ns, theme, index) {
   ## This is very weird because all of the attribute patternType,
   ## fgColor and bgColor are optional.
   pattern_type <- xml2::xml_attr(x, "patternType")
-  fg <- xlsx_color(xml2::xml_find_one(x, "./d1:fgColor", ns), theme, index)
-  bg <- xlsx_color(xml2::xml_find_one(x, "./d1:bgColor", ns), theme, index)
+  fg <- xlsx_ct_color(xml2::xml_find_one(x, "./d1:fgColor", ns), theme, index)
+  bg <- xlsx_ct_color(xml2::xml_find_one(x, "./d1:bgColor", ns), theme, index)
   c(type="pattern", pattern_type=pattern_type, fg=fg, bg=bg)
 }
 
@@ -132,7 +190,7 @@ xlsx_read_style_gradient_fill <- function(x, ns, theme, index) {
 }
 
 ## See 18.8.19, p. 1757
-xlsx_color <- function(x, theme, index) {
+xlsx_ct_color <- function(x, theme, index) {
   if (inherits(x, "xml_missing")) {
     NA_character_
   } else {
