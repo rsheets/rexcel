@@ -32,7 +32,7 @@ rexcel_read <- function(path, sheet=1L) {
   ## elements, and they contain only a "ref" attribute.  Once I track
   ## down the full schema (MS's website is a mess here) we can add
   ## correct references for this assertion.
-  merged <- xlsx_read_merged(xls, ns)
+  merged <- xlsx_read_merged(xml, ns)
 
   date_offset <- xlsx_date_offset(path)
 
