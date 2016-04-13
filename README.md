@@ -26,6 +26,11 @@ devtools::install_github("jennybc/rexcel")
 * [ ] Text font
 * [ ] Text size
 * [ ] Text alignment (horizontal, vertical)
+* [ ] Column/row visibility
+* [ ] Column/row width/height
+* [ ] Styles applied at the column level (though the spec seems vague about if that's a real thing - compare p. 1600 and 1596)
+* [ ] Conditional formatting (the rule and the outcome)
+* [ ] Borders
 
 Of particular concern:
 
@@ -42,10 +47,13 @@ So we should find a sheet that includes this and see what this looks like empiri
 ## Other worthwhile things to get
 
 * [ ] named ranges
-* [ ] comments
+* [ ] comments (author, ref, rich text, visibility)
 * [ ] graphs
 * [ ] other drawings
 * [ ] pivot tables
+* [ ] frozen rows / split panes
+* [ ] calculation chain
+* [ ] header/footer
 
 ## The Excel XML Spec
 
