@@ -32,11 +32,13 @@ rexcel_read <- function(path, sheet=1L) {
   ## elements, and they contain only a "ref" attribute.  Once I track
   ## down the full schema (MS's website is a mess here) we can add
   ## correct references for this assertion.
-  merged <- xml2::xml_text(
-    xml2::xml_find_all(xml, "./d1:mergeCells/d1:mergeCell/@ref", ns))
-  merged <- lapply(merged, cellranger::as.cell_limits)
+  merged <- xlsx_read_merged(xls, ns)
 
   date_offset <- xlsx_date_offset(path)
+
+  ## For the vast majority of sheets, this should be the longest step.
+  ## The per-cell processing is pretty hard on the XML processing in
+  ## R.
   cells <- xlsx_parse_cells(xml, ns, strings, style, date_offset)
 
   linen::worksheet(cells, merged, linen::workbook(style))
@@ -98,6 +100,12 @@ xlsx_read_shared_strings <- function(path) {
     xml2::xml_text(xml2::xml_find_one(si[!is_rich], "d1:t", ns))
   ret[is_rich] <- vcapply(si[is_rich], xlsx_parse_string, ns)
   ret
+}
+
+xlsx_read_merged <- function(xml, ns) {
+  merged <- xml2::xml_text(
+    xml2::xml_find_all(xml, "./d1:mergeCells/d1:mergeCell/@ref", ns))
+  merged <- lapply(merged, cellranger::as.cell_limits)
 }
 
 ## sheetData: https://msdn.microsoft.com/EN-US/library/office/documentformat.openxml.spreadsheet.sheetdata.aspx
