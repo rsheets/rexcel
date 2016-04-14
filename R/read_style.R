@@ -11,8 +11,8 @@ xlsx_read_style <- function(path) {
 
   ## XFS is "cell formatting".  The s="<int>" tag refers to an entry
   ## in cellXfs, so this is _probably_ the most useful.
-  cell_style_xfs <- xlsx_read_cell_style_xfs(xml, ns)
-  cell_xfs <- xlsx_read_cell_xfs(xml, ns)
+  cell_style_xfs <- xlsx_read_style_cell_style_xfs(xml, ns)
+  cell_xfs <- xlsx_read_style_cell_xfs(xml, ns)
   cell_styles <- xlsx_read_cell_styles(xml, ns)
   num_formats <- xlsx_read_num_formats(xml, ns)
 
@@ -243,21 +243,61 @@ xlsx_read_style_borders <- function(xml, ns) {
     stringsAsFactors=FALSE)
 }
 
-xlsx_read_cell_style_xfs <- function(xml, ns) {
+xlsx_read_style_cell_style_xfs <- function(xml, ns) {
   csx <- xml2::xml_find_one(xml, "d1:cellStyleXfs", ns)
   as.data.frame(attrs_to_matrix(xml2::xml_children(csx), "integer"))
 }
 
-xlsx_read_cell_xfs <- function(xml, ns) {
-  cx <- xml2::xml_find_one(xml, "d1:cellXfs", ns)
-  cx_kids <- xml2::xml_children(cx)
-  ret <- as.data.frame(attrs_to_matrix(cx_kids, "integer"))
-  ret_align <- attrs_to_matrix(xml2::xml_find_one(cx_kids, "d1:alignment", ns))
-  ret_align <- data.frame(ret_align, stringsAsFactors=FALSE)
-  if ("wrapText" %in% names(ret_align)) {
-    ret_align$wrapText <- as.logical(ret_align$wrapText)
-  }
-  cbind(ret, ret_align)
+## Up to here: pull out alignment information.
+xlsx_read_style_cell_xfs <- function(xml, ns) {
+  xfs <- xml2::xml_children(xml2::xml_find_one(xml, "d1:cellXfs", ns))
+  dat <- lapply(xfs, xlsx_read_style_xf, ns)
+  tibble::as_data_frame(do.call("rbind", dat, quote=TRUE))
+}
+
+xlsx_read_style_xf <- function(x, ns) {
+  at <- as.list(xml2::xml_attrs(x))
+  xf <- tibble::data_frame(
+    ## Booleans, indicating if things are applied:
+    apply_alignment = attr_bool(at$applyAlignment),
+    apply_border = attr_bool(at$applyBorder),
+    apply_fill = attr_bool(at$applyFill),
+    apply_font = attr_bool(at$applyFont),
+    apply_number_format = attr_bool(at$applyNumberFormat),
+    apply_protection = attr_bool(at$applyProtection),
+
+    ## References to actual formats (all base 0)
+    border_id = attr_integer(at$borderId),
+    fill_id = attr_integer(at$fillId),
+    font_id = attr_integer(at$fontId),
+    num_fmt_id = attr_integer(at$numFmtId),
+
+    pivot_button = attr_bool(at$pivotButton),
+    quote_prefix = attr_bool(at$quotePrefix),
+
+    ## This is a reference against cellStyleXfs
+    xf_id = attr_integer(at$xfId))
+  alignment <- xlsx_read_style_alignment(
+    xml2::xml_find_one(x, "d1:alignment", ns))
+  cbind(xf, alignment)
+}
+
+## horizontal: center | centerContinuous | distributed | fill |
+##   general | justify | right
+##
+## vertical: bottom | center | distributed | justify | top
+xlsx_read_style_alignment <- function(x, ns) {
+  at <- as.list(xml2::xml_attrs(x))
+  tibble::data_frame(
+    horizontal=attr_character(at$horizontal),
+    vertical=attr_character(at$vertical),
+    indent=attr_integer(at$indent),
+    justify_last_line=attr_bool(at$justifyLastLine),
+    reading_order=attr_integer(at$readingOrder),
+    ## relativeIndent [used only in a dxf element]
+    shrink_to_fit=attr_bool(at$shrinkToFit),
+    text_rotation=attr_integer(at$text_rotation),
+    text_wrap=attr_bool(at$textWrap))
 }
 
 xlsx_read_cell_styles <- function(xml, ns) {

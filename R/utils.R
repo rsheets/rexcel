@@ -30,3 +30,19 @@ attrs_to_matrix <- function(x, mode=NULL) {
   }
   ret
 }
+
+attr_bool <- function(x, missing=NA) {
+  if (is.null(x)) missing else as.logical(as.integer(x))
+}
+
+attr_integer <- function(x, missing=NA_integer_) {
+  if (is.null(x)) missing else as.integer(x)
+}
+
+attr_character <- function(x, missing=NA_character_) {
+  if (is.null(x)) missing else x
+}
+
+`%||%` <- function(a, b) {
+  if (is.null(a)) b else a
+}
