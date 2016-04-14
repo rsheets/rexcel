@@ -19,18 +19,19 @@ devtools::install_github("jennybc/rexcel")
 ## Formatting preserved
 
 * [x] Cell fill colour
-* [ ] Cell patterns
+* [x] Cell patterns
 * [ ] Cell _gradients_
-* [ ] Text colour
-* [ ] Text bold, italic, underline, strikethrough
-* [ ] Text font
-* [ ] Text size
-* [ ] Text alignment (horizontal, vertical)
+* [x] Text colour
+* [x] Text bold, italic, underline, strikethrough, outline, shadow, condense, extend
+* [x] Text font
+* [x] Text size
+* [x] Text alignment (horizontal, vertical)
 * [ ] Column/row visibility
 * [ ] Column/row width/height
 * [ ] Styles applied at the column level (though the spec seems vague about if that's a real thing - compare p. 1600 and 1596)
 * [ ] Conditional formatting (the rule and the outcome)
-* [ ] Borders
+* [x] Borders (position and colour)
+* [ ] Numeric/date formatting, possibly also formatted text?
 
 Of particular concern:
 
