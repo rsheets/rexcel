@@ -182,7 +182,7 @@ xlsx_parse_cells <- function(xml, ns, strings, style_data, date_offset) {
   }
 
   ## Might roll this back into the style?
-  is_date_time <- xlsx_is_date_time(style_data$cell_xfs$numFmtId, custom_date)
+  is_date_time <- xlsx_is_date_time(style_data$cell_xfs$num_fmt_id, custom_date)
 
   type <- character(length(value))
   type[!is.na(cells_type) & cells_type == "b"] <- "bool"
