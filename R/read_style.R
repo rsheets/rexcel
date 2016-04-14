@@ -7,20 +7,12 @@ xlsx_read_style <- function(path) {
 
   fonts <- xlsx_read_style_fonts(xml, ns, theme, index)
   fills <- xlsx_read_style_fills(xml, ns, theme, index)
-  borders <- xlsx_read_style_borders(xml, ns)
+  borders <- xlsx_read_style_borders(xml, ns, theme, index)
 
-  ## XFS is "cell formatting".  The s="<int>" tag refers to an entry
-  ## in cellXfs, so this is _probably_ the most useful.
   cell_style_xfs <- xlsx_read_style_cell_style_xfs(xml, ns)
   cell_xfs <- xlsx_read_style_cell_xfs(xml, ns)
   cell_styles <- xlsx_read_cell_styles(xml, ns)
   num_formats <- xlsx_read_num_formats(xml, ns)
-
-  ## The cell_styles and cell_style_xfs go together; the cell_styes
-  ## table is what other things hit I think, and these translate
-  ## through to various formattings in cell_style_xfs.  So we could
-  ## probably join those straightaway here.  I don't have a sheet that
-  ## uses a style yet.
 
   list(fonts=fonts, fills=fills, borders=borders,
        cell_style_xfs=cell_style_xfs,
@@ -59,9 +51,6 @@ xlsx_read_theme <- function(path) {
   list(palette=pal)
 }
 
-## TODO: expand this out to include all attributes that might be
-## present in the XML based on the schema rather than using just what
-## is here.
 xlsx_read_style_fonts <- function(xml, ns, theme, index) {
   fonts <- xml2::xml_children(xml2::xml_find_one(xml, "d1:fonts", ns))
   dat <- lapply(fonts, xlsx_read_style_font, ns, theme, index)
@@ -115,7 +104,6 @@ xlsx_read_style_font <- function(x, ns, theme, index) {
   tibble::data_frame(name, family,
                      b, i, strike, outline, shadow, condense, extend,
                      color, sz, u, scheme)
-
 }
 
 xlsx_st_font_family <- function(f, missing=NA_character_) {
@@ -205,9 +193,21 @@ xlsx_ct_color <- function(x, theme, index) {
     }
     t <- types[i][[1L]]
     v <- tmp[[t]]
+    ## TODO: I can't find any information indicating what "auto" means
+    ## in this context.  The spec says (at least for fgColor in
+    ## 18.8.19, p. 1757, but similar words are used elsewhere):
+    ##
+    ## > auto: A boolean value indicating the color is automatic and
+    ## > system color dependent.
+    ##
+    ## So it probably depends on exactly _where_ the colour is used
+    ## (e.g. if it tends to be a fg or a bg colour).  So I will return
+    ## "auto" I think, at least for now.  Probably I could return
+    ## "black" but that's going to be quite lossy.  This way I can
+    ## transform into a sensible colour at use.
     col <- switch(
       t,
-      auto=stop("(TODO) I don't actually know what 'auto' means here..."),
+      auto="auto",
       indexed=index[[as.integer(v) + 1L]],
       rgb=argb2rgb(v),
       theme=theme$palette[[as.integer(v) + 1L]])
@@ -218,29 +218,72 @@ xlsx_ct_color <- function(x, theme, index) {
   }
 }
 
-xlsx_read_style_borders <- function(xml, ns) {
-  borders <- xml2::xml_find_one(xml, "d1:borders", ns)
-  borders_f <- xml2::xml_children(borders)
+xlsx_read_style_borders <- function(xml, ns, theme, index) {
+  borders <- xml2::xml_children(xml2::xml_find_one(xml, "d1:borders", ns))
+  dat <- lapply(borders, xlsx_read_style_border, ns, theme, index)
+  do.call("rbind", dat, quote=TRUE)
+}
 
-  pos <- sort(unique(unlist(lapply(borders_f, function(el)
-    xml2::xml_name(kids <- xml2::xml_children(el))))))
-  known <- c("bottom", "left", "top", "right", "diagonal")
-  unk <- setdiff(pos, known)
-  if (length(unk) > 0L) {
-    message("Skipping unhandled border tags: ", paste(unk, collapse=", "))
+## See
+##   * 18.8.4 (p. 1749)
+##   * 18.8.5 (p. 1750)
+##   * A.2 l. 3460 (p. 3924)
+##
+## Unfortunately, note that the xsd talks about start / end but the
+## *example* has begin / end.  And neither of them indicates what on
+## earth these are for (though the text in the example suggests that
+## end is the right border in that context).  In the sheets I am
+## looking at I mostly see left / right / top / bottom / diagonal.
+xlsx_read_style_border <- function(x, ns, theme, index) {
+  ## NOTE: I am skipping attributes diagonalUp and diagonalDown along
+  ## with the element diagonal - it's not the only bit of formatting
+  ## trivia we won't handle, but it's a fairly unusual thing to see, I
+  ## believe.
+  outline <- attr_bool(xml2::xml_attr(x, "outline"))
+
+  f <- function(path) {
+    xlsx_ct_border_pr(xml2::xml_find_one(x, path, ns), ns, theme, index)
   }
 
-  ## NOTE: Not taking any actual style information here (e.g., weight,
-  ## colour), aside from the presence of the border.  It's possible
-  ## that this does not get the correct style in all cases though --
-  ## if style == "none" perhaps this is wrong?  Is that a valid style?
-  data.frame(
-    bottom=xml2::xml_find_lgl(borders_f, "boolean(d1:bottom/@style)", ns),
-    left=xml2::xml_find_lgl(borders_f, "boolean(d1:left/@style)", ns),
-    top=xml2::xml_find_lgl(borders_f, "boolean(d1:top/@style)", ns),
-    right=xml2::xml_find_lgl(borders_f, "boolean(d1:right/@style)", ns),
-    diagonal=xml2::xml_find_lgl(borders_f, "boolean(d1:diagonal/@style)", ns),
-    stringsAsFactors=FALSE)
+  tmp <- list(list(outline = outline),
+              start = f("d1:start"),
+              end = f("d1:end"),
+              left = f("d1:left"),
+              right = f("d1:right"),
+              top = f("d1:top"),
+              bottom = f("d1:bottom"))
+  tmp <- unlist(tmp, FALSE)
+  names(tmp) <- sub(".", "_", names(tmp), fixed=TRUE)
+  tibble::as_data_frame(tmp)
+}
+
+## style (ST_BorderStyle) can be one of (18.18.3, p. 2428):
+##
+##   * dashDot
+##   * dashDotDot
+##   * dashed
+##   * dotted
+##   * double
+##   * hair
+##   * medium
+##   * mediumDashDot
+##   * mediumDashDotDot
+##   * mediumDashed
+##   * none
+##   * slantDashDot
+##   * thick
+##   * thin
+##
+## Note that the various combinations do not cross with one another.
+xlsx_ct_border_pr <- function(x, ns, theme, index) {
+  present <- !inherits(x, "xml_missing")
+  if (present) {
+    style <- xml2::xml_attr(x, "style")
+    color <- xlsx_ct_color(xml2::xml_find_one(x, "d1:color", ns), theme, index)
+  } else {
+    color <- style <- NA_character_
+  }
+  list(present=present, style=style, color=color)
 }
 
 xlsx_read_style_cell_style_xfs <- function(xml, ns) {
@@ -317,6 +360,8 @@ xlsx_read_cell_styles <- function(xml, ns) {
 }
 
 xlsx_read_num_formats <- function(xml, ns) {
+  ## TODO: look at the spec here more carefully; at least translate
+  ## from camelCase.
   dat <- xml2::xml_find_one(xml, "d1:numFmts", ns)
   ret <- as.data.frame(attrs_to_matrix(xml2::xml_children(dat)))
   if ("numFmtId" %in% names(ret)) {
