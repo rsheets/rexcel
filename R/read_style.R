@@ -244,11 +244,11 @@ xlsx_read_style_borders <- function(xml, ns) {
 }
 
 xlsx_read_style_cell_style_xfs <- function(xml, ns) {
-  csx <- xml2::xml_find_one(xml, "d1:cellStyleXfs", ns)
-  as.data.frame(attrs_to_matrix(xml2::xml_children(csx), "integer"))
+  xfs <- xml2::xml_children(xml2::xml_find_one(xml, "d1:cellStyleXfs", ns))
+  dat <- lapply(xfs, xlsx_read_style_xf, ns)
+  tibble::as_data_frame(do.call("rbind", dat, quote=TRUE))
 }
 
-## Up to here: pull out alignment information.
 xlsx_read_style_cell_xfs <- function(xml, ns) {
   xfs <- xml2::xml_children(xml2::xml_find_one(xml, "d1:cellXfs", ns))
   dat <- lapply(xfs, xlsx_read_style_xf, ns)
