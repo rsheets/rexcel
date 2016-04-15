@@ -8,19 +8,19 @@
 ##   [ ] 18.8.1  alignment (Alignment)
 ##   [ ] 18.8.2  b (Bold)
 ##   [ ] 18.8.3  bgColor (Background Color)
-##   [ ] 18.8.4  border (Border)
-##   [ ] 18.8.5  borders (Borders)
-##   [ ] 18.8.6  bottom (Bottom Border)
+##   [x] 18.8.4  border (Border) -- xlsx_ct_border
+##   [x] 18.8.5  borders (Borders) -- xlsx_ct_borders
+##   [x] 18.8.6  bottom (Bottom Border) -- xlsx_ct_border_pr
 ##   [x] 18.8.7  cellStyle (Cell Style) -- xlsx_ct_cell_style
 ##   [x] 18.8.8  cellStyles (Cell Styles) -- xlsx_ct_cell_styles
 ##   [ ] 18.8.9  cellStyleXfs (Formatting Records)
 ##   [ ] 18.8.10 cellXfs (Cell Formats)
 ##   [ ] 18.8.11 colors (Colors)
 ##   [ ] 18.8.12 condense (Condense)
-##   [ ] 18.8.13 diagonal (Diagonal)
+##   [*] 18.8.13 diagonal (Diagonal) -- (xlsx_ct_border_pr)
 ##   [ ] 18.8.14 dxf (Formatting)
 ##   [ ] 18.8.15 dxfs (Formats)
-##   [ ] 18.8.16 end (Trailing Edge Border)
+##   [x] 18.8.16 end (Trailing Edge Border) -- xlsx_ct_border_pr
 ##   [ ] 18.8.17 extend (Extend)
 ##   [ ] 18.8.18 family (Font Family)
 ##   [ ] 18.8.19 fgColor (Foreground Color)
@@ -41,13 +41,13 @@
 ##   [ ] 18.8.34 rgbColor (RGB Color)
 ##   [ ] 18.8.35 scheme (Scheme)
 ##   [ ] 18.8.36 shadow (Shadow)
-##   [ ] 18.8.37 start (Leading Edge Border)
+##   [x] 18.8.37 start (Leading Edge Border) -- xlsx_ct_border_pr
 ##   [ ] 18.8.38 stop (Gradient Stop)
 ##   [ ] 18.8.39 styleSheet (Style Sheet)
 ##   [ ] 18.8.40 tableStyle (Table Style)
 ##   [ ] 18.8.41 tableStyleElement (Table Style)
 ##   [ ] 18.8.42 tableStyles (Table Styles)
-##   [ ] 18.8.43 top (Top Border)
+##   [x] 18.8.43 top (Top Border) -- xlsx_ct_border_pr
 ##   [ ] 18.8.44 vertical (Vertical Inner Border)
 ##   [ ] 18.8.45 xf (Format)
 ##
@@ -76,7 +76,7 @@ xlsx_read_style <- function(path) {
 
   fonts <- xlsx_ct_fonts(xml, ns, theme, index)
   fills <- xlsx_ct_fills(xml, ns, theme, index)
-  borders <- xlsx_read_style_borders(xml, ns, theme, index)
+  borders <- xlsx_ct_borders(xml, ns, theme, index)
 
   cell_style_xfs <- xlsx_read_style_cell_style_xfs(xml, ns)
   cell_xfs <- xlsx_read_style_cell_xfs(xml, ns)
@@ -290,14 +290,14 @@ xlsx_ct_color <- function(x, theme, index) {
   }
 }
 
-xlsx_read_style_borders <- function(xml, ns, theme, index) {
-  borders <- xml2::xml_children(xml2::xml_find_one(xml, "d1:borders", ns))
-  dat <- lapply(borders, xlsx_read_style_border, ns, theme, index)
-  do.call("rbind", dat, quote=TRUE)
+## 18.8.5  borders
+xlsx_ct_borders <- function(xml, ns, theme, index) {
+  process_container(xml, "d1:borders", ns, xlsx_ct_border, theme, index)
 }
 
-## See
-##   * 18.8.4 (p. 1749)
+## 18.8.4  border
+##
+## See also
 ##   * 18.8.5 (p. 1750)
 ##   * A.2 l. 3460 (p. 3924)
 ##
@@ -306,7 +306,7 @@ xlsx_read_style_borders <- function(xml, ns, theme, index) {
 ## earth these are for (though the text in the example suggests that
 ## end is the right border in that context).  In the sheets I am
 ## looking at I mostly see left / right / top / bottom / diagonal.
-xlsx_read_style_border <- function(x, ns, theme, index) {
+xlsx_ct_border <- function(x, ns, theme, index) {
   ## NOTE: I am skipping attributes diagonalUp and diagonalDown along
   ## with the element diagonal - it's not the only bit of formatting
   ## trivia we won't handle, but it's a fairly unusual thing to see, I
@@ -347,6 +347,13 @@ xlsx_read_style_border <- function(x, ns, theme, index) {
 ##   * thin
 ##
 ## Note that the various combinations do not cross with one another.
+##
+## This handles:
+##   * 18.8.6  bottom
+##   * 18.8.16 end
+##   * 18.8.37 start
+##   * 18.8.43 top
+## as well as left and right which aren't given section numbers in the spec.
 xlsx_ct_border_pr <- function(x, ns, theme, index) {
   present <- !inherits(x, "xml_missing")
   if (present) {
