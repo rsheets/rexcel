@@ -1,3 +1,72 @@
+## Basically everything here follows from "Styles": section 18.8 (p. 1744).
+##
+## I have been fairly thorough at pulling things in, but it's not
+## really complete.  There are enumeration types that I have not
+## turned into factors (arguments go either way, really).  There are a
+## few things that are going to be very hard to deal with, too.
+##
+##   [ ] 18.8.1  alignment (Alignment)
+##   [ ] 18.8.2  b (Bold)
+##   [ ] 18.8.3  bgColor (Background Color)
+##   [ ] 18.8.4  border (Border)
+##   [ ] 18.8.5  borders (Borders)
+##   [ ] 18.8.6  bottom (Bottom Border)
+##   [x] 18.8.7  cellStyle (Cell Style) -- xlsx_ct_cell_style
+##   [x] 18.8.8  cellStyles (Cell Styles) -- xlsx_ct_cell_styles
+##   [ ] 18.8.9  cellStyleXfs (Formatting Records)
+##   [ ] 18.8.10 cellXfs (Cell Formats)
+##   [ ] 18.8.11 colors (Colors)
+##   [ ] 18.8.12 condense (Condense)
+##   [ ] 18.8.13 diagonal (Diagonal)
+##   [ ] 18.8.14 dxf (Formatting)
+##   [ ] 18.8.15 dxfs (Formats)
+##   [ ] 18.8.16 end (Trailing Edge Border)
+##   [ ] 18.8.17 extend (Extend)
+##   [ ] 18.8.18 family (Font Family)
+##   [ ] 18.8.19 fgColor (Foreground Color)
+##   [ ] 18.8.20 fill (Fill)
+##   [ ] 18.8.21 fills (Fills)
+##   [x] 18.8.22 font (Font) -- xlsx_ct_font
+##   [x] 18.8.23 fonts (Fonts) -- xlsx_ct_fonts
+##   [ ] 18.8.24 gradientFill (Gradient)
+##   [ ] 18.8.25 horizontal (Horizontal Inner Borders)
+##   [ ] 18.8.26 i (Italic)
+##   [ ] 18.8.27 indexedColors (Color Indexes)
+##   [ ] 18.8.28 mruColors (MRU Colors)
+##   [ ] 18.8.29 name (Font Name)
+##   [x] 18.8.30 numFmt (Number Format) -- xlsx_ct_num_fmt
+##   [x] 18.8.31 numFmts (Number Formats) -- xlsx_ct_num_fmts
+##   [ ] 18.8.32 patternFill (Pattern)
+##   [ ] 18.8.33 protection (Protection Properties)
+##   [ ] 18.8.34 rgbColor (RGB Color)
+##   [ ] 18.8.35 scheme (Scheme)
+##   [ ] 18.8.36 shadow (Shadow)
+##   [ ] 18.8.37 start (Leading Edge Border)
+##   [ ] 18.8.38 stop (Gradient Stop)
+##   [ ] 18.8.39 styleSheet (Style Sheet)
+##   [ ] 18.8.40 tableStyle (Table Style)
+##   [ ] 18.8.41 tableStyleElement (Table Style)
+##   [ ] 18.8.42 tableStyles (Table Styles)
+##   [ ] 18.8.43 top (Top Border)
+##   [ ] 18.8.44 vertical (Vertical Inner Border)
+##   [ ] 18.8.45 xf (Format)
+##
+## I don't have a good naming scheme for all of these yet because I
+## don't really have a sense for how the open XML authors named
+## things.  There are elements and at some point things get called a
+## CT_<thing> (for "Complex Type"), e.g., CT_Color.  At that point
+## things are called xlsx_ct_boolean_property or similar.
+##
+## There are no strong argument conventions either; if anything can
+## contain a colour the both theme and index are passed through, as
+## these contain information to convert colour types into an RGB
+## triplet.  If any Xpath query is used then the namespace is passed
+## along as ns.
+##
+## From the point of view of the rest of the package, the only entry
+## point to use is xlsx_read_style which will return a list of a great
+## many data.frames (the format here will get cleaned up soon).
+
 xlsx_read_style <- function(path) {
   xml <- xlsx_read_file(path, "xl/styles.xml")
   ns <- xml2::xml_ns(xml)
@@ -14,13 +83,17 @@ xlsx_read_style <- function(path) {
   cell_styles <- xlsx_ct_cell_styles(xml, ns)
   num_fmts <- xlsx_ct_num_fmts(xml, ns)
 
-  list(fonts=fonts, fills=fills, borders=borders,
+  list(fonts=fonts,
+       fills=fills,
+       borders=borders,
        cell_style_xfs=cell_style_xfs,
        cell_xfs=cell_xfs,
        cell_styles=cell_styles,
        num_fmts=num_fmts)
 }
 
+## NOTE: this only reads the the colour information from the theme as
+## nothing else looks that exciting in there, really.
 xlsx_read_theme <- function(path) {
   ## TODO: Strictly, the theme information should come from the
   ## workbook.rels.xml file by looking to see which file has the
