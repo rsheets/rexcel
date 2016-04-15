@@ -12,13 +12,13 @@ xlsx_read_style <- function(path) {
   cell_style_xfs <- xlsx_read_style_cell_style_xfs(xml, ns)
   cell_xfs <- xlsx_read_style_cell_xfs(xml, ns)
   cell_styles <- xlsx_ct_cell_styles(xml, ns)
-  num_formats <- xlsx_read_num_formats(xml, ns)
+  num_fmts <- xlsx_ct_num_fmts(xml, ns)
 
   list(fonts=fonts, fills=fills, borders=borders,
        cell_style_xfs=cell_style_xfs,
        cell_xfs=cell_xfs,
        cell_styles=cell_styles,
-       num_formats=num_formats)
+       num_fmts=num_fmts)
 }
 
 xlsx_read_theme <- function(path) {
@@ -373,15 +373,15 @@ xlsx_ct_cell_style <- function(x, ns) {
     xf_id = attr_integer(at$xfId))
 }
 
-xlsx_read_num_formats <- function(xml, ns) {
-  ## TODO: look at the spec here more carefully; at least translate
-  ## from camelCase.
-  dat <- xml2::xml_find_one(xml, "d1:numFmts", ns)
-  ret <- as.data.frame(attrs_to_matrix(xml2::xml_children(dat)))
-  if ("numFmtId" %in% names(ret)) {
-    ret$numFmtId <- as.integer(ret$numFmtId)
-  }
-  ret
+xlsx_ct_num_fmts <- function(xml, ns) {
+  process_container(xml, "d1:numFmts", ns, xlsx_ct_num_fmt)
+}
+
+xlsx_ct_num_fmt <- function(x, ns) {
+  at <- as.list(xml2::xml_attrs(x))
+  tibble::data_frame(
+    num_format_id = attr_integer(at$numFmtId),
+    format_code = attr_character(at$formatCode))
 }
 
 col_apply_tint <- function(col, tint) {

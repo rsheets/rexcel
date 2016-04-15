@@ -173,10 +173,12 @@ xlsx_parse_cells <- function(xml, ns, strings, style_data, date_offset) {
     stop("Inline string value not yet handled")
   }
 
-  ## TODO: Roll this back into the xfs parsing perhaps?
-  if ("formatCode" %in% names(style_data$num_formats)) {
-    custom_date <- style_data$num_formats$numFmtId[
-      grepl("[dmyhs]", style_data$num_formats$formatCode)]
+  ## TODO: Roll this back into the xfs parsing perhaps?  in the (not
+  ## yet existing) compute style part I think.  We can have an
+  ## "is_date" entry there.
+  if ("formatCode" %in% names(style_data$num_fmts)) {
+    custom_date <- style_data$num_fmts$num_fmt_id[
+      grepl("[dmyhs]", style_data$num_fmts$format_code)]
   } else {
     custom_date <- integer()
   }
