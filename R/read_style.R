@@ -11,7 +11,7 @@ xlsx_read_style <- function(path) {
 
   cell_style_xfs <- xlsx_read_style_cell_style_xfs(xml, ns)
   cell_xfs <- xlsx_read_style_cell_xfs(xml, ns)
-  cell_styles <- xlsx_read_cell_styles(xml, ns)
+  cell_styles <- xlsx_ct_cell_styles(xml, ns)
   num_formats <- xlsx_read_num_formats(xml, ns)
 
   list(fonts=fonts, fills=fills, borders=borders,
@@ -343,20 +343,34 @@ xlsx_read_style_alignment <- function(x, ns) {
     text_wrap=attr_bool(at$textWrap))
 }
 
-xlsx_read_cell_styles <- function(xml, ns) {
-  cs <- xml2::xml_find_one(xml, "d1:cellStyles", ns)
-  ret <- data.frame(attrs_to_matrix(xml2::xml_children(cs)),
-                    stringsAsFactors=FALSE)
-  if ("xfId" %in% names(ret)) {
-    ret$xfId <- as.integer(ret$xfId)
-  }
-  if ("builtinId" %in% names(ret)) {
-    ret$builtinId <- as.integer(ret$builtinId)
-  }
-  if ("hidden" %in% names(ret)) {
-    ret$hidden <- as.logical(ret$hidden)
-  }
-  ret
+xlsx_ct_cell_styles <- function(xml, ns) {
+  cs <- xml2::xml_children(xml2::xml_find_one(xml, "d1:cellStyles", ns))
+  dat <- lapply(cs, xlsx_ct_cell_style, ns)
+  tibble::as_data_frame(do.call("rbind", dat, quote=TRUE))
+}
+
+xlsx_ct_cell_style <- function(x, ns) {
+  ## NOTE: Getting this right is really hard because the Annex (G.2)
+  ## lists information about "built-in" styles but these vary with all
+  ## things like row position, but no actual information about the
+  ## styles is given in the annex.  So it's not really obvious what we
+  ## can do here.
+
+  ## NOTE: This element can contain "extension list" elements which
+  ## are reserved for future use.  But we can skip that.
+
+  ## NOTE: xf_id: Zero-based index referencing an xf record in the
+  ## cellStyleXfs collection. This is used to determine the formatting
+  ## defined for this named cell style.
+
+  at <- as.list(xml2::xml_attrs(x))
+  tibble::data_frame(
+    builtin_id = attr_integer(at$builtinId),
+    custom_builtin = attr_bool(at$customBuiltin),
+    hidden = attr_bool(at$hidden),
+    i_level = attr_integer(at$iLevel),
+    name = attr_character(at$name),
+    xf_id = attr_integer(at$xfId))
 }
 
 xlsx_read_num_formats <- function(xml, ns) {
