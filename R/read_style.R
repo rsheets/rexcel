@@ -24,8 +24,8 @@
 ##   [ ] 18.8.17 extend (Extend)
 ##   [ ] 18.8.18 family (Font Family)
 ##   [ ] 18.8.19 fgColor (Foreground Color)
-##   [ ] 18.8.20 fill (Fill)
-##   [ ] 18.8.21 fills (Fills)
+##   [x] 18.8.20 fill (Fill) -- xlsx_ct_fill
+##   [x] 18.8.21 fills (Fills) -- xlsx_ct_fills
 ##   [x] 18.8.22 font (Font) -- xlsx_ct_font
 ##   [x] 18.8.23 fonts (Fonts) -- xlsx_ct_fonts
 ##   [ ] 18.8.24 gradientFill (Gradient)
@@ -75,7 +75,7 @@ xlsx_read_style <- function(path) {
   index <- xlsx_indexed_cols()
 
   fonts <- xlsx_ct_fonts(xml, ns, theme, index)
-  fills <- xlsx_read_style_fills(xml, ns, theme, index)
+  fills <- xlsx_ct_fills(xml, ns, theme, index)
   borders <- xlsx_read_style_borders(xml, ns, theme, index)
 
   cell_style_xfs <- xlsx_read_style_cell_style_xfs(xml, ns)
@@ -205,18 +205,19 @@ xlsx_ct_underline_property <- function(u, missing="none") {
   }
 }
 
-xlsx_read_style_fills <- function(xml, ns, theme, index) {
-  fills <- xml2::xml_children(xml2::xml_find_one(xml, "d1:fills", ns))
-  dat <- lapply(fills, xlsx_read_style_fill, ns, theme, index)
+## 18.8.21 fills
+xlsx_ct_fills <- function(xml, ns, theme, index) {
+  process_container(xml, "d1:fills", ns, xlsx_ct_fill, theme, index)
+}
+
+## 18.8.20 fill
+xlsx_ct_fill <- function(x, ns, theme, index) {
   ## TODO: In the case where not all of these are "pattern" (i.e., we
   ## have a gradient fill) this will not work correctly because we
   ## need totally different things here.  I think what we'll return
   ## there is type=gradient, and then a lookup to a gradient table, so
   ## this will expand by one more column with gradient_id perhaps.
-  as.data.frame(do.call("rbind", dat), stringsAsFactors=FALSE)
-}
 
-xlsx_read_style_fill <- function(x, ns, theme, index) {
   ## The only options here, according to the xsd (A.2, p. 3925,
   ## l. 3498) is a single element of patternFill or gradientFill
   xk <- xml2::xml_children(x)[[1L]]
