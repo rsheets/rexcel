@@ -5,7 +5,7 @@ xlsx_read_style <- function(path) {
   theme <- xlsx_read_theme(path)
   index <- xlsx_indexed_cols()
 
-  fonts <- xlsx_read_style_fonts(xml, ns, theme, index)
+  fonts <- xlsx_ct_fonts(xml, ns, theme, index)
   fills <- xlsx_read_style_fills(xml, ns, theme, index)
   borders <- xlsx_read_style_borders(xml, ns, theme, index)
 
@@ -51,10 +51,8 @@ xlsx_read_theme <- function(path) {
   list(palette=pal)
 }
 
-xlsx_read_style_fonts <- function(xml, ns, theme, index) {
-  fonts <- xml2::xml_children(xml2::xml_find_one(xml, "d1:fonts", ns))
-  dat <- lapply(fonts, xlsx_read_style_font, ns, theme, index)
-  do.call("rbind", dat, quote=TRUE)
+xlsx_ct_fonts <- function(xml, ns, theme, index) {
+  process_container(xml, "d1:fonts", ns, xlsx_ct_font, theme, index)
 }
 
 ## Getting the definition of this from the spec is proving difficult:
@@ -79,7 +77,7 @@ xlsx_read_style_fonts <- function(xml, ns, theme, index) {
 ## Looks like horizontal alignment comes through with the xf element
 ## in cellxfs, but I think I ignore that at the moment.  Seems like an
 ## odd place tbh.
-xlsx_read_style_font <- function(x, ns, theme, index) {
+xlsx_ct_font <- function(x, ns, theme, index) {
   name <- xml2::xml_text(xml2::xml_find_one(x, "d1:name/@val", ns))
   ## ignoring charset
   family <- xlsx_st_font_family(xml2::xml_find_one(x, "d1:family", ns))
