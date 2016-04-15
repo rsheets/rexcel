@@ -5,42 +5,42 @@
 ## turned into factors (arguments go either way, really).  There are a
 ## few things that are going to be very hard to deal with, too.
 ##
-##   [ ] 18.8.1  alignment (Alignment)
-##   [ ] 18.8.2  b (Bold)
-##   [ ] 18.8.3  bgColor (Background Color)
+##   [x] 18.8.1  alignment (Alignment) -- xlsx_ct_alignment
+##   [x] 18.8.2  b (Bold) -- xlsx_ct_boolean_property
+##   [x] 18.8.3  bgColor (Background Color) -- xlsx_ct_color
 ##   [x] 18.8.4  border (Border) -- xlsx_ct_border
 ##   [x] 18.8.5  borders (Borders) -- xlsx_ct_borders
 ##   [x] 18.8.6  bottom (Bottom Border) -- xlsx_ct_border_pr
 ##   [x] 18.8.7  cellStyle (Cell Style) -- xlsx_ct_cell_style
 ##   [x] 18.8.8  cellStyles (Cell Styles) -- xlsx_ct_cell_styles
-##   [ ] 18.8.9  cellStyleXfs (Formatting Records)
-##   [ ] 18.8.10 cellXfs (Cell Formats)
+##   [x] 18.8.9  cellStyleXfs (Formatting Records) -- xlsx_ct_cell_style_xfs
+##   [x] 18.8.10 cellXfs (Cell Formats) -- xlsx_ct_cell_xfs
 ##   [ ] 18.8.11 colors (Colors)
-##   [ ] 18.8.12 condense (Condense)
-##   [*] 18.8.13 diagonal (Diagonal) -- (xlsx_ct_border_pr)
+##   [x] 18.8.12 condense (Condense) -- xlsx_ct_boolean_property
+##   [-] 18.8.13 diagonal (Diagonal) -- (xlsx_ct_border_pr)
 ##   [ ] 18.8.14 dxf (Formatting)
 ##   [ ] 18.8.15 dxfs (Formats)
 ##   [x] 18.8.16 end (Trailing Edge Border) -- xlsx_ct_border_pr
-##   [ ] 18.8.17 extend (Extend)
-##   [ ] 18.8.18 family (Font Family)
-##   [ ] 18.8.19 fgColor (Foreground Color)
+##   [x] 18.8.17 extend (Extend) -- xlsx_ct_boolean_property
+##   [x] 18.8.18 family (Font Family) -- xlsx_st_font_family
+##   [x] 18.8.19 fgColor (Foreground Color) -- xlsx_ct_color
 ##   [x] 18.8.20 fill (Fill) -- xlsx_ct_fill
 ##   [x] 18.8.21 fills (Fills) -- xlsx_ct_fills
 ##   [x] 18.8.22 font (Font) -- xlsx_ct_font
 ##   [x] 18.8.23 fonts (Fonts) -- xlsx_ct_fonts
-##   [ ] 18.8.24 gradientFill (Gradient)
+##   [x] 18.8.24 gradientFill (Gradient) -- xlsx_ct_gradient_fill
 ##   [ ] 18.8.25 horizontal (Horizontal Inner Borders)
-##   [ ] 18.8.26 i (Italic)
+##   [x] 18.8.26 i (Italic) -- xlsx_ct_boolean_property
 ##   [ ] 18.8.27 indexedColors (Color Indexes)
 ##   [ ] 18.8.28 mruColors (MRU Colors)
-##   [ ] 18.8.29 name (Font Name)
+##   [x] 18.8.29 name (Font Name) -- (plain text handling in xlsx_ct_font)
 ##   [x] 18.8.30 numFmt (Number Format) -- xlsx_ct_num_fmt
 ##   [x] 18.8.31 numFmts (Number Formats) -- xlsx_ct_num_fmts
-##   [ ] 18.8.32 patternFill (Pattern)
+##   [x] 18.8.32 patternFill (Pattern) -- xlsx_ct_pattern_fill
 ##   [ ] 18.8.33 protection (Protection Properties)
 ##   [ ] 18.8.34 rgbColor (RGB Color)
-##   [ ] 18.8.35 scheme (Scheme)
-##   [ ] 18.8.36 shadow (Shadow)
+##   [x] 18.8.35 scheme (Scheme) -- (plain text handling in xlsx_ct_font)
+##   [x] 18.8.36 shadow (Shadow) -- xlsx_ct_boolean_property
 ##   [x] 18.8.37 start (Leading Edge Border) -- xlsx_ct_border_pr
 ##   [ ] 18.8.38 stop (Gradient Stop)
 ##   [ ] 18.8.39 styleSheet (Style Sheet)
@@ -49,13 +49,13 @@
 ##   [ ] 18.8.42 tableStyles (Table Styles)
 ##   [x] 18.8.43 top (Top Border) -- xlsx_ct_border_pr
 ##   [ ] 18.8.44 vertical (Vertical Inner Border)
-##   [ ] 18.8.45 xf (Format)
+##   [x] 18.8.45 xf (Format) -- xlsx_ct_xf
 ##
-## I don't have a good naming scheme for all of these yet because I
-## don't really have a sense for how the open XML authors named
-## things.  There are elements and at some point things get called a
-## CT_<thing> (for "Complex Type"), e.g., CT_Color.  At that point
-## things are called xlsx_ct_boolean_property or similar.
+## Most elements at some point things get called a CT_<thing> (for
+## "Complex Type"), e.g., CT_Color; at that point the processing thing
+## is called xlsx_ct_boolean_property or similar.  Note that this
+## drives off the *type*, not off the element name.  These are often,
+## but not always, the same.
 ##
 ## There are no strong argument conventions either; if anything can
 ## contain a colour the both theme and index are passed through, as
@@ -66,6 +66,26 @@
 ## From the point of view of the rest of the package, the only entry
 ## point to use is xlsx_read_style which will return a list of a great
 ## many data.frames (the format here will get cleaned up soon).
+##
+## Some of the definitions here come from elsewhere and aren't handled
+## elsewhere yet (blergh):
+##
+## Shared string table:
+##
+##   [-] 18.4.1  charset (Character Set) (ignored for now)
+##   [x] 18.4.2  outline (Outline) -- xlsx_ct_boolean_property
+##   [ ] 18.4.3  phoneticPr (Phonetic Properties)
+##   [ ] 18.4.4  r (Rich Text Run)
+##   [ ] 18.4.5  rFont (Font)
+##   [ ] 18.4.6  rPh (Phonetic Run)
+##   [ ] 18.4.7  rPr (Run Properties)
+##   [ ] 18.4.8  si (String Item)
+##   [ ] 18.4.9  sst (Shared String Table)
+##   [x] 18.4.10 strike (Strike Through) -- xlsx_ct_boolean_property
+##   [x] 18.4.11 sz (Font Size) -- xlsx_ct_font_size
+##   [ ] 18.4.12 t (Text)
+##   [x] 18.4.13 u (Underline) -- xlsx_ct_underline_property
+##   [-] 18.4.14 vertAlign (Vertical Alignment) (ignored for now)
 
 xlsx_read_style <- function(path) {
   xml <- xlsx_read_file(path, "xl/styles.xml")
@@ -78,8 +98,8 @@ xlsx_read_style <- function(path) {
   fills <- xlsx_ct_fills(xml, ns, theme, index)
   borders <- xlsx_ct_borders(xml, ns, theme, index)
 
-  cell_style_xfs <- xlsx_read_style_cell_style_xfs(xml, ns)
-  cell_xfs <- xlsx_read_style_cell_xfs(xml, ns)
+  cell_style_xfs <- xlsx_ct_cell_style_xfs(xml, ns)
+  cell_xfs <- xlsx_ct_cell_xfs(xml, ns)
   cell_styles <- xlsx_ct_cell_styles(xml, ns)
   num_fmts <- xlsx_ct_num_fmts(xml, ns)
 
@@ -124,18 +144,18 @@ xlsx_read_theme <- function(path) {
   list(palette=pal)
 }
 
+## 18.8.23 fonts
 xlsx_ct_fonts <- function(xml, ns, theme, index) {
   process_container(xml, "d1:fonts", ns, xlsx_ct_font, theme, index)
 }
 
-## Getting the definition of this from the spec is proving difficult:
+## 18.8.22 font
 ##
-## On p. 1759, 18.8.22 font just says "CT_Font is in A.2"
+## The link to the actual definition is broken, but p. 3930, l 3797
+## looks good.  Beware of the similar but different CT_Font probably
+## for Word's XML.
 ##
-## The link is broken, but p. 3930, l 3797 looks good.  Beware of the
-## similar but different CT_Font probably for Word's XML.
-##
-## Possible tags (all optional but at most one of each present)
+## Possible daughter elements (all optional but at most one of each present)
 ##
 ##   name (CT_FontName)
 ##   charset (CT_IntProperty)
@@ -150,6 +170,12 @@ xlsx_ct_fonts <- function(xml, ns, theme, index) {
 ## Looks like horizontal alignment comes through with the xf element
 ## in cellxfs, but I think I ignore that at the moment.  Seems like an
 ## odd place tbh.
+##
+## Despite most elements being CT_*, most of this is just that if the
+## element is present a "val" attribute is required.
+##
+## Note that some of the elements here are defined in the "Shared
+## Strings" section of the spec.  Others I have not tracked down yet.
 xlsx_ct_font <- function(x, ns, theme, index) {
   name <- xml2::xml_text(xml2::xml_find_one(x, "d1:name/@val", ns))
   ## ignoring charset
@@ -164,10 +190,12 @@ xlsx_ct_font <- function(x, ns, theme, index) {
   extend <- xlsx_ct_boolean_property(xml2::xml_find_one(x, "d1:extend", ns))
 
   color <- xlsx_ct_color(xml2::xml_find_one(x, "d1:color", ns), theme, index)
-  sz <- as.integer(xml2::xml_text(xml2::xml_find_one(x, "d1:sz/@val", ns)))
+  sz <- xlsx_ct_font_size(xml2::xml_find_one(x, "d1:sz", ns))
 
   u <- xlsx_ct_underline_property(xml2::xml_find_one(x, "d1:u", ns))
-  ## This one here is either baseline, superscript or subscript.  So probably not terribly useful and fairly confuse-able with _actual_ vertical alignment.
+  ## This one here is either baseline, superscript or subscript.  So
+  ## probably not terribly useful and fairly confuse-able with
+  ## _actual_ vertical alignment.
 
   ## vertAlign <- xml2::xml_text(xml2::xml_find_one(x, "d1:vertAlign/@val", ns))
   scheme <- xml2::xml_text(xml2::xml_find_one(x, "d1:scheme/@val", ns))
@@ -177,6 +205,7 @@ xlsx_ct_font <- function(x, ns, theme, index) {
                      color, sz, u, scheme)
 }
 
+## 18.8.18 family
 xlsx_st_font_family <- function(f, missing=NA_character_) {
   pos <- c(NA_character_, "Roman", "Swiss", "Modern", "Script", "Decorative",
            rep("<<reserved>>", 9))
@@ -187,6 +216,9 @@ xlsx_st_font_family <- function(f, missing=NA_character_) {
   }
 }
 
+## Used by a bunch of things.  The actual definition is on l 3751 of
+## A.2 (p. 3929).  Note that the xsd defines that if the element is
+## present but @val is empty it defaults to TRUE.
 xlsx_ct_boolean_property <- function(b, missing=FALSE) {
   if (inherits(b, "xml_missing")) {
     missing
@@ -196,6 +228,13 @@ xlsx_ct_boolean_property <- function(b, missing=FALSE) {
   }
 }
 
+
+## 18.4.11 sz (Font Size)
+xlsx_ct_font_size <- function(sz) {
+  as.numeric(xml2::xml_attr(sz, "val"))
+}
+
+## 18.4.13 u (Underline)
 xlsx_ct_underline_property <- function(u, missing="none") {
   if (inherits(u, "xml_missing")) {
     missing
@@ -222,13 +261,14 @@ xlsx_ct_fill <- function(x, ns, theme, index) {
   ## l. 3498) is a single element of patternFill or gradientFill
   xk <- xml2::xml_children(x)[[1L]]
   if (xml2::xml_name(xk) == "patternFill") {
-    xlsx_read_style_pattern_fill(xk, ns, theme, index)
+    xlsx_ct_pattern_fill(xk, ns, theme, index)
   } else {
-    xlsx_read_style_gradient_fill(xk, ns, theme, index)
+    xlsx_ct_gradient_fill(xk, ns, theme, index)
   }
 }
 
-xlsx_read_style_pattern_fill <- function(x, ns, theme, index) {
+## 18.8.32 patternFill
+xlsx_ct_pattern_fill <- function(x, ns, theme, index) {
   ## This is very weird because all of the attribute patternType,
   ## fgColor and bgColor are optional.
   pattern_type <- xml2::xml_attr(x, "patternType")
@@ -237,7 +277,8 @@ xlsx_read_style_pattern_fill <- function(x, ns, theme, index) {
   c(type="pattern", pattern_type=pattern_type, fg=fg, bg=bg)
 }
 
-xlsx_read_style_gradient_fill <- function(x, ns, theme, index) {
+## 18.8.24 gradientFill
+xlsx_ct_gradient_fill <- function(x, ns, theme, index) {
   ## zero or more stop elements, plus attributes type, degree, left,
   ## right, bottom, all of which are optional.  I think that
   ## realistically we'll have to dump these into a separate lookup
@@ -249,7 +290,8 @@ xlsx_read_style_gradient_fill <- function(x, ns, theme, index) {
   stop("Ignoring gradient fill")
 }
 
-## See 18.8.19, p. 1757
+## 18.8.3  bgColor
+## 18.8.19 fgColor
 xlsx_ct_color <- function(x, theme, index) {
   if (inherits(x, "xml_missing")) {
     NA_character_
@@ -365,19 +407,18 @@ xlsx_ct_border_pr <- function(x, ns, theme, index) {
   list(present=present, style=style, color=color)
 }
 
-xlsx_read_style_cell_style_xfs <- function(xml, ns) {
-  xfs <- xml2::xml_children(xml2::xml_find_one(xml, "d1:cellStyleXfs", ns))
-  dat <- lapply(xfs, xlsx_read_style_xf, ns)
-  tibble::as_data_frame(do.call("rbind", dat, quote=TRUE))
+## 18.8.9  cellStyleXfs
+xlsx_ct_cell_style_xfs <- function(xml, ns) {
+  process_container(xml, "d1:cellStyleXfs", ns, xlsx_ct_xf)
 }
 
-xlsx_read_style_cell_xfs <- function(xml, ns) {
-  xfs <- xml2::xml_children(xml2::xml_find_one(xml, "d1:cellXfs", ns))
-  dat <- lapply(xfs, xlsx_read_style_xf, ns)
-  tibble::as_data_frame(do.call("rbind", dat, quote=TRUE))
+## 18.8.10 cellXfs
+xlsx_ct_cell_xfs <- function(xml, ns) {
+  process_container(xml, "d1:cellXfs", ns, xlsx_ct_xf)
 }
 
-xlsx_read_style_xf <- function(x, ns) {
+## 18.8.45 xf (format)
+xlsx_ct_xf <- function(x, ns) {
   at <- as.list(xml2::xml_attrs(x))
   xf <- tibble::data_frame(
     ## Booleans, indicating if things are applied:
@@ -399,16 +440,17 @@ xlsx_read_style_xf <- function(x, ns) {
 
     ## This is a reference against cellStyleXfs
     xf_id = attr_integer(at$xfId))
-  alignment <- xlsx_read_style_alignment(
-    xml2::xml_find_one(x, "d1:alignment", ns))
+  alignment <- xlsx_ct_alignment(xml2::xml_find_one(x, "d1:alignment", ns))
   cbind(xf, alignment)
 }
 
+## 18.8.1  alignment
+##
 ## horizontal: center | centerContinuous | distributed | fill |
 ##   general | justify | right
 ##
 ## vertical: bottom | center | distributed | justify | top
-xlsx_read_style_alignment <- function(x, ns) {
+xlsx_ct_alignment <- function(x, ns) {
   at <- as.list(xml2::xml_attrs(x))
   tibble::data_frame(
     horizontal=attr_character(at$horizontal),
@@ -422,12 +464,12 @@ xlsx_read_style_alignment <- function(x, ns) {
     text_wrap=attr_bool(at$textWrap))
 }
 
+## 18.8.8  cellStyles
 xlsx_ct_cell_styles <- function(xml, ns) {
-  cs <- xml2::xml_children(xml2::xml_find_one(xml, "d1:cellStyles", ns))
-  dat <- lapply(cs, xlsx_ct_cell_style, ns)
-  tibble::as_data_frame(do.call("rbind", dat, quote=TRUE))
+  process_container(xml, "d1:cellStyles", ns, xlsx_ct_cell_style)
 }
 
+## 18.8.7  cellStyle
 xlsx_ct_cell_style <- function(x, ns) {
   ## NOTE: Getting this right is really hard because the Annex (G.2)
   ## lists information about "built-in" styles but these vary with all
@@ -452,10 +494,12 @@ xlsx_ct_cell_style <- function(x, ns) {
     xf_id = attr_integer(at$xfId))
 }
 
+## 18.8.31 numFmts
 xlsx_ct_num_fmts <- function(xml, ns) {
   process_container(xml, "d1:numFmts", ns, xlsx_ct_num_fmt)
 }
 
+## 18.8.30 numFmt
 xlsx_ct_num_fmt <- function(x, ns) {
   at <- as.list(xml2::xml_attrs(x))
   tibble::data_frame(
