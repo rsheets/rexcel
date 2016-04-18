@@ -81,12 +81,6 @@ xlsx_read_file_if_exists <- function(path, file, missing=NULL) {
   }
 }
 
-xlsx_read_merged <- function(xml, ns) {
-  merged <- xml2::xml_text(
-    xml2::xml_find_all(xml, "./d1:mergeCells/d1:mergeCell/@ref", ns))
-  merged <- lapply(merged, cellranger::as.cell_limits)
-}
-
 ## sheetData: https://msdn.microsoft.com/EN-US/library/office/documentformat.openxml.spreadsheet.sheetdata.aspx
 ##
 ##   Nothing looks interesting in sheetData, and all elements must be
@@ -232,6 +226,8 @@ xlsx_internal_sheet_name <- function(filename, sheet) {
   target
 }
 
+## NOTE: Date handling will change a bit once I get the string parsing
+## stuff entirely worked out.
 xlsx_date_offset <- function(path) {
   ## See readxl/src/utils.h: dateOffset
   ## See readxl/src/XlsxWorkbook.h: is1904
