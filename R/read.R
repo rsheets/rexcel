@@ -148,8 +148,8 @@ xlsx_parse_cells <- function(xml, ns, strings, style_data, date_offset) {
   ## only is values)
   inline_string <- xml2::xml_find_lgl(cells, "boolean(./d1:is)", ns)
   if (any(inline_string)) {
-    ## These would get fired through the string parsing I think.
-    stop("Inline string value not yet handled")
+    is <- xml2::xml_find_one(cells[inline_string], "./d1:is", ns)
+    value[inline_string] <- vcapply(is, xlsx_ct_rst, ns)
   }
 
   ## TODO: Roll this back into the xfs parsing perhaps?  in the (not
