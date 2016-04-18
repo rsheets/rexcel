@@ -2,13 +2,13 @@
 ##
 ##   [-] 18.4.1  charset (Character Set) (ignored for now)
 ##   [x] 18.4.2  outline (Outline) -- xlsx_ct_boolean_property
-##   [ ] 18.4.3  phoneticPr (Phonetic Properties)
-##   [ ] 18.4.4  r (Rich Text Run)
-##   [ ] 18.4.5  rFont (Font)
-##   [ ] 18.4.6  rPh (Phonetic Run)
-##   [ ] 18.4.7  rPr (Run Properties)
+##   [-] 18.4.3  phoneticPr (Phonetic Properties)
+##   [x] 18.4.4  r (Rich Text Run) -- xlsx_ct_rst
+##   [-] 18.4.5  rFont (Font)
+##   [-] 18.4.6  rPh (Phonetic Run)
+##   [-] 18.4.7  rPr (Run Properties)
 ##   [x] 18.4.8  si (String Item) -- xlsx_ct_rst
-##   [ ] 18.4.9  sst (Shared String Table)
+##   [x] 18.4.9  sst (Shared String Table) -- xlsx_read_shared_strings
 ##   [x] 18.4.10 strike (Strike Through) -- xlsx_ct_boolean_property
 ##   [x] 18.4.11 sz (Font Size) -- xlsx_ct_font_size
 ##   [x] 18.4.12 t (Text) -- in xlsx_ct_rst

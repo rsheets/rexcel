@@ -323,7 +323,7 @@ xlsx_ct_border <- function(x, ns, theme, index) {
   ## with the element diagonal - it's not the only bit of formatting
   ## trivia we won't handle, but it's a fairly unusual thing to see, I
   ## believe.
-  outline <- attr_bool(xml2::xml_attr(x, "outline"))
+  outline <- attr_bool(xml2::xml_attr(x, "outline"), FALSE)
 
   f <- function(path) {
     xlsx_ct_border_pr(xml2::xml_find_one(x, path, ns), ns, theme, index)
@@ -392,12 +392,12 @@ xlsx_ct_xf <- function(x, ns) {
   at <- as.list(xml2::xml_attrs(x))
   xf <- tibble::data_frame(
     ## Booleans, indicating if things are applied:
-    apply_alignment = attr_bool(at$applyAlignment),
-    apply_border = attr_bool(at$applyBorder),
-    apply_fill = attr_bool(at$applyFill),
-    apply_font = attr_bool(at$applyFont),
-    apply_number_format = attr_bool(at$applyNumberFormat),
-    apply_protection = attr_bool(at$applyProtection),
+    apply_alignment = attr_bool(at$applyAlignment, FALSE),
+    apply_border = attr_bool(at$applyBorder, FALSE),
+    apply_fill = attr_bool(at$applyFill, FALSE),
+    apply_font = attr_bool(at$applyFont, FALSE),
+    apply_number_format = attr_bool(at$applyNumberFormat, FALSE),
+    apply_protection = attr_bool(at$applyProtection, FALSE),
 
     ## References to actual formats (all base 0)
     border_id = attr_integer(at$borderId),
@@ -405,8 +405,8 @@ xlsx_ct_xf <- function(x, ns) {
     font_id = attr_integer(at$fontId),
     num_fmt_id = attr_integer(at$numFmtId),
 
-    pivot_button = attr_bool(at$pivotButton),
-    quote_prefix = attr_bool(at$quotePrefix),
+    pivot_button = attr_bool(at$pivotButton, FALSE),
+    quote_prefix = attr_bool(at$quotePrefix, FALSE),
 
     ## This is a reference against cellStyleXfs
     xf_id = attr_integer(at$xfId))
@@ -426,12 +426,12 @@ xlsx_ct_alignment <- function(x, ns) {
     horizontal=attr_character(at$horizontal),
     vertical=attr_character(at$vertical),
     indent=attr_integer(at$indent),
-    justify_last_line=attr_bool(at$justifyLastLine),
+    justify_last_line=attr_bool(at$justifyLastLine, FALSE),
     reading_order=attr_integer(at$readingOrder),
     ## relativeIndent [used only in a dxf element]
-    shrink_to_fit=attr_bool(at$shrinkToFit),
+    shrink_to_fit=attr_bool(at$shrinkToFit, FALSE),
     text_rotation=attr_integer(at$text_rotation),
-    text_wrap=attr_bool(at$textWrap))
+    text_wrap=attr_bool(at$textWrap, FALSE))
 }
 
 ## 18.8.8  cellStyles
@@ -457,8 +457,8 @@ xlsx_ct_cell_style <- function(x, ns) {
   at <- as.list(xml2::xml_attrs(x))
   tibble::data_frame(
     builtin_id = attr_integer(at$builtinId),
-    custom_builtin = attr_bool(at$customBuiltin),
-    hidden = attr_bool(at$hidden),
+    custom_builtin = attr_bool(at$customBuiltin, FALSE),
+    hidden = attr_bool(at$hidden, FALSE),
     i_level = attr_integer(at$iLevel),
     name = attr_character(at$name),
     xf_id = attr_integer(at$xfId))
