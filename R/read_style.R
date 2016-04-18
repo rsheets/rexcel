@@ -122,7 +122,10 @@ xlsx_read_theme <- function(path) {
   ##
   ## NOTE: MSDN suggests that this will always be theme1.xml for Excel
   ## and only n>1 for PowerPoint.
-  xml <- xlsx_read_file(path, "xl/theme/theme1.xml")
+  xml <- xlsx_read_file_if_exists(path, "xl/theme/theme1.xml")
+  if (is.null(xml)) {
+    return(NULL)
+  }
   ns <- xml2::xml_ns(xml)
   tmp <- xml2::xml_find_one(xml, "/a:theme/a:themeElements/a:clrScheme", ns)
 
