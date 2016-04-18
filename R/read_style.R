@@ -43,7 +43,7 @@
 ##   [x] 18.8.36 shadow (Shadow) -- xlsx_ct_boolean_property
 ##   [x] 18.8.37 start (Leading Edge Border) -- xlsx_ct_border_pr
 ##   [ ] 18.8.38 stop (Gradient Stop)
-##   [ ] 18.8.39 styleSheet (Style Sheet)
+##   [x] 18.8.39 styleSheet (Style Sheet) -- xlsx_read_style
 ##   [ ] 18.8.40 tableStyle (Table Style)
 ##   [ ] 18.8.41 tableStyleElement (Table Style)
 ##   [ ] 18.8.42 tableStyles (Table Styles)
@@ -67,26 +67,9 @@
 ## point to use is xlsx_read_style which will return a list of a great
 ## many data.frames (the format here will get cleaned up soon).
 ##
-## Some of the definitions here come from elsewhere and aren't handled
-## elsewhere yet (blergh):
+## Some of the needed functions here come from the shared string table.
 ##
-## Shared string table:
 ##
-##   [-] 18.4.1  charset (Character Set) (ignored for now)
-##   [x] 18.4.2  outline (Outline) -- xlsx_ct_boolean_property
-##   [ ] 18.4.3  phoneticPr (Phonetic Properties)
-##   [ ] 18.4.4  r (Rich Text Run)
-##   [ ] 18.4.5  rFont (Font)
-##   [ ] 18.4.6  rPh (Phonetic Run)
-##   [ ] 18.4.7  rPr (Run Properties)
-##   [ ] 18.4.8  si (String Item)
-##   [ ] 18.4.9  sst (Shared String Table)
-##   [x] 18.4.10 strike (Strike Through) -- xlsx_ct_boolean_property
-##   [x] 18.4.11 sz (Font Size) -- xlsx_ct_font_size
-##   [ ] 18.4.12 t (Text)
-##   [x] 18.4.13 u (Underline) -- xlsx_ct_underline_property
-##   [-] 18.4.14 vertAlign (Vertical Alignment) (ignored for now)
-
 xlsx_read_style <- function(path) {
   xml <- xlsx_read_file(path, "xl/styles.xml")
   ns <- xml2::xml_ns(xml)
@@ -167,7 +150,7 @@ xlsx_ct_fonts <- function(xml, ns, theme, index) {
 ##   color (CT_Color)
 ##   sz (CT_FontSize)
 ##   u (CT_UnderlineProperty)
-##   vertAlign (CT_VerticalAlignFontProperty) - not actually vertical alignment
+##   vertAlign (CT_VerticalAlignFontProperty) - subscript / superscript
 ##   scheme (CT_FontScheme)
 ##
 ## Looks like horizontal alignment comes through with the xf element
@@ -228,22 +211,6 @@ xlsx_ct_boolean_property <- function(b, missing=FALSE) {
   } else {
     val <- xml2::xml_attr(b, "val")
     if (is.na(val)) TRUE else as.logical(as.integer(val))
-  }
-}
-
-
-## 18.4.11 sz (Font Size)
-xlsx_ct_font_size <- function(sz) {
-  as.numeric(xml2::xml_attr(sz, "val"))
-}
-
-## 18.4.13 u (Underline)
-xlsx_ct_underline_property <- function(u, missing="none") {
-  if (inherits(u, "xml_missing")) {
-    missing
-  } else {
-    val <- xml2::xml_attr(u, "val")
-    if (is.na(val)) "single" else val
   }
 }
 
@@ -509,6 +476,10 @@ xlsx_ct_num_fmt <- function(x, ns) {
     num_format_id = attr_integer(at$numFmtId),
     format_code = attr_character(at$formatCode))
 }
+
+## Below here is bits that may move around a bit; code for processing
+## things out into values that R can understand, mostly for colours.
+## We need to do the number formatting thing soon too.
 
 col_apply_tint <- function(col, tint) {
   if (length(tint) == 1L && length(col) > 1L) {

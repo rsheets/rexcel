@@ -81,27 +81,6 @@ xlsx_read_file_if_exists <- function(path, file, missing=NULL) {
   }
 }
 
-## If the format is <si>/<t> then we can just take the text values.
-## Otherwise we'll have to parse out the RTF strings separately.
-xlsx_read_shared_strings <- function(path) {
-  xml <- xlsx_read_file_if_exists(path, "xl/sharedStrings.xml")
-  if (is.null(xml)) {
-    return(character(0))
-  }
-  ns <- xml2::xml_ns(xml)
-  si <- xml2::xml_find_all(xml, "d1:si", ns)
-  if (length(si) == 0L) {
-    return(character(0))
-  }
-  ## TODO: This is a bug in xls
-  is_rich <- xml2::xml_find_lgl(si, "boolean(d1:r)", ns)
-  ret <- character(length(si))
-  ret[!is_rich] <-
-    xml2::xml_text(xml2::xml_find_one(si[!is_rich], "d1:t", ns))
-  ret[is_rich] <- vcapply(si[is_rich], xlsx_parse_string, ns)
-  ret
-}
-
 xlsx_read_merged <- function(xml, ns) {
   merged <- xml2::xml_text(
     xml2::xml_find_all(xml, "./d1:mergeCells/d1:mergeCell/@ref", ns))
@@ -207,23 +186,6 @@ xlsx_parse_cells <- function(xml, ns, strings, style_data, date_offset) {
                        "UTC", date_offset))
 
   linen::cells(ref, style, value, formula, type)
-}
-
-xlsx_parse_string <- function(x, ns) {
-  t <- xml2::xml_find_one(x, "d1:t", ns)
-  if (inherits(t, "xml_missing")) {
-    ## NOTE: it *looks* like most of the time we can do xml_text(x)
-    ## here and get about the right answer.
-    str <- character()
-  } else {
-    str <- xml2::xml_text(t)
-  }
-  r <- xml2::xml_find_all(x, "d1:r", ns)
-  if (length(r) > 0L) {
-    str <- paste(c(str, xml2::xml_text(r)), collapse="")
-  }
-  ## TODO: still need to "unescape" these.
-  str
 }
 
 xlsx_sheet_names <- function(filename) {

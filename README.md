@@ -32,6 +32,7 @@ devtools::install_github("jennybc/rexcel")
 * [ ] Conditional formatting (the rule and the outcome)
 * [x] Borders (position and colour)
 * [ ] Numeric/date formatting, possibly also formatted text?
+* [ ] Table styles (e.g. for pivot tables)
 
 Of particular concern:
 
