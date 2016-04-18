@@ -10,11 +10,11 @@
 ## [ ] 18.3.1.10 cfRule (Conditional Formatting Rule)
 ## [ ] 18.3.1.11 cfvo (Conditional Format Value Object)
 ## [ ] 18.3.1.12 chartsheet (Chart Sheet)
-## [ ] 18.3.1.13 col (Column Width & Formatting)
+## [x] 18.3.1.13 col (Column Width & Formatting) -- xlsx_ct_cols
 ## [ ] 18.3.1.14 colBreaks (Vertical Page Breaks)
 ## [ ] 18.3.1.15 color (Data Bar Color)
 ## [ ] 18.3.1.16 colorScale (Color Scale)
-## [ ] 18.3.1.17 cols (Column Information)
+## [x] 18.3.1.17 cols (Column Information) -- xlsx_ct_cols
 ## [ ] 18.3.1.18 conditionalFormatting (Conditional Formatting)
 ## [ ] 18.3.1.19 control (Embedded Control)
 ## [ ] 18.3.1.20 controlPr (Embedded Control Properties)
@@ -83,10 +83,10 @@
 ## [ ] 18.3.1.83 sheetPr (Chart Sheet Properties)
 ## [ ] 18.3.1.84 sheetProtection (Chart Sheet Protection)
 ## [ ] 18.3.1.85 sheetProtection (Sheet Protection Options)
-## [ ] 18.3.1.86 sheetView (Chart Sheet View)
-## [ ] 18.3.1.87 sheetView (Worksheet View)
-## [ ] 18.3.1.88 sheetViews (Sheet Views)
-## [ ] 18.3.1.89 sheetViews (Chart Sheet Views)
+## [-] 18.3.1.86 sheetView (Chart Sheet View)
+## [-] 18.3.1.87 sheetView (Worksheet View)
+## [-] 18.3.1.88 sheetViews (Sheet Views)
+## [-] 18.3.1.89 sheetViews (Chart Sheet Views)
 ## [ ] 18.3.1.90 smartTags (Smart Tags)
 ## [ ] 18.3.1.91 sortCondition (Sort Condition)
 ## [ ] 18.3.1.92 sortState (Sort State)
@@ -98,13 +98,43 @@
 ## [ ] 18.3.1.98 webPublishItems (Web Publishing Items)
 ## [ ] 18.3.1.99 worksheet (Worksheet)
 
-## [ ] 18.3.1.55 mergeCells (Merge Cells)
+## 18.3.1.17 cols
+xlsx_ct_cols <- function(xml, ns) {
+  process_container(xml, "d1:cols", ns, xlsx_ct_col)
+}
+
+## NOTE: width is a funny measurement that is a hybrid of pixels and
+## character width:
+##
+## > Column width measured as the number of characters of the maximum
+## > digit width of the numbers 0, 1, 2, ..., 9 as rendered in the
+## > normal style's font. There are 4 pixels of margin padding (two on
+## > each side), plus 1 pixel padding for the gridlines.
+##
+## But the actual calculation of how much space there is will vary
+## with things like the border and padding thickness, boldness, etc.
+xlsx_ct_col <- function(xml, ns) {
+  at <- as.list(xml2::xml_attrs(xml))
+  tibble::data_frame(
+    best_fit = attr_bool(at$bestFit, FALSE),
+    collapsed = attr_bool(at$collapsed, FALSE),
+    custom_width = attr_bool(at$customWidth, FALSE),
+    hidden = attr_bool(at$hidden, FALSE),
+    min = attr_integer(at$min),
+    max = attr_integer(at$max),
+    outline_level = attr_integer(at$outlineLevel),
+    phonetic = attr_bool(at$phonetic),
+    style = attr_integer(at$style), # for new cols only
+    width = attr_numeric(at$width))
+}
+
+## 18.3.1.55 mergeCells (Merge Cells)
 xlsx_read_merged <- function(xml, ns) {
   merged <- xml2::xml_children(xml2::xml_find_one(xml, "d1:mergeCells", ns))
   lapply(merged, xlsx_ct_merge_cell)
 }
 
-## [ ] 18.3.1.54 mergeCell (Merged Cell)
+## 18.3.1.54 mergeCell (Merged Cell)
 xlsx_ct_merge_cell <- function(x) {
   cellranger::as.cell_limits(xml2::xml_attr(x, "ref"))
 }

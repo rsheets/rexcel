@@ -19,6 +19,10 @@ attr_integer <- function(x, missing=NA_integer_) {
   if (is.null(x)) missing else as.integer(x)
 }
 
+attr_numeric <- function(x, missing=NA_real_) {
+  if (is.null(x)) missing else as.numeric(x)
+}
+
 attr_character <- function(x, missing=NA_character_) {
   if (is.null(x)) missing else x
 }

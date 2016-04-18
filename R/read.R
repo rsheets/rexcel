@@ -28,6 +28,9 @@ rexcel_read <- function(path, sheet=1L) {
   strings <- xlsx_read_shared_strings(path)
   style <- xlsx_read_style(path)
 
+  ## These aren't actually used yet.
+  cols <- xlsx_ct_cols(xml, ns)
+
   ## According to the spec mergeCells contains only mergeCell
   ## elements, and they contain only a "ref" attribute.  Once I track
   ## down the full schema (MS's website is a mess here) we can add
