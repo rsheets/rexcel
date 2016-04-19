@@ -75,6 +75,12 @@ xlsx_read_style <- function(path) {
   ns <- xml2::xml_ns(xml)
 
   theme <- xlsx_read_theme(path)
+  ## TODO: When indexedColors is present in the worksheet we need to
+  ## read that.
+  if (!inherits(xml2::xml_find_one(xml, "//d1:indexedColors", ns),
+                "xml_missing")) {
+    stop("FIXME: read the indexColors")
+  }
   index <- xlsx_indexed_cols()
 
   fonts <- xlsx_ct_fonts(xml, ns, theme, index)
@@ -293,9 +299,9 @@ xlsx_ct_color <- function(x, theme, index) {
     col <- switch(
       t,
       auto="auto",
-      indexed=index[[as.integer(v) + 1L]],
+      indexed=palette_color(as.integer(v) + 1L, index),
       rgb=argb2rgb(v),
-      theme=theme$palette[[as.integer(v) + 1L]])
+      theme=palette_color(as.integer(v) + 1L, theme$palette))
     if ("tint" %in% names(tmp)) {
       col <- col_apply_tint(col, as.numeric(tmp[["tint"]]))
     }
@@ -572,4 +578,8 @@ xlsx_pattern_type <- function() {
     "lightUp",
     "lightVertical",
     "mediumGray")
+}
+
+palette_color <- function(i, pal, err="black") {
+  if (i > length(pal)) err else pal[[i]]
 }
