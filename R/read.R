@@ -36,10 +36,12 @@ rexcel_read_workbook <- function(path, sheets=NULL, progress=TRUE) {
     stop(sprintf("%s does not exist", path))
   }
 
+  dat <- xlsx_read_workbook(path)
+
   if (is.null(sheets)) {
-    sheets <- xlsx_sheet_names(path)
-  } else if (is.integer(sheets)) {
-    sheets <- xlsx_sheet_names(path)[sheets]
+    sheets <- xlsx_sheet_names(dat)
+  } else if (is.numeric(sheets)) {
+    sheets <- xlsx_sheet_names(dat)[sheets]
   }
 
   p <- progress(paste0(basename(path), " [:bar] :current / :total"),
@@ -55,7 +57,7 @@ rexcel_read_workbook <- function(path, sheets=NULL, progress=TRUE) {
   workbook <- linen::workbook(sheets, style)
   for (s in sheets) {
     p(1)
-    rexcel_read_worksheet(path, s, workbook, strings, style, date_offset)
+    rexcel_read_worksheet(path, s, workbook, dat, strings, style, date_offset)
   }
 
   workbook
@@ -64,7 +66,7 @@ rexcel_read_workbook <- function(path, sheets=NULL, progress=TRUE) {
 ## The name here is a bit of a gong show, as is the general logic.  I
 ## hope this will refine a bit over the next little bit.
 rexcel_read_worksheet <- function(path, sheet, workbook,
-                                  strings, style, date_offset) {
+                                  workbook_dat, strings, style, date_offset) {
   if (is.numeric(sheet)) {
     sheet_idx <- sheet
     sheet_name <- workbook$names[[sheet]]
@@ -75,7 +77,7 @@ rexcel_read_worksheet <- function(path, sheet, workbook,
     stop("Invalid input for sheet")
   }
 
-  xml <- xlsx_read_sheet(path, sheet_idx)
+  xml <- xlsx_read_sheet(path, sheet_idx, workbook_dat)
   ns <- xml2::xml_ns(xml)
 
   merged <- xlsx_read_merged(xml, ns)
@@ -89,8 +91,8 @@ rexcel_read_worksheet <- function(path, sheet, workbook,
 ## xlsx_read_*: reads something from a file
 ## xlsx_parse_*: turns xml into somethig usable
 
-xlsx_read_sheet <- function(path, sheet) {
-  xml <- xlsx_read_file(path, xlsx_internal_sheet_name(path, sheet))
+xlsx_read_sheet <- function(path, sheet, workbook_dat) {
+  xml <- xlsx_read_file(path, xlsx_internal_sheet_name(sheet, workbook_dat))
   stopifnot(xml2::xml_name(xml) == "worksheet")
   xml
 }
@@ -190,48 +192,32 @@ xlsx_parse_cells <- function(xml, ns, strings, style_data, date_offset) {
   linen::cells(cells$ref, cells$style, type, cells$value, cells$formula)
 }
 
-xlsx_sheet_names <- function(filename) {
-  xml <- xlsx_read_file(filename, "xl/workbook.xml")
-  ns <- xml2::xml_ns(xml)
-  xml2::xml_text(xml2::xml_find_all(xml, "d1:sheets/d1:sheet/@name", ns))
+xlsx_sheet_names <- function(dat) {
+  if (is.character(dat)) {
+    dat <- xlsx_read_workbook(dat)
+  }
+  sheets <- dat$sheets
+  sheets$name[sheets$type == "worksheet" & sheets$state != "veryHidden"]
 }
 
 ## Return the filename within the bundle
-xlsx_internal_sheet_name <- function(filename, sheet) {
+xlsx_internal_sheet_name <- function(sheet, dat) {
   if (length(sheet) != 1L) {
     stop("'sheet' must be a scalar")
   }
   if (is.na(sheet)) {
     stop("'sheet' must be non-missing")
   }
-  if (is.character(sheet)) {
-    sheet <- match(sheet, xlsx_sheet_names(filename))
-  } else if (!(is.integer(sheet) || is.numeric(sheet))) {
-    stop("'sheet' must be an integer or a string")
-  }
 
-  ## TODO: Looks like this does always exist.
-  rels <- xlsx_read_file_if_exists(filename, "xl/_rels/workbook.xml.rels")
-  if (is.null(rels)) {
-    target <- sprintf("xl/worksheets/sheet%d.xml", sheet)
-  } else {
-    ## This might fail with a cryptic error if my assumptions are
-    ## incorrect.
-    xml <- xlsx_read_file(filename, "xl/workbook.xml")
-    xpath <- sprintf("d1:sheets/d1:sheet[%d]", sheet)
-    node <- xml2::xml_find_one(xml, xpath, xml2::xml_ns(xml))
-    id <- xml2::xml_attr(node, "id")
-    ## This _should_ work but I don't see it:
-    ##   xpath <- sprintf("string(d1:sheets/d1:sheet[%d]/@id)", sheet)
-    ##   xml2::xml_find_chr(xml, xpath, ns) # --> ""
-    xpath <- sprintf('/d1:Relationships/d1:Relationship[@Id = "%s"]/@Target',
-                     id)
-    target <- xml2::xml_text(xml2::xml_find_one(rels, xpath,
-                                                xml2::xml_ns(rels)))
-    ## NOTE: these are _relative_ paths so must be qualified here:
-    target <- file.path("xl", target)
+  sheets <- dat$sheets
+  sheets <- sheets[sheets$type == "worksheet" & sheets$state != "veryHidden", ]
+
+  if (is.character(sheet)) {
+    target <- sheets$target[match(sheet, sheets$name)]
+  } else if (is.numeric(sheet)) {
+    target <- sheets$target[[sheet]]
   }
-  target
+  file.path("xl", target)
 }
 
 ## NOTE: Date handling will change a bit once I get the string parsing
