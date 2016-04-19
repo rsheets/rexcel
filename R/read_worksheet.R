@@ -148,10 +148,13 @@ xlsx_ct_merge_cell <- function(x) {
 xlsx_read_sheet_data <- function(xml, ns, strings) {
   rows <- xml2::xml_children(xml2::xml_find_one(xml, "d1:sheetData", ns))
   dat <- lapply(rows, xlsx_ct_row, ns, strings)
+
   cells <- rbind_df(unlist(lapply(dat, "[[", "cells"), FALSE),
                     c(ref="character", style="integer", type="character",
                       formula="character", value="list"))
-  rows <- rbind_df(lapply(dat, "[[", "row"))
+  rows <- rbind_df(lapply(dat, "[[", "row"),
+                   vcapply(xlsx_ct_row(NULL)$row, storage.mode))
+
   list(rows=rows, cells=cells)
 }
 
@@ -161,7 +164,11 @@ xlsx_ct_row <- function(xml, ns, strings) {
   ## optional so it seems possible that we could end up unable to
   ## determine where rows and cells are?  Unless the the fact that
   ## rows are an xsd:sequence comes in to help?
-  at <- as.list(xml2::xml_attrs(xml))
+  if (is.null(xml)) {
+    at <- list()
+  } else {
+    at <- as.list(xml2::xml_attrs(xml))
+  }
 
   row <- list(
     r = attr_integer(at$r),
@@ -177,8 +184,12 @@ xlsx_ct_row <- function(xml, ns, strings) {
     thick_top = attr_bool(at$thickTop, FALSE),
     thick_bot = attr_bool(at$thickBot, FALSE))
 
-  cells <- lapply(xml2::xml_find_all(xml, "./d1:c", ns),
-                  xlsx_ct_cell, ns, strings)
+  if (is.null(xml)) {
+    cells <- list()
+  } else {
+    cells <- lapply(xml2::xml_find_all(xml, "./d1:c", ns),
+                    xlsx_ct_cell, ns, strings)
+  }
 
   list(row=row, cells=cells)
 }
