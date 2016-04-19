@@ -73,7 +73,7 @@ tibble_empty_data_frame <- function(classes) {
 }
 
 progress <- function(fmt, total, ..., show=TRUE) {
-  if (show) {
+  if (show && total > 0L) {
     pb <- progress::progress_bar$new(fmt, total=total)
     function(len=1) {
       invisible(pb$tick(len))
