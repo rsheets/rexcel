@@ -587,21 +587,3 @@ xlsx_pattern_type <- function() {
     "lightVertical",
     "mediumGray")
 }
-
-## NOTE: the spec is unfortunately a little vague about the
-## interpretation of the alpha channel; in the example colours
-## (p. 1763) they use 00 to indicate opacity but empirically (and
-## conventionally) FF is used.
-argb2rgb <- function(x) {
-  a <- substr(x, 1L, 2L)
-  rgb <- paste0("#", substr(x, 3L, 8L))
-  if (a == "FF") rgb else paste0(rgb, a)
-}
-
-col2hsv <- function(col) {
-  rgb2hsv(col2rgb(col))
-}
-
-hsv2rgb <- function(m) {
-  rgb(m[1, ], m[2, ], m[3, ], if (nrow(m) == 4L) m[4, ])
-}
