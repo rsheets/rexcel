@@ -71,3 +71,14 @@ tibble_empty_data_frame <- function(classes) {
     tibble::as_data_frame(lapply(classes, vector))
   }
 }
+
+progress <- function(fmt, total, ..., show=TRUE) {
+  if (show) {
+    pb <- progress::progress_bar$new(fmt, total=total)
+    function(len=1) {
+      invisible(pb$tick(len))
+    }
+  } else {
+    function(...) {}
+  }
+}

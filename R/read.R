@@ -17,34 +17,72 @@
 ##'   complete change so is not documented here.
 ##' @export
 rexcel_read <- function(path, sheet=1L) {
-  ## NOTE: Some docs here:
-  ##   https://msdn.microsoft.com/en-us/library/office/documentformat.openxml.spreadsheet.aspx
-  ## though getting the actual spec would be nicer I suspect.
+  rexcel_read_workbook(path, sheet)$sheets[[1L]]
+}
+
+##' Read an entire workbook
+##'
+##' @title Read an Excel workbook
+##'
+##' @param path Path to the xlsx file to load.  xls files are not supported.
+##'
+##' @param sheets Character or integer vector of sheets to read, or
+##'   \code{NULL} to read all sheets (the default)
+##'
+##' @param progress Display a progress bar?
+##' @export
+rexcel_read_workbook <- function(path, sheets=NULL, progress=TRUE) {
   if (!file.exists(path)) {
     stop(sprintf("%s does not exist", path))
   }
-  xml <- xlsx_read_sheet(path, sheet)
-  ns <- xml2::xml_ns(xml)
+
+  if (is.null(sheets)) {
+    sheets <- xlsx_sheet_names(path)
+  } else if (is.integer(sheets)) {
+    sheets <- xlsx_sheet_names(path)[sheets]
+  }
+
+  p <- progress(paste0(basename(path), " [:bar] :current / :total"),
+                length(sheets), show=progress)
+  p(0)
+
+  ## Some of this will move into the worksheet and save some of the
+  ## ugly options passinh here.
   strings <- xlsx_read_shared_strings(path)
   style <- xlsx_read_style(path)
-
-  ## These aren't actually used yet.
-  cols <- xlsx_ct_cols(xml, ns)
-
-  ## According to the spec mergeCells contains only mergeCell
-  ## elements, and they contain only a "ref" attribute.  Once I track
-  ## down the full schema (MS's website is a mess here) we can add
-  ## correct references for this assertion.
-  merged <- xlsx_read_merged(xml, ns)
-
   date_offset <- xlsx_date_offset(path)
 
-  ## For the vast majority of sheets, this should be the longest step.
-  ## The per-cell processing is pretty hard on the XML processing in
-  ## R.
+  workbook <- linen::workbook(sheets, style)
+  for (s in sheets) {
+    p(1)
+    rexcel_read_worksheet(path, s, workbook, strings, style, date_offset)
+  }
+
+  workbook
+}
+
+## The name here is a bit of a gong show, as is the general logic.  I
+## hope this will refine a bit over the next little bit.
+rexcel_read_worksheet <- function(path, sheet, workbook,
+                                  strings, style, date_offset) {
+  if (is.numeric(sheet)) {
+    sheet_idx <- sheet
+    sheet_name <- workbook$names[[sheet]]
+  } else if (is.character(sheet)) {
+    sheet_idx <- match(sheet, workbook$names)
+    sheet_name <- sheet
+  } else {
+    stop("Invalid input for sheet")
+  }
+
+  xml <- xlsx_read_sheet(path, sheet_idx)
+  ns <- xml2::xml_ns(xml)
+
+  merged <- xlsx_read_merged(xml, ns)
+  cols <- xlsx_ct_cols(xml, ns) # NOTE: not used yet
   cells <- xlsx_parse_cells(xml, ns, strings, style, date_offset)
 
-  linen::worksheet(cells, merged, linen::workbook(style))
+  linen::worksheet(sheet_name, cells, merged, workbook)
 }
 
 ## Non api functions:
