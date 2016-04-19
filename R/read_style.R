@@ -31,14 +31,14 @@
 ##   [x] 18.8.24 gradientFill (Gradient) -- xlsx_ct_gradient_fill
 ##   [ ] 18.8.25 horizontal (Horizontal Inner Borders)
 ##   [x] 18.8.26 i (Italic) -- xlsx_ct_boolean_property
-##   [ ] 18.8.27 indexedColors (Color Indexes)
+##   [x] 18.8.27 indexedColors (Color Indexes) -- xlsx_ct_indexed_colors
 ##   [ ] 18.8.28 mruColors (MRU Colors)
 ##   [x] 18.8.29 name (Font Name) -- (plain text handling in xlsx_ct_font)
 ##   [x] 18.8.30 numFmt (Number Format) -- xlsx_ct_num_fmt
 ##   [x] 18.8.31 numFmts (Number Formats) -- xlsx_ct_num_fmts
 ##   [x] 18.8.32 patternFill (Pattern) -- xlsx_ct_pattern_fill
 ##   [ ] 18.8.33 protection (Protection Properties)
-##   [ ] 18.8.34 rgbColor (RGB Color)
+##   [x] 18.8.34 rgbColor (RGB Color) -- xlsx_ct_rgbcolor
 ##   [x] 18.8.35 scheme (Scheme) -- (plain text handling in xlsx_ct_font)
 ##   [x] 18.8.36 shadow (Shadow) -- xlsx_ct_boolean_property
 ##   [x] 18.8.37 start (Leading Edge Border) -- xlsx_ct_border_pr
@@ -75,13 +75,7 @@ xlsx_read_style <- function(path) {
   ns <- xml2::xml_ns(xml)
 
   theme <- xlsx_read_theme(path)
-  ## TODO: When indexedColors is present in the worksheet we need to
-  ## read that.
-  if (!inherits(xml2::xml_find_one(xml, "//d1:indexedColors", ns),
-                "xml_missing")) {
-    stop("FIXME: read the indexColors")
-  }
-  index <- xlsx_indexed_cols()
+  index <- xlsx_ct_indexed_colors(xml, ns)
 
   fonts <- xlsx_ct_fonts(xml, ns, theme, index)
   fills <- xlsx_ct_fills(xml, ns, theme, index)
@@ -578,6 +572,33 @@ xlsx_pattern_type <- function() {
     "lightUp",
     "lightVertical",
     "mediumGray")
+}
+
+## 18.8.27 indexedColors (Color Indexes)
+xlsx_ct_indexed_colors <- function(xml, ns) {
+  indexed_colors <- xml2::xml_find_one(xml, "//d1:indexedColors", ns)
+  if (inherits(indexed_colors, "xml_missing")) {
+    indexed <- xlsx_indexed_cols()
+  } else {
+    ## NOTE, it seems here that "00" is used for full opacity, which
+    ## is charming.
+    indexed <- vcapply(xml2::xml_children(indexed_colors),
+                       xlsx_ct_rgbcolor, "00")
+    if (length(indexed) == 64) {
+      indexed <- c(indexed, "black", "white")
+    }
+  }
+  indexed
+}
+
+## 18.8.34 rgbColor (RGB Color)
+##
+## NOTE: the spec is unfortunately a little vague about the
+## interpretation of the alpha channel; in the example colours
+## (p. 1763) they use 00 to indicate opacity but empirically (and
+## conventionally) FF is used.
+xlsx_ct_rgbcolor <- function(x, opaque="FF") {
+  argb2rgb(xml2::xml_attr(x, "rgb"), opaque)
 }
 
 palette_color <- function(i, pal, err="black") {

@@ -18,10 +18,10 @@ col_apply_tint <- function(col, tint) {
 ## interpretation of the alpha channel; in the example colours
 ## (p. 1763) they use 00 to indicate opacity but empirically (and
 ## conventionally) FF is used.
-argb2rgb <- function(x) {
+argb2rgb <- function(x, opaque="FF") {
   a <- substr(x, 1L, 2L)
   rgb <- paste0("#", substr(x, 3L, 8L))
-  if (a == "FF") rgb else paste0(rgb, a)
+  if (a == opaque) rgb else paste0(rgb, a)
 }
 
 check_col_matrix <- function(m) {
