@@ -1,3 +1,19 @@
+col_apply_tint <- function(col, tint) {
+  if (length(tint) == 1L && length(col) > 1L) {
+    tint <- rep(tint, length(col))
+  }
+  i <- tint < 0
+  hsl <- rgb2hsl(col2rgb(col))
+  if (any(i)) {
+    hsl[3L, i] <- hsl[3L, i] * (1 + tint)
+  }
+  i <- !i
+  if (any(i)) {
+    hsl[3L, i] <- hsl[3L, i] * (1 - tint) + tint
+  }
+  rgb2col(hsl2rgb(hsl))
+}
+
 ## NOTE: the spec is unfortunately a little vague about the
 ## interpretation of the alpha channel; in the example colours
 ## (p. 1763) they use 00 to indicate opacity but empirically (and
@@ -7,42 +23,6 @@ argb2rgb <- function(x) {
   rgb <- paste0("#", substr(x, 3L, 8L))
   if (a == "FF") rgb else paste0(rgb, a)
 }
-
-col2hsv <- function(col) {
-  rgb2hsv(col2rgb(col))
-}
-
-## rgb2hsl <- function(m) {
-##   m <- col2rgb(cols)
-##   m <- m / 255
-##   r <- apply(m, 2, range)
-
-##   d <- drop(diff(r)) # Chroma
-##   t <- colSums(r)
-
-##   l <- t / 2
-##   s <- ifelse(l > 0.5, d / (2 - t), d / t)
-
-##   i <- apply(m, 2, which.max)
-##   h <- numeric(length(s))
-
-##   r <- m[1L, ]
-##   g <- m[2L, ]
-##   b <- m[3L, ]
-
-##   j <- i == 1L
-##   h[j] <- (b[j] - g[j]) / d[j] + ifelse(b[j] < g[j], 6, 0)
-##   j <- i == 2L
-##   h[j] <- (g[j] - r[j]) / d[j] + 2
-##   j <- i == 3L
-##   h[j] <- (r[j] - b[j]) / d[j] + 4
-##   h <- h / 6
-
-##   i <- d == 0
-##   h[i] <- s[i] <- 0
-
-##   rbind(h, s, l)
-## }
 
 check_col_matrix <- function(m) {
   if (!is.matrix(m)) {
@@ -135,7 +115,6 @@ hsl2rgb <- function(m) {
   ret
 }
 
-hsv2rgb <- function(m) {
-  ret <- hsv(m[1, ], m[2, ], m[3, ], if (nrow(m) == 4L) m[4, ])
-  ret
+rgb2col <- function(m) {
+  rgb(m[1, ], m[2, ], m[3, ], if (nrow(m) == 4L) m[4, ], maxColorValue=255)
 }

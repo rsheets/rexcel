@@ -16,6 +16,8 @@ devtools::install_github("hadley/xml2")
 devtools::install_github("jennybc/rexcel")
 ```
 
+The [development version of `crayon`](https://github.com/gaborcsardi/crayon) is also recommended for printing colours to the terminal.
+
 ## Formatting preserved
 
 * [x] Cell fill colour

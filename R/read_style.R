@@ -481,22 +481,6 @@ xlsx_ct_num_fmt <- function(x, ns) {
 ## things out into values that R can understand, mostly for colours.
 ## We need to do the number formatting thing soon too.
 
-col_apply_tint <- function(col, tint) {
-  if (length(tint) == 1L && length(col) > 1L) {
-    tint <- rep(tint, length(col))
-  }
-  i <- tint < 0
-  hsv <- col2hsv(col)
-  if (any(i)) {
-    hsv[3L, i] <- hsv[3L, i] * (1 + tint)
-  }
-  if (!all(i)) {
-    j <- !i
-    hsv[3L, j] <- hsv[3L, j] * (1 - tint) + tint
-  }
-  hsv2rgb(hsv)
-}
-
 ## These come from the ECMA Open XML definition, p 1763 (18.8.27).
 ## The spec describes this as a "legacy indexing scheme for colors
 ## that is still required for some records, and for backwards
