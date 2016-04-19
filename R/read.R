@@ -124,65 +124,32 @@ xlsx_read_file_if_exists <- function(path, file, missing=NULL) {
 ##
 ## See readxl/src/XlsxCell.h: XlsxCell::type()
 xlsx_parse_cells <- function(xml, ns, strings, style_data, date_offset) {
-  sheet_data <- xml2::xml_find_one(xml, "d1:sheetData", ns)
-  cells <- xml2::xml_find_all(sheet_data, "./d1:row/d1:c", ns)
 
-  xml_find_if_exists <- function(x, xpath, ns) {
-    i <- xml2::xml_find_lgl(x, sprintf("boolean(%s)", xpath), ns)
-    ret <- vector("list", length(i))
-    ret[i] <- xml2::xml_text(xml2::xml_find_one(x[i], xpath, ns))
-    ret
-  }
-
-  ref <- xml2::xml_attr(cells, "r")
-  style <- as.integer(xml2::xml_attr(cells, "s"))
-  cells_type <- xml2::xml_attr(cells, "t")
-
-  formula <- xml_find_if_exists(cells, "./d1:f", ns)
-  value <- xml_find_if_exists(cells, "./d1:v", ns)
-
-  ## Quick check to make sure we didn't miss anything (I think it's
-  ## only is values)
-  inline_string <- xml2::xml_find_lgl(cells, "boolean(./d1:is)", ns)
-  if (any(inline_string)) {
-    is <- xml2::xml_find_one(cells[inline_string], "./d1:is", ns)
-    value[inline_string] <- vcapply(is, xlsx_ct_rst, ns)
-  }
+  sheet_data <- xlsx_read_sheet_data(xml, ns, strings)
+  cells <- sheet_data$cells
+  rows <- sheet_data$rows
 
   ## TODO: Roll this back into the xfs parsing perhaps?  in the (not
   ## yet existing) compute style part I think.  We can have an
   ## "is_date" entry there.
-  if ("formatCode" %in% names(style_data$num_fmts)) {
-    custom_date <- style_data$num_fmts$num_fmt_id[
-      grepl("[dmyhs]", style_data$num_fmts$format_code)]
-  } else {
-    custom_date <- integer()
-  }
-
-  ## Might roll this back into the style?
+  custom_date <- style_data$num_fmts$num_format_id[
+    grepl("[dmyhs]", style_data$num_fmts$format_code)]
   is_date_time <- xlsx_is_date_time(style_data$cell_xfs$num_fmt_id, custom_date)
 
-  type <- character(length(value))
-  type[!is.na(cells_type) & cells_type == "b"] <- "bool"
-  type[!is.na(cells_type) & cells_type == "s" | cells_type == "str"] <- "text"
-  i <- is.na(cells_type) | cells_type == "n"
-  j <- is_date_time[style[i] + 1L]
+  type <- character(nrow(cells))
+  type[!is.na(cells$type) & cells$type == "b"] <- "bool"
+  type[!is.na(cells$type) & cells$type == "s" | cells$type == "str"] <- "text"
+  i <- is.na(cells$type) | cells$type == "n"
+  j <- is_date_time[cells$style[i] + 1L]
   type[i] <- ifelse(!is.na(j) & j, "date", "number")
-  type[lengths(value) == 0L] <- "blank"
-
-  ## String substitutions:
-  i <- which(cells_type == "s")
-  value[i] <- strings[as.integer(unlist(value[i])) + 1L]
-
-  i <- type == "bool" | type == "number"
-  value[i] <- as.numeric(unlist(value[i]))
+  type[lengths(cells$value) == 0L] <- "blank"
 
   i <- type == "date"
-  value[i] <-
-    as.list(as.POSIXct(as.numeric(unlist(value[i])) * 86400,
-                       "UTC", date_offset))
+  cells$value[i] <-
+    as.list(as.POSIXct(unlist(cells$value[i]) * 86400, "UTC", date_offset))
 
-  linen::cells(ref, style, value, formula, type)
+  ## TODO: do something with rows, currently ignored.
+  linen::cells(cells$ref, cells$style, type, cells$value, cells$formula)
 }
 
 xlsx_sheet_names <- function(filename) {

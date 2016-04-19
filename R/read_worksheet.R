@@ -1,7 +1,7 @@
 ## [ ] 18.3.1.1  anchor (Object Cell Anchor)
 ## [ ] 18.3.1.2  autoFilter (AutoFilter Settings)
 ## [ ] 18.3.1.3  brk (Break)
-## [ ] 18.3.1.4  c (Cell)
+## [x] 18.3.1.4  c (Cell) -- xlsx_ct_cell
 ## [ ] 18.3.1.5  cellSmartTag (Cell Smart Tag)
 ## [ ] 18.3.1.6  cellSmartTagPr (Smart Tag Properties)
 ## [ ] 18.3.1.7  cellSmartTags (Cell Smart Tags)
@@ -77,7 +77,7 @@
 ## [ ] 18.3.1.77 securityDescriptor (Security Descriptor)
 ## [ ] 18.3.1.78 selection (Selection)
 ## [ ] 18.3.1.79 sheetCalcPr (Sheet Calculation Properties)
-## [ ] 18.3.1.80 sheetData (Sheet Data)
+## [x] 18.3.1.80 sheetData (Sheet Data) -- xlsx_read_sheet_data
 ## [ ] 18.3.1.81 sheetFormatPr (Sheet Format Properties)
 ## [ ] 18.3.1.82 sheetPr (Sheet Properties)
 ## [ ] 18.3.1.83 sheetPr (Chart Sheet Properties)
@@ -100,7 +100,12 @@
 
 ## 18.3.1.17 cols
 xlsx_ct_cols <- function(xml, ns) {
-  process_container(xml, "d1:cols", ns, xlsx_ct_col)
+  classes <- c(best_fit="logical", collapsed="logical",
+               custom_width="logical", hidden="logical",
+               min="integer", max="integer", outline_level="integer",
+               style="integer", width="numeric")
+  process_container(xml, "d1:cols", ns, xlsx_ct_col,
+                    classes=classes)
 }
 
 ## NOTE: width is a funny measurement that is a hybrid of pixels and
@@ -123,7 +128,7 @@ xlsx_ct_col <- function(xml, ns) {
     min = attr_integer(at$min),
     max = attr_integer(at$max),
     outline_level = attr_integer(at$outlineLevel),
-    phonetic = attr_bool(at$phonetic),
+    ## phonetic = attr_bool(at$phonetic),
     style = attr_integer(at$style), # for new cols only
     width = attr_numeric(at$width))
 }
@@ -137,4 +142,101 @@ xlsx_read_merged <- function(xml, ns) {
 ## 18.3.1.54 mergeCell (Merged Cell)
 xlsx_ct_merge_cell <- function(x) {
   cellranger::as.cell_limits(xml2::xml_attr(x, "ref"))
+}
+
+## 18.3.1.80 sheetData (Sheet Data)
+xlsx_read_sheet_data <- function(xml, ns, strings) {
+  rows <- xml2::xml_children(xml2::xml_find_one(xml, "d1:sheetData", ns))
+  dat <- lapply(rows, xlsx_ct_row, ns, strings)
+  cells <- rbind_df(unlist(lapply(dat, "[[", "cells"), FALSE),
+                    c(ref="character", style="integer", type="character",
+                      formula="character", value="list"))
+  rows <- rbind_df(lapply(dat, "[[", "row"))
+  list(rows=rows, cells=cells)
+}
+
+## 18.3.1.73 row (Row)
+xlsx_ct_row <- function(xml, ns, strings) {
+  ## NOTE: the r attribute is optional and the <cell> 'r' attribute is
+  ## optional so it seems possible that we could end up unable to
+  ## determine where rows and cells are?  Unless the the fact that
+  ## rows are an xsd:sequence comes in to help?
+  at <- as.list(xml2::xml_attrs(xml))
+
+  row <- list(
+    r = attr_integer(at$r),
+    spans = attr_character(at$spans),
+    s = attr_integer(at[["s"]]), # style
+    custom_format = attr_bool(at$customFormat, FALSE),
+    ht = attr_numeric(at$ht), # height -- vs <col> that uses "width" :-/
+    hidden = attr_bool(at$hidden, FALSE),
+    custom_height = attr_bool(at$customHeight),
+    outline_level = attr_integer(at$outlineLevel),
+    collapsed = attr_bool(at$collapsed, FALSE),
+    ## ph = attr_bool(at$ph, FALSE))
+    thick_top = attr_bool(at$thickTop, FALSE),
+    thick_bot = attr_bool(at$thickBot, FALSE))
+
+  cells <- lapply(xml2::xml_find_all(xml, "./d1:c", ns),
+                  xlsx_ct_cell, ns, strings)
+
+  list(row=row, cells=cells)
+}
+
+## 18.3.1.4  c (Cell)
+##
+## > While a cell can have a formula element f and a value element v,
+## > when the cell's type t is inlineStr then only the element is is
+## > allowed as a child element.
+##
+## Ignoring attributes:
+## * cm metadata
+## * vm metadat
+## * ph phonetic information
+##
+## Cell types are enumerated in 18.18.11:
+##
+##   b: Boolean
+##   d: Date (in the ISO 8601 format)
+##   e: Error
+##   inlineStr: Inline String (i.e., one not in the shared string
+##              table. If this cell type is used, then the cell value
+##              is in the is element rather than the v element in the
+##              cell (c element).)
+##   n: Number
+##   s: Shared String
+##   str: String (a formula string)
+xlsx_ct_cell <- function(xml, ns, strings) {
+  at <- as.list(xml2::xml_attrs(xml))
+
+  type <- attr_character(at$t)
+  if (identical(type, "inlineStr")) { # avoid missingness
+    formula <- NA_character_
+    ## value here _must_ be present, so no conditional (vs below)
+    value <- xlsx_ct_rst(xml2::xml_find_one(xml, "d1:is", ns), ns)
+  } else {
+    formula <- xml2::xml_text(xml2::xml_find_one(xml, "d1:f", ns))
+    v <- xml2::xml_find_one(xml, "d1:v", ns)
+    value <- if (inherits(v, "xml_missing")) NULL else xml2::xml_text(v)
+
+    ## String substitutions from the string table:
+    if (identical(type, "s")) {
+      value <- strings[as.integer(unlist(value)) + 1L]
+    } else if (identical(type, "b")) {
+      ## TODO: This is probably worth doing?
+      ## value <- as.logical(as.integer(value))
+      value <- as.numeric(value)
+    } else if (!is.null(value) &&
+               (is.na(type) || identical(type, "n") || identical(type, "d"))) {
+      ## TODO: Consider being more careful with the 'd' class here?
+      value <- as.numeric(value)
+    }
+  }
+
+  list(
+    ref = attr_character(at$r),
+    style = attr_integer(at$s),
+    type = type,
+    formula = formula,
+    value = value)
 }

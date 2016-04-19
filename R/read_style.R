@@ -132,7 +132,8 @@ xlsx_read_theme <- function(path) {
 
 ## 18.8.23 fonts
 xlsx_ct_fonts <- function(xml, ns, theme, index) {
-  process_container(xml, "d1:fonts", ns, xlsx_ct_font, theme, index)
+  process_container(xml, "d1:fonts", ns, xlsx_ct_font,
+                    theme, index)
 }
 
 ## 18.8.22 font
@@ -466,7 +467,8 @@ xlsx_ct_cell_style <- function(x, ns) {
 
 ## 18.8.31 numFmts
 xlsx_ct_num_fmts <- function(xml, ns) {
-  process_container(xml, "d1:numFmts", ns, xlsx_ct_num_fmt)
+  classes <- c(num_format_id="integer", format_code="character")
+  process_container(xml, "d1:numFmts", ns, xlsx_ct_num_fmt, classes=classes)
 }
 
 ## 18.8.30 numFmt
