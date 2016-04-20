@@ -28,8 +28,8 @@ The [development version of `crayon`](https://github.com/gaborcsardi/crayon) is 
 * [x] Text font
 * [x] Text size
 * [x] Text alignment (horizontal, vertical)
-* [ ] Column/row visibility
-* [ ] Column/row width/height
+* [x] Column/row visibility
+* [x] Column/row width/height
 * [ ] Styles applied at the column level (though the spec seems vague about if that's a real thing - compare p. 1600 and 1596)
 * [ ] Conditional formatting (the rule and the outcome)
 * [x] Borders (position and colour)
@@ -50,8 +50,8 @@ So we should find a sheet that includes this and see what this looks like empiri
 
 ## Other worthwhile things to get
 
-* [ ] named ranges
-* [ ] comments (author, ref, rich text, visibility)
+* [x] named ranges
+* [x] comments (author, ref, rich text, visibility)
 * [ ] graphs
 * [ ] other drawings
 * [ ] pivot tables

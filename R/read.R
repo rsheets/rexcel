@@ -84,6 +84,7 @@ rexcel_read_worksheet <- function(path, sheet, workbook,
   ns <- xml2::xml_ns(xml)
 
   merged <- xlsx_read_merged(xml, ns)
+  view <- xlsx_ct_worksheet_views(xml, ns)
   cols <- xlsx_ct_cols(xml, ns) # NOTE: not used yet
   dat <- xlsx_parse_cells(xml, ns, strings, style, date_offset)
   rows <- dat$rows
@@ -100,7 +101,8 @@ rexcel_read_worksheet <- function(path, sheet, workbook,
     }
   }
 
-  linen::worksheet(sheet_name, cols, rows, cells, merged, comments, workbook)
+  linen::worksheet(sheet_name, cols, rows, cells, merged, view, comments,
+                   workbook)
 }
 
 xlsx_read_sheet <- function(path, sheet, workbook_dat) {

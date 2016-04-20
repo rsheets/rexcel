@@ -63,7 +63,7 @@
 ## [ ] 18.3.1.63 pageSetup (Page Setup Settings)
 ## [ ] 18.3.1.64 pageSetup (Chart Sheet Page Setup)
 ## [ ] 18.3.1.65 pageSetUpPr (Page Setup Properties)
-## [ ] 18.3.1.66 pane (View Pane)
+## [x] 18.3.1.66 pane (View Pane) -- xlsx_ct_pane
 ## [ ] 18.3.1.67 picture (Background Image)
 ## [ ] 18.3.1.68 pivotArea (Pivot Area)
 ## [ ] 18.3.1.69 pivotSelection (PivotTable Selection)
@@ -84,8 +84,8 @@
 ## [ ] 18.3.1.84 sheetProtection (Chart Sheet Protection)
 ## [ ] 18.3.1.85 sheetProtection (Sheet Protection Options)
 ## [-] 18.3.1.86 sheetView (Chart Sheet View)
-## [-] 18.3.1.87 sheetView (Worksheet View)
-## [-] 18.3.1.88 sheetViews (Sheet Views)
+## [x] 18.3.1.87 sheetView (Worksheet View) -- xlsx_ct_worksheet_view
+## [x] 18.3.1.88 sheetViews (Sheet Views) -- xlsx_ct_worksheet_views
 ## [-] 18.3.1.89 sheetViews (Chart Sheet Views)
 ## [ ] 18.3.1.90 smartTags (Smart Tags)
 ## [ ] 18.3.1.91 sortCondition (Sort Condition)
@@ -246,4 +246,40 @@ xlsx_ct_cell <- function(xml, ns, strings) {
     type = type,
     formula = formula,
     value = value)
+}
+
+## 18.3.1.88 sheetViews
+xlsx_ct_worksheet_views <- function(xml, ns) {
+  els <- xml2::xml_find_all(xml, "./d1:sheetViews/d1:sheetView", ns)
+  if (length(els) == 0L) {
+    NULL
+  } else if (length(els) == 1L) {
+    xlsx_ct_worksheet_view(els[[1L]], ns)
+  } else {
+    stop("CHECK THIS (sheetView > 1)") # TODO: assertion.
+  }
+}
+
+## 18.3.1.87 sheetView
+xlsx_ct_worksheet_view <- function(xml, ns) {
+  pane <- xml2::xml_find_one(xml, "./d1:pane", ns)
+  if (inherits(pane, "xml_missing")) NULL else xlsx_ct_pane(pane)
+}
+
+## 18.3.1.66 pane (View Pane)
+xlsx_ct_pane <- function(xml, ns) {
+  at <- xml_attrs_list(xml)
+  ## x_split: Horizontal position of the split, in 1/20th of a point;
+  ##    0 if none.  If the pane is frozen, this value indicates the
+  ##    number of columns visible in the top pane.
+  ## y_split: Vertical position of the split, in 1/20th of a point;
+  ##    0 if none.  If the pane is frozen, this value indicates the
+  ##    number of columns visible in the left pane.
+  ## state: one of frozen / frozenSplit / split
+  state <- attr_character(at$state)
+  list(x_split = attr_numeric(at$xSplit, 0),
+       y_split = attr_numeric(at$ySplit, 0),
+       top_left = attr_character(at$topLeftCell),
+       state = state,
+       frozen = state != "split")
 }

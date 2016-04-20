@@ -10,6 +10,7 @@ xlsx_read_workbook <- function(path) {
   list(rels=rels, sheets=sheets, defined_names=defined_names)
 }
 
+## 18.2.20 sheets
 xlsx_ct_sheets <- function(xml, ns, rels) {
   dat <- process_container(xml, "d1:sheets", ns, xlsx_ct_sheet)
 
@@ -23,6 +24,7 @@ xlsx_ct_sheets <- function(xml, ns, rels) {
   dat
 }
 
+## 18.2.19 sheet
 xlsx_ct_sheet <- function(xml, ns) {
   at <- as.list(xml2::xml_attrs(xml))
   tibble::data_frame(
