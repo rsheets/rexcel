@@ -54,7 +54,7 @@ rexcel_read_workbook <- function(path, sheets=NULL, progress=TRUE) {
   style <- xlsx_read_style(path)
   date_offset <- xlsx_date_offset(path)
 
-  workbook <- linen::workbook(sheets, style)
+  workbook <- linen::workbook(sheets, style, dat$defined_names)
   for (s in sheets) {
     p(1)
     rexcel_read_worksheet(path, s, workbook, dat, strings, style, date_offset)

@@ -33,6 +33,13 @@ attr_character <- function(x, missing=NA_character_) {
 
 process_container <- function(xml, xpath, ns, fun, ..., classes=NULL) {
   els <- xml2::xml_children(xml2::xml_find_one(xml, xpath, ns))
+  if (isTRUE(classes)) {
+    if (length(els) == 0L) {
+      classes <- vcapply(fun(NULL, ns, ...), storage.mode)
+    } else {
+      classes <- NULL
+    }
+  }
   rbind_df(lapply(els, fun, ns, ...), classes)
 }
 
@@ -109,4 +116,14 @@ path_join <- function(a, b) {
     a[j] <- unlist(tmp)
   }
   paste(a, b, sep="/")
+}
+
+## TODO: replace as.list(xml2::xml_attrs(...)) with this where NULL
+## values are OK.
+xml_attrs_list <- function(x) {
+  if (is.null(x)) {
+    structure(list(), names=character())
+  } else {
+    as.list(xml2::xml_attrs(x))
+  }
 }

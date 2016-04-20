@@ -164,11 +164,7 @@ xlsx_ct_row <- function(xml, ns, strings) {
   ## optional so it seems possible that we could end up unable to
   ## determine where rows and cells are?  Unless the the fact that
   ## rows are an xsd:sequence comes in to help?
-  if (is.null(xml)) {
-    at <- list()
-  } else {
-    at <- as.list(xml2::xml_attrs(xml))
-  }
+  at <- xml_attrs_list(xml)
 
   row <- list(
     r = attr_integer(at$r),
