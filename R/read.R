@@ -77,19 +77,31 @@ rexcel_read_worksheet <- function(path, sheet, workbook,
     stop("Invalid input for sheet")
   }
 
+  target <- xlsx_internal_sheet_name(sheet, workbook_dat)
+  rels <- xlsx_read_rels(path, target)
+
   xml <- xlsx_read_sheet(path, sheet_idx, workbook_dat)
   ns <- xml2::xml_ns(xml)
 
   merged <- xlsx_read_merged(xml, ns)
   cols <- xlsx_ct_cols(xml, ns) # NOTE: not used yet
-  cells <- xlsx_parse_cells(xml, ns, strings, style, date_offset)
+  dat <- xlsx_parse_cells(xml, ns, strings, style, date_offset)
+  rows <- dat$rows
+  cells <- linen::cells(dat$cells$ref, dat$cells$style, dat$cells$type,
+                        dat$cells$value, dat$cells$formula)
 
-  linen::worksheet(sheet_name, cells, merged, workbook)
+  comments <- NULL
+  if (!is.null(rels)) {
+    path_comments <- rels$target_abs[rels$type == "comments"]
+    if (length(path_comments) == 1L) {
+      comments <- xlsx_read_comments(path, path_comments)
+    } else if (length(path_comments) > 1L) {
+      stop("CHECK THIS") # TODO: assertion.
+    }
+  }
+
+  linen::worksheet(sheet_name, cols, rows, cells, merged, comments, workbook)
 }
-
-## Non api functions:
-## xlsx_read_*: reads something from a file
-## xlsx_parse_*: turns xml into somethig usable
 
 xlsx_read_sheet <- function(path, sheet, workbook_dat) {
   xml <- xlsx_read_file(path, xlsx_internal_sheet_name(sheet, workbook_dat))
@@ -183,13 +195,13 @@ xlsx_parse_cells <- function(xml, ns, strings, style_data, date_offset) {
   j <- is_date_time[cells$style[i] + 1L]
   type[i] <- ifelse(!is.na(j) & j, "date", "number")
   type[lengths(cells$value) == 0L] <- "blank"
+  cells$type <- type
 
   i <- type == "date"
   cells$value[i] <-
     as.list(as.POSIXct(unlist(cells$value[i]) * 86400, "UTC", date_offset))
 
-  ## TODO: do something with rows, currently ignored.
-  linen::cells(cells$ref, cells$style, type, cells$value, cells$formula)
+  list(cells=cells, rows=rows)
 }
 
 xlsx_sheet_names <- function(dat) {
@@ -213,11 +225,13 @@ xlsx_internal_sheet_name <- function(sheet, dat) {
   sheets <- sheets[sheets$type == "worksheet" & sheets$state != "veryHidden", ]
 
   if (is.character(sheet)) {
-    target <- sheets$target[match(sheet, sheets$name)]
+    target <- sheets$target_abs[match(sheet, sheets$name)]
   } else if (is.numeric(sheet)) {
-    target <- sheets$target[[sheet]]
+    target <- sheets$target_abs[[sheet]]
+  } else {
+    stop("invalid input")
   }
-  file.path("xl", target)
+  target
 }
 
 ## NOTE: Date handling will change a bit once I get the string parsing

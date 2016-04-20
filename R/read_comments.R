@@ -5,15 +5,14 @@
 ## [ ] 18.7.5 commentPr (Comment Properties)
 ## [x] 18.7.6 comments (Comments) -- xlsx_ct_comments
 ## [x] 18.7.7 text (Comment Text) -- xlsx_ct_rst
-xlsx_read_comments <- function(path, target) {
-  xml <- xlsx_read_file(path, target)
-  ns <- xml2::xml_ns(xml)
-  xlsx_ct_comments(xml, ns)
+xlsx_read_comments <- function(path, file) {
+  xml <- xlsx_read_file(path, file)
+  xlsx_ct_comments(xml, xml2::xml_ns(xml))
 }
 
 xlsx_ct_comments <- function(xml, ns) {
   authors <- xlsx_ct_authors(xml, ns)
-  comments <- xlsx_ct_comment_list(xml, ns, authors)
+  xlsx_ct_comment_list(xml, ns, authors)
 }
 
 xlsx_ct_authors <- function(xml, ns) {

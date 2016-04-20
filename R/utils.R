@@ -82,3 +82,31 @@ progress <- function(fmt, total, ..., show=TRUE) {
     function(...) {}
   }
 }
+
+path_join <- function(a, b) {
+  na <- length(a)
+  nb <- length(b)
+  if (na == 1L && nb != 1L) {
+    a <- rep_len(a, nb)
+  } else if (nb == 1L && na != 1L) {
+    b <- rel_len(b, na)
+  } else if (na != nb && na != 1L && nb != 1L) {
+    stop("Can't recycle vectors together")
+  }
+
+  i <- regexpr("(\\.\\./)+", b)
+  len <- attr(i, "match.length", exact=TRUE)
+  j <- len > 0L
+  if (any(j)) {
+    b[j] <- substr(b[j], len[j] + 1L, nchar(b[j]))
+    len[j] <- len[j] / 3
+
+    tmp <- strsplit(a[j], "/", fixed=TRUE)
+    for (k in seq_along(tmp)) {
+      tmp[[k]] <- paste(tmp[[k]][seq_len(length(tmp[[k]]) - len[j][[k]])],
+                        collapse="/")
+    }
+    a[j] <- unlist(tmp)
+  }
+  paste(a, b, sep="/")
+}

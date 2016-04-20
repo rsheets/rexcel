@@ -1,6 +1,6 @@
 xlsx_read_workbook <- function(path) {
-  rels <- xlsx_read_rels(path)
-
+  ## TODO: Consider what do do when rels is NULL; do we throw?
+  rels <- xlsx_read_rels(path, "xl/workbook.xml")
   xml <- xlsx_read_file(path, "xl/workbook.xml")
   ns <- xml2::xml_ns(xml)
   sheets <- xlsx_ct_sheets(xml, ns, rels)
