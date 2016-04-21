@@ -391,27 +391,37 @@ xlsx_ct_cell_xfs <- function(xml, ns) {
 ## 18.8.45 xf (format)
 xlsx_ct_xf <- function(x, ns) {
   at <- as.list(xml2::xml_attrs(x))
+
+  ## Booleans, indicating if things are applied:
+  apply_border <- attr_bool(at$applyBorder, FALSE)
+  apply_fill <- attr_bool(at$applyFill, FALSE)
+  apply_font <- attr_bool(at$applyFont, FALSE)
+  apply_number_format <- attr_bool(at$applyNumberFormat, FALSE)
+
+  apply_alignment <- attr_bool(at$applyAlignment, FALSE)
+
+  `%&&%` <- function(a, b) {
+    if (isTRUE(a)) b else NA_integer_
+  }
+
   xf <- tibble::data_frame(
-    ## Booleans, indicating if things are applied:
-    apply_alignment = attr_bool(at$applyAlignment, FALSE),
-    apply_border = attr_bool(at$applyBorder, FALSE),
-    apply_fill = attr_bool(at$applyFill, FALSE),
-    apply_font = attr_bool(at$applyFont, FALSE),
-    apply_number_format = attr_bool(at$applyNumberFormat, FALSE),
-    apply_protection = attr_bool(at$applyProtection, FALSE),
+    border_id  = apply_border        %&&% attr_integer(at$borderId) + 1L,
+    fill_id    = apply_fill          %&&% attr_integer(at$fillId)   + 1L,
+    font_id    = apply_font          %&&% attr_integer(at$fontId)   + 1L,
+    num_fmt_id = apply_number_format %&&% attr_integer(at$numFmtId) + 1L,
 
-    ## References to actual formats (all base 0)
-    border_id = attr_integer(at$borderId),
-    fill_id = attr_integer(at$fillId),
-    font_id = attr_integer(at$fontId),
-    num_fmt_id = attr_integer(at$numFmtId),
-
+    ## Not really sure about these, but they don't hurt to keep around:
     pivot_button = attr_bool(at$pivotButton, FALSE),
     quote_prefix = attr_bool(at$quotePrefix, FALSE),
+    apply_protection = attr_bool(at$applyProtection, FALSE),
 
     ## This is a reference against cellStyleXfs
-    xf_id = attr_integer(at$xfId))
+    xf_id = attr_integer(at$xfId) + 1L)
+
   alignment <- xlsx_ct_alignment(xml2::xml_find_one(x, "d1:alignment", ns))
+  if (!isTRUE(apply_alignment)) {
+    alignment[] <- lapply(alignment, as_na)
+  }
   cbind(xf, alignment)
 }
 
@@ -451,18 +461,19 @@ xlsx_ct_cell_style <- function(x, ns) {
   ## NOTE: This element can contain "extension list" elements which
   ## are reserved for future use.  But we can skip that.
 
-  ## NOTE: xf_id: Zero-based index referencing an xf record in the
+  ## NOTE: xfId: Zero-based index referencing an xf record in the
   ## cellStyleXfs collection. This is used to determine the formatting
-  ## defined for this named cell style.
+  ## defined for this named cell style (this is converted to base1 for
+  ## use in R).
 
   at <- as.list(xml2::xml_attrs(x))
   tibble::data_frame(
-    builtin_id = attr_integer(at$builtinId),
+    builtin_id = attr_integer(at$builtinId) + 1L,
     custom_builtin = attr_bool(at$customBuiltin, FALSE),
     hidden = attr_bool(at$hidden, FALSE),
     i_level = attr_integer(at$iLevel),
     name = attr_character(at$name),
-    xf_id = attr_integer(at$xfId))
+    xf_id = attr_integer(at$xfId) + 1L)
 }
 
 ## 18.8.31 numFmts
@@ -475,7 +486,7 @@ xlsx_ct_num_fmts <- function(xml, ns) {
 xlsx_ct_num_fmt <- function(x, ns) {
   at <- as.list(xml2::xml_attrs(x))
   tibble::data_frame(
-    num_format_id = attr_integer(at$numFmtId),
+    num_format_id = attr_integer(at$numFmtId) + 1L,
     format_code = attr_character(at$formatCode))
 }
 

@@ -127,3 +127,9 @@ xml_attrs_list <- function(x) {
     as.list(xml2::xml_attrs(x))
   }
 }
+
+as_na <- function(x) {
+  ret <- NA
+  storage.mode(ret) <- storage.mode(x)
+  ret
+}

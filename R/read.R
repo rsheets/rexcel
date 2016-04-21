@@ -178,7 +178,6 @@ xlsx_read_file_if_exists <- function(path, file, missing=NULL) {
 ##
 ## See readxl/src/XlsxCell.h: XlsxCell::type()
 xlsx_parse_cells <- function(xml, ns, strings, style_data, date_offset) {
-
   sheet_data <- xlsx_read_sheet_data(xml, ns, strings)
   cells <- sheet_data$cells
   rows <- sheet_data$rows
@@ -194,7 +193,7 @@ xlsx_parse_cells <- function(xml, ns, strings, style_data, date_offset) {
   type[!is.na(cells$type) & cells$type == "b"] <- "bool"
   type[!is.na(cells$type) & cells$type == "s" | cells$type == "str"] <- "text"
   i <- is.na(cells$type) | cells$type == "n"
-  j <- is_date_time[cells$style[i] + 1L]
+  j <- is_date_time[cells$style[i]]
   type[i] <- ifelse(!is.na(j) & j, "date", "number")
   type[lengths(cells$value) == 0L] <- "blank"
   cells$type <- type

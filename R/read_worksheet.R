@@ -242,7 +242,7 @@ xlsx_ct_cell <- function(xml, ns, strings) {
 
   list(
     ref = attr_character(at$r),
-    style = attr_integer(at$s),
+    style = attr_integer(at$s) + 1L,
     type = type,
     formula = formula,
     value = value)
