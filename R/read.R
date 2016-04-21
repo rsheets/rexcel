@@ -17,7 +17,7 @@
 ##'   complete change so is not documented here.
 ##' @export
 rexcel_read <- function(path, sheet=1L) {
-  rexcel_read_workbook(path, sheet)$sheets[[1L]]
+  rexcel_read_workbook(path, sheet, FALSE)$sheets[[1L]]
 }
 
 ##' Read an entire workbook
