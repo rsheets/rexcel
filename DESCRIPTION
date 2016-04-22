@@ -11,7 +11,9 @@ BugReports: https://github.com/jennybc/rexcel/issues
 Imports:
     cellranger,
     linen (>= 0.0.3),
-    progress
+    progress,
+    tibble,
+    xml2 (>= 0.1.2.9000)
 Suggests:
     testthat
 RoxygenNote: 5.0.1

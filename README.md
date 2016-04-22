@@ -9,7 +9,7 @@ Compared with the many other packages, `rexcel` tries to read all the data from 
 
 ## Installation
 
-Requires the development version of xml2 (for `xml_find_lgl`):
+Requires the development version of xml2, as the newer version changes the behaviour of matching functions in fairly large ways.
 
 ```r
 devtools::install_github("hadley/xml2")
