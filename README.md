@@ -9,10 +9,12 @@ Compared with the many other packages, `rexcel` tries to read all the data from 
 
 ## Installation
 
-Requires the development version of xml2, as the newer version changes the behaviour of matching functions in fairly large ways.
+Requires the development version of `xml2`, as the newer version changes the behaviour of matching functions in fairly large ways.  For terminal printing we use the most recent copy of `crayon` which includes more accurate rendering.  And we use `linen` as the R spreadsheet representation.
 
 ```r
 devtools::install_github("hadley/xml2")
+devtools::install_github("gaborcsardi/crayon")
+devtools::install_github("jennybc/linen")
 devtools::install_github("jennybc/rexcel")
 ```
 

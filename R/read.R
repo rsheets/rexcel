@@ -51,8 +51,29 @@ rexcel_read_workbook <- function(path, sheets=NULL, progress=TRUE) {
   ## Some of this will move into the worksheet and save some of the
   ## ugly options passinh here.
   strings <- xlsx_read_shared_strings(path)
-  style <- xlsx_read_style(path)
   date_offset <- xlsx_date_offset(path)
+
+  style_xlsx <- xlsx_read_style(path)
+  lookup <- tibble::data_frame(
+    font    = style_xlsx$cell_xfs$font_id,
+    fill    = style_xlsx$cell_xfs$fill_id,
+    border  = style_xlsx$cell_xfs$border_id,
+    num_fmt = style_xlsx$cell_xfs$num_fmt_id)
+
+  ## This becomes read_number_formats?
+  if (nrow(style_xlsx$num_fmts) > 0L) {
+    n <- max(style_xlsx$num_fmts$num_format_id)
+    fmt <- rep(NA_character_, n)
+    fmt[seq_along(xlsx_format_codes())] <- xlsx_format_codes()
+    fmt[style_xlsx$num_fmts$num_format_id] <- style_xlsx$num_fmts$format_code
+  } else {
+    fmt <- xlsx_format_codes()
+  }
+  num_fmt <- tibble::data_frame(num_fmt=fmt)
+  style <- linen::linen_style(lookup, font=style_xlsx$fonts,
+                              fill=style_xlsx$fills,
+                              border=style_xlsx$borders,
+                              num_fmt=num_fmt)
 
   workbook <- linen::workbook(sheets, style, dat$defined_names)
   for (s in sheets) {
