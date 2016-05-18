@@ -154,6 +154,10 @@ xlsx_read_file <- function(path, file) {
   xml2::read_xml(filename)
 }
 
+xlsx_list_files <- function(path) {
+  tibble::as_data_frame(utils::unzip(path, list = TRUE))
+}
+
 xlsx_read_file_if_exists <- function(path, file, missing=NULL) {
   ## TODO: Appropriate error handling here is difficult; we should
   ## check that `path` exists, but by the time that this is called we
