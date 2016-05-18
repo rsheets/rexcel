@@ -133,3 +133,12 @@ as_na <- function(x) {
   storage.mode(ret) <- storage.mode(x)
   ret
 }
+
+is_xlsx <- function(path) {
+  if (!file.exists(path)) {
+    stop("\n", path, "\ndoes not exist")
+  }
+  ## TO DO: what else could we put here to increase confidence that this truly
+  ## is xlsx?
+  invisible(path)
+}
