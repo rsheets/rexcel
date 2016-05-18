@@ -15,5 +15,9 @@ Imports:
     tibble,
     xml2 (>= 0.1.2.9000)
 Suggests:
-    testthat
-RoxygenNote: 5.0.1
+    testthat,
+    knitr,
+    rmarkdown,
+    rprojroot
+RoxygenNote: 5.0.1.9000
+VignetteBuilder: knitr

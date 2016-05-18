@@ -69,11 +69,11 @@ rexcel_read_workbook <- function(path, sheets=NULL, progress=TRUE) {
   } else {
     fmt <- xlsx_format_codes()
   }
-  num_fmt <- tibble::data_frame(num_fmt=fmt)
-  style <- linen::linen_style(lookup, font=style_xlsx$fonts,
-                              fill=style_xlsx$fills,
-                              border=style_xlsx$borders,
-                              num_fmt=num_fmt)
+  num_fmt <- tibble::data_frame(num_fmt = fmt)
+  style <- linen::linen_style(lookup, font = style_xlsx$fonts,
+                              fill = style_xlsx$fills,
+                              border = style_xlsx$borders,
+                              num_fmt = num_fmt)
 
   workbook <- linen::workbook(sheets, style, dat$defined_names)
   for (s in sheets) {
@@ -132,13 +132,25 @@ xlsx_read_sheet <- function(path, sheet, workbook_dat) {
   xml
 }
 
+
+#' Read XML for a specific file
+#'
+#' Read in the XML for a specific file within the xlsx, e.g. the file
+#' corresponding to a specific worksheet.
+#'
+#' @param path path to xlsx
+#' @param file xml file corresponding to a specific worksheet
+#'
+#' @return an XML document
+#'
+#' @keywords internal
 xlsx_read_file <- function(path, file) {
   tmp <- tempfile()
   dir.create(tmp)
   ## Oh boy more terrible default behaviour.
-  filename <- tryCatch(utils::unzip(path, file, exdir=tmp),
-                       warning=function(e) stop(e))
-  on.exit(unlink(tmp, recursive=TRUE))
+  filename <- tryCatch(utils::unzip(path, file, exdir = tmp),
+                       warning = function(e) stop(e))
+  on.exit(unlink(tmp, recursive = TRUE))
   xml2::read_xml(filename)
 }
 
