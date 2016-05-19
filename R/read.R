@@ -32,9 +32,7 @@ rexcel_read <- function(path, sheet=1L) {
 ##' @param progress Display a progress bar?
 ##' @export
 rexcel_read_workbook <- function(path, sheets=NULL, progress=TRUE) {
-  if (!file.exists(path)) {
-    stop(sprintf("%s does not exist", path))
-  }
+  is_xlsx(path)
 
   dat <- xlsx_read_workbook(path)
 
