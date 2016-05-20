@@ -3,4 +3,4 @@
 export(rexcel_read)
 export(rexcel_read_workbook)
 export(rexcel_readxl)
-importFrom(purrr,"`%>%`")
+importFrom(purrr,"%>%")
