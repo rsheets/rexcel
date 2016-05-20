@@ -140,5 +140,11 @@ is_xlsx <- function(path) {
   }
   ## TO DO: what else could we put here to increase confidence that this truly
   ## is xlsx?
+  ## look at extension?
+  ## verify it's a zip archive? only way I know is unix `file` command
+  ## maybe peek at file listing and verify presence of ... what?
+  ## [Content_Types].xml ? xl/workbook.xml ?
   invisible(path)
 }
+
+rm_xml_ns <- function(x) gsub(".*:(.*)", "\\1", x)
