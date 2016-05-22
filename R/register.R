@@ -29,13 +29,15 @@ rexcel_workbook <- function(path) {
 
   ## overview of typical manifest
 
-   ## [Content_Types].xml
+  ## *** workbook infrastructure ***
+  ## [Content_Types].xml
   ## _rels/.rels
   ## xl/workbook.xml
   ## xl/sharedStrings.xml
   ## xl/styles.xml
   ## xl/_rels/workbook.xml.rels
 
+  ## ** worksheets-related ***
   ## xl/worksheets/sheet1.xml
   ## xl/worksheets/sheet2.xml
   ##  ... and so on
@@ -55,10 +57,9 @@ rexcel_workbook <- function(path) {
     dplyr::select(PartName, Extension, ContentType)
   #setdiff(manifest$Name, gsub("^\\/", "", ct$PartName))
   #intersect(gsub("^\\/", "", ct$PartName), manifest$Name)
-  ## ct is a tbl associating content types with extensions or files
-  ## for the most part, each row addresses a specific file in manifest
-  ## except all "rels" files are represented by a single row
-  ## and there's a row that says xml files are "application/xml"
+  ## ct is a tbl associating content types with extensions or specific files
+  ## two "general" rows for the xml and rels extensions, otherwise ...
+  ## each row seems to address a specific file from the manifest (but not all)
 
   ## _rels/.rels
   #rels <- xlsx_read_file(path, "_rels/.rels")
@@ -110,7 +111,7 @@ rexcel_workbook <- function(path) {
   ## fonts is a tbl with one row per font and variables such as
   ## sz, color, name
 
-  ## I'm don't feel like parsing the remaining elements of styles for now
+  ## I don't feel like parsing the remaining elements of styles for now
   ## no temptation to duplicate rich's efforts there ... yikes
   fills <- NULL
   borders <- NULL
@@ -130,7 +131,7 @@ rexcel_workbook <- function(path) {
   ## workbook_rels is a tibble, each row a file, with variables
   ## Id: character, e.g. "rId5" (a key that came up already in sheets above)
   ## Target: a file path relative to xl/
-  ## Type: an long namespace-y string, the last bit of which tells you
+  ## Type: a long namespace-y string, the last bit of which tells you
   ## if the associated file is sharedStrings, styles, or a worksheet, e.g.,
   ## http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet
 
@@ -142,23 +143,27 @@ rexcel_workbook <- function(path) {
   wr <- fnames %>%
     purrr::map(xlsx_read_file, path = path)
   ns <- xml2::xml_ns(wr[[1]])
-  worksheet_rels <-
-    wr %>%
-    purrr::map(xml2::xml_find_one, xpath = "//d1:Relationship", ns = ns) %>%
-    purrr::map(xml2::xml_attrs, ns = ns) %>%
-    purrr::map(as.list) %>%
-    dplyr::bind_rows() %>%
-    dplyr::mutate(sheet = nms) %>%
-    dplyr::select(sheet, Target, dplyr::everything())
+  worksheet_rels <- wr %>%
+    purrr::map(xml2::xml_find_all, xpath = "//d1:Relationship", ns = ns) %>%
+    setNames(nms)
+  f <- function(x, ns) {
+    x %>%
+      purrr::map(xml2::xml_attrs, ns = ns) %>%
+      purrr::map(as.list) %>%
+      dplyr::bind_rows()
+  }
+  worksheet_rels <- worksheet_rels %>%
+    purrr::map(f, ns = ns) %>%
+    dplyr::bind_rows(.id = "worksheet")
   ## worksheet_rels is a tibble, each row a file ... so far one row per
   ## worksheet, though that might not hold in general, with variables
-  ## sheet: character, e.g. "sheet1" (I added this!)
+  ## worksheet: character, e.g. "sheet1" (I added this!)
+  ## Id: character, so far uniformly "rId1"
+  ## Type: uniformly a long name-spacey string ending in "drawing" or "hyperlink"
   ## Target: hmmm .... seems to vary
   ##    in one example: path to the corresponding worksheetdrawingX.xml file
   ##    ^^ maybe that's the default? when there's nothing else?
   ##    in another: "http://www.google.com/", which appears in the sheet
-  ## Id: character, so far uniformly "rId1"
-  ## Type: uniformly a long name-spacey string ending in "drawing" or "hyperlink"
   ## TargetMode: (seen in one example) "External" for the hyperlink
 
   ## xl/worksheets/sheet1.xml etc.
@@ -172,7 +177,7 @@ rexcel_workbook <- function(path) {
   ## I don't see anything here that belongs in top-level workbook creation
   ## also, in my toy examples with no charts, this consists only of namespaces
 
-  ## come back here and make a new object
+  ## use synthesis of the above:
   ## one row per sheet
   ## everything from sheets tbl already formed
   ## workbook_rels prepend xl/ to Target
@@ -180,7 +185,7 @@ rexcel_workbook <- function(path) {
   sheets_df <- workbook_rels %>%
     dplyr::mutate(Target = file.path("xl", Target)) %>%
     dplyr::right_join(sheets, by = c("Id" = "id")) %>%
-    dplyr::select(sheetId, name, Id, Target, Type)
+    dplyr::select(sheetId, name, Id, Target, state, Type)
 
   dplyr::lst(xlsx_path = path,
       reg_time = Sys.time(),

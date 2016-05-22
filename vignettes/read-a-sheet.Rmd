@@ -13,12 +13,52 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-*I'm exploring the existing sheet reading functionality, using the vignette format. This is not an actual vignette!*
-
 ```{r}
 library(rprojroot)
 devtools::load_all(find_package_root_file())
 ```
+
+*Using a function I wrote while exploring all the files that make up an xlsx.*
+
+Apply it to mini gapminder.
+
+```{r}
+mini_gap_path <- system.file("sheets", "mini-gap.xlsx", package = "rexcel")
+mini_gap_workbook <- rexcel_workbook(mini_gap_path)
+str(mini_gap_workbook, max.level = 1)
+```
+
+What's here?
+
+  * `xlsx_path`: path to the xlsx
+  * `reg_time`: time xlsx was processed
+  * `manifest`: file list for the xlsx zip archive
+  * `content_types`: tbl representing `[Content_Types].xml`
+  * `sheets`: tbl representing `xl/workbook.xml`
+  * `sheets_df`:
+    - This is really the only thing I created.
+    - A tbl with one row per worksheet, from joining `sheets` and `workbook_rels`
+  * `shared_strings`: character vector representing `xl/sharedStrings.xml`
+  * `styles`: list of tbls from `xl/styles.xml` (ok, I admit, I stopped after parsing fonts)
+  * `workbook_rels`:
+    - tbl that links target files to `Id`s, also gives file type
+    - example: tells you that `Id = rId4` refers to `Target` file `xl/worksheets/sheetX.xml`
+    - comes from `xl/_rels/workbook.xml.rels`
+  * `worksheet_rels`:
+    - *I'm still figuring this one out but it's about files or external resources (potentially) referred to from worksheets*
+    - comes from files like` xl/worksheets/_rels/(sheet[0-9]+).xml.rels`
+  
+  
+
+Apply it to formula and formatting sheet.
+
+```{r}
+ff_path <- system.file("sheets", "gs-test-formula-formatting.xlsx",
+                       package = "rexcel")
+rexcel_workbook(ff_path)
+```
+
+*Here I'm exploring the existing sheet reading functionality, using the vignette format. This is not an actual vignette!*
 
 Peeling the many-layered onion that is `rexcel_read()` until I get at the XML for a worksheet. Wish me luck.
 

@@ -3,6 +3,15 @@ library(rprojroot)
 devtools::load_all(find_package_root_file())
 
 ## ------------------------------------------------------------------------
+mini_gap_path <- system.file("sheets", "mini-gap.xlsx", package = "rexcel")
+rexcel_workbook(mini_gap_path)
+
+## ------------------------------------------------------------------------
+ff_path <- system.file("sheets", "gs-test-formula-formatting.xlsx",
+                       package = "rexcel")
+rexcel_workbook(ff_path)
+
+## ------------------------------------------------------------------------
 (ff_path <- system.file("sheets", "gs-test-formula-formatting.xlsx",
                         package = "rexcel"))
 

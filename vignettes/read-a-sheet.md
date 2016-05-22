@@ -2,8 +2,6 @@
 Jennifer Bryan  
 `r Sys.Date()`  
 
-*I'm exploring the existing sheet reading functionality, using the vignette format. This is not an actual vignette!*
-
 
 ```r
 library(rprojroot)
@@ -20,6 +18,295 @@ devtools::load_all(find_package_root_file())
 ```
 ## Loading rexcel
 ```
+
+*Using a function I wrote while exploring all the files that make up an xlsx.*
+
+Apply it to mini gapminder.
+
+
+```r
+mini_gap_path <- system.file("sheets", "mini-gap.xlsx", package = "rexcel")
+rexcel_workbook(mini_gap_path)
+```
+
+```
+## $xlsx_path
+## [1] "/Users/jenny/rrr/rexcel/inst/sheets/mini-gap.xlsx"
+## 
+## $reg_time
+## [1] "2016-05-20 15:18:34 PDT"
+## 
+## $manifest
+## Source: local data frame [21 x 3]
+## 
+##                                   Name Length                Date
+##                                  <chr>  <dbl>              <time>
+## 1             xl/worksheets/sheet1.xml   2136 2015-04-25 12:00:00
+## 2  xl/worksheets/_rels/sheet1.xml.rels    307 2015-04-25 12:00:00
+## 3             xl/worksheets/sheet2.xml   2136 2015-04-25 12:00:00
+## 4  xl/worksheets/_rels/sheet2.xml.rels    307 2015-04-25 12:00:00
+## 5             xl/worksheets/sheet3.xml   2146 2015-04-25 12:00:00
+## 6  xl/worksheets/_rels/sheet3.xml.rels    307 2015-04-25 12:00:00
+## 7             xl/worksheets/sheet4.xml   2136 2015-04-25 12:00:00
+## 8  xl/worksheets/_rels/sheet4.xml.rels    307 2015-04-25 12:00:00
+## 9             xl/worksheets/sheet5.xml   2144 2015-04-25 12:00:00
+## 10 xl/worksheets/_rels/sheet5.xml.rels    307 2015-04-25 12:00:00
+## ..                                 ...    ...                 ...
+## 
+## $content_types
+## Source: local data frame [15 x 3]
+## 
+##                              PartName Extension
+##                                 <chr>     <chr>
+## 1                                <NA>      rels
+## 2                                <NA>       xml
+## 3  /xl/drawings/worksheetdrawing4.xml      <NA>
+## 4  /xl/drawings/worksheetdrawing2.xml      <NA>
+## 5  /xl/drawings/worksheetdrawing1.xml      <NA>
+## 6  /xl/drawings/worksheetdrawing3.xml      <NA>
+## 7  /xl/drawings/worksheetdrawing5.xml      <NA>
+## 8                      /xl/styles.xml      <NA>
+## 9               /xl/sharedStrings.xml      <NA>
+## 10                   /xl/workbook.xml      <NA>
+## 11          /xl/worksheets/sheet5.xml      <NA>
+## 12          /xl/worksheets/sheet3.xml      <NA>
+## 13          /xl/worksheets/sheet1.xml      <NA>
+## 14          /xl/worksheets/sheet4.xml      <NA>
+## 15          /xl/worksheets/sheet2.xml      <NA>
+## Variables not shown: ContentType <chr>.
+## 
+## $sheets
+## Source: local data frame [5 x 4]
+## 
+##     state     name sheetId    id
+##     <chr>    <chr>   <int> <chr>
+## 1 visible   Africa       1  rId3
+## 2 visible Americas       2  rId4
+## 3 visible     Asia       3  rId5
+## 4 visible   Europe       4  rId6
+## 5 visible  Oceania       5  rId7
+## 
+## $sheets_df
+## Source: local data frame [5 x 5]
+## 
+##   sheetId     name    Id                   Target
+##     <int>    <chr> <chr>                    <chr>
+## 1       1   Africa  rId3 xl/worksheets/sheet4.xml
+## 2       2 Americas  rId4 xl/worksheets/sheet3.xml
+## 3       3     Asia  rId5 xl/worksheets/sheet5.xml
+## 4       4   Europe  rId6 xl/worksheets/sheet1.xml
+## 5       5  Oceania  rId7 xl/worksheets/sheet2.xml
+## Variables not shown: Type <chr>.
+## 
+## $shared_strings
+##  [1] "country"                "continent"             
+##  [3] "year"                   "lifeExp"               
+##  [5] "pop"                    "gdpPercap"             
+##  [7] "Algeria"                "Africa"                
+##  [9] "Angola"                 "Albania"               
+## [11] "Europe"                 "Benin"                 
+## [13] "Austria"                "Argentina"             
+## [15] "Americas"               "Belgium"               
+## [17] "Australia"              "Oceania"               
+## [19] "Bolivia"                "Bosnia and Herzegovina"
+## [21] "New Zealand"            "Bulgaria"              
+## [23] "Brazil"                 "Canada"                
+## [25] "Afghanistan"            "Asia"                  
+## [27] "Bahrain"                "Chile"                 
+## [29] "Bangladesh"             "Botswana"              
+## [31] "Cambodia"               "China"                 
+## [33] "Burkina Faso"          
+## attr(,"count")
+## [1] 80
+## attr(,"uniqueCount")
+## [1] 33
+## 
+## $styles
+## $styles$fonts
+## Source: local data frame [1 x 3]
+## 
+##      sz    color  name
+##   <chr>    <chr> <chr>
+## 1  10.0 FF000000 Arial
+## 
+## $styles$fills
+## NULL
+## 
+## $styles$borders
+## NULL
+## 
+## $styles$cell_style_xfs
+## NULL
+## 
+## $styles$cell_xfs
+## NULL
+## 
+## $styles$cell_styles
+## NULL
+## 
+## $styles$num_fmts
+## NULL
+## 
+## $styles$dxfs
+## NULL
+## 
+## 
+## $workbook_rels
+## Source: local data frame [7 x 3]
+## 
+##      Id                Target
+##   <chr>                 <chr>
+## 1  rId2     sharedStrings.xml
+## 2  rId1            styles.xml
+## 3  rId4 worksheets/sheet3.xml
+## 4  rId3 worksheets/sheet4.xml
+## 5  rId6 worksheets/sheet1.xml
+## 6  rId5 worksheets/sheet5.xml
+## 7  rId7 worksheets/sheet2.xml
+## Variables not shown: Type <chr>.
+## 
+## $worksheet_rels
+## $worksheet_rels[[1]]
+## {xml_nodeset (1)}
+## [1] <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/offi ...
+## 
+## $worksheet_rels[[2]]
+## {xml_nodeset (1)}
+## [1] <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/offi ...
+## 
+## $worksheet_rels[[3]]
+## {xml_nodeset (1)}
+## [1] <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/offi ...
+## 
+## $worksheet_rels[[4]]
+## {xml_nodeset (1)}
+## [1] <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/offi ...
+## 
+## $worksheet_rels[[5]]
+## {xml_nodeset (1)}
+## [1] <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/offi ...
+```
+
+Apply it to formula and formatting sheet.
+
+
+```r
+ff_path <- system.file("sheets", "gs-test-formula-formatting.xlsx",
+                       package = "rexcel")
+rexcel_workbook(ff_path)
+```
+
+```
+## $xlsx_path
+## [1] "/Users/jenny/rrr/rexcel/inst/sheets/gs-test-formula-formatting.xlsx"
+## 
+## $reg_time
+## [1] "2016-05-20 15:18:34 PDT"
+## 
+## $manifest
+## Source: local data frame [9 x 3]
+## 
+##                                  Name Length                Date
+##                                 <chr>  <dbl>              <time>
+## 1            xl/worksheets/sheet1.xml  60580 2016-05-03 02:56:00
+## 2 xl/worksheets/_rels/sheet1.xml.rels    471 2016-05-03 02:56:00
+## 3   xl/drawings/worksheetdrawing1.xml    494 2016-05-03 02:56:00
+## 4                xl/sharedStrings.xml    407 2016-05-03 02:56:00
+## 5                       xl/styles.xml   3014 2016-05-03 02:56:00
+## 6                     xl/workbook.xml    731 2016-05-03 02:56:00
+## 7          xl/_rels/workbook.xml.rels    565 2016-05-03 02:56:00
+## 8                         _rels/.rels    296 2016-05-03 02:56:00
+## 9                 [Content_Types].xml    945 2016-05-03 02:56:00
+## 
+## $content_types
+## Source: local data frame [7 x 3]
+## 
+##                             PartName Extension
+##                                <chr>     <chr>
+## 1                               <NA>       xml
+## 2                               <NA>      rels
+## 3          /xl/worksheets/sheet1.xml      <NA>
+## 4              /xl/sharedStrings.xml      <NA>
+## 5 /xl/drawings/worksheetdrawing1.xml      <NA>
+## 6                     /xl/styles.xml      <NA>
+## 7                   /xl/workbook.xml      <NA>
+## Variables not shown: ContentType <chr>.
+## 
+## $sheets
+## Source: local data frame [1 x 4]
+## 
+##     state   name sheetId    id
+##     <chr>  <chr>   <int> <chr>
+## 1 visible Sheet1       1  rId3
+## 
+## $sheets_df
+## Source: local data frame [1 x 5]
+## 
+##   sheetId   name    Id                   Target
+##     <int>  <chr> <chr>                    <chr>
+## 1       1 Sheet1  rId3 xl/worksheets/sheet1.xml
+## Variables not shown: Type <chr>.
+## 
+## $shared_strings
+##  [1] "integer"           "number_formatted"  "number_rounded"   
+##  [4] "character"         "formula"           "formula_formatted"
+##  [7] "one"               "three"             "four"             
+## [10] "five"             
+## attr(,"count")
+## [1] 10
+## attr(,"uniqueCount")
+## [1] 10
+## 
+## $styles
+## $styles$fonts
+## Source: local data frame [3 x 3]
+## 
+##      sz    color        name
+##   <chr>    <chr>       <chr>
+## 1  10.0 FF000000       Arial
+## 2  <NA> FF0000FF        <NA>
+## 3  <NA>     <NA> Courier New
+## 
+## $styles$fills
+## NULL
+## 
+## $styles$borders
+## NULL
+## 
+## $styles$cell_style_xfs
+## NULL
+## 
+## $styles$cell_xfs
+## NULL
+## 
+## $styles$cell_styles
+## NULL
+## 
+## $styles$num_fmts
+## NULL
+## 
+## $styles$dxfs
+## NULL
+## 
+## 
+## $workbook_rels
+## Source: local data frame [3 x 3]
+## 
+##      Id                Target
+##   <chr>                 <chr>
+## 1  rId1            styles.xml
+## 2  rId2     sharedStrings.xml
+## 3  rId3 worksheets/sheet1.xml
+## Variables not shown: Type <chr>.
+## 
+## $worksheet_rels
+## $worksheet_rels[[1]]
+## {xml_nodeset (2)}
+## [1] <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/offi ...
+## [2] <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/offi ...
+```
+
+*Here I'm exploring the existing sheet reading functionality, using the vignette format. This is not an actual vignette!*
 
 Peeling the many-layered onion that is `rexcel_read()` until I get at the XML for a worksheet. Wish me luck.
 
