@@ -22,7 +22,10 @@ xlsx_read_shared_strings <- function(path) {
   if (is.null(xml)) {
     return(character(0))
   }
-  vcapply(xml2::xml_children(xml), xlsx_ct_rst, xml2::xml_ns(xml))
+  ret <- vcapply(xml2::xml_children(xml), xlsx_ct_rst, xml2::xml_ns(xml))
+  at <- lapply(as.list(xml2::xml_attrs(xml)), as.integer)
+  attributes(ret) <- at
+  ret
 }
 
 ## 18.4.8 si

@@ -72,15 +72,8 @@ rexcel_workbook <- function(path) {
   ## id: character, e.g. "rId5" (a key that comes up in other tables)
 
   ## xl/sharedStrings.xml
-  shared_strings <- xlsx_read_file(path, "xl/sharedStrings.xml")
-  shared_strings_att <- xml2::xml_attrs(shared_strings) %>%
-    as.list() %>%
-    purrr::map(as.integer)
-  shared_strings <- shared_strings %>%
-    xml2::xml_find_all("//d1:t", xml2::xml_ns(.)) %>%
-    purrr::map_chr(xml2::xml_text)
-  attributes(shared_strings) <- shared_strings_att
-  ## sh_strings is a character of shared strings
+  shared_strings <- xlsx_read_shared_strings(path)
+  ## shared_strings is a character of shared strings
   ## with attributes count (total # of strings?), uniqueCount (its own length?)
 
   ## xl/styles.xml
