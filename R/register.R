@@ -24,7 +24,10 @@ rexcel_workbook <- function(path) {
   ## Recall(path$path)
   ## i.e. refresh registration of the workbook
   ## to be used when you are concerned the xlsx has changed
-  is_xlsx(path)
+  if (!is_xlsx(path)) {
+    stop("`path` does not appear to point to valid xlsx:\n", path,
+         call. = FALSE)
+  }
   manifest <- xlsx_list_files(path)
 
   ## overview of typical manifest

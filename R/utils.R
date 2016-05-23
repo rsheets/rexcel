@@ -138,13 +138,15 @@ is_xlsx <- function(path) {
   if (!file.exists(path)) {
     stop("\n", path, "\ndoes not exist")
   }
-  ## TO DO: what else could we put here to increase confidence that this truly
-  ## is xlsx?
-  ## look at extension?
-  ## verify it's a zip archive? only way I know is unix `file` command
-  ## maybe peek at file listing and verify presence of ... what?
-  ## [Content_Types].xml ? xl/workbook.xml ?
-  invisible(path)
+  ## TO DO: verify it's a zip archive? only way I know is unix `file` command
+  ## http://officeopenxml.com/anatomyofOOXML-xlsx.php
+  ## https://msdn.microsoft.com/en-us/library/office/gg278316.aspx#MinWBScenario
+  files <- xlsx_list_files(path)
+  has_content_types <- "[Content_Types].xml" %in% files$Name
+  has_rels <- "_rels/.rels" %in% files$Name
+  has_workbook_xml <- "xl/workbook.xml" %in% files$Name
+  has_sheet <- any(grepl("xl/worksheets/sheet[0-9]*.xml", files$Name))
+  has_content_types && has_rels && has_workbook_xml && has_sheet
 }
 
 rm_xml_ns <- function(x) gsub(".*:(.*)", "\\1", x)
