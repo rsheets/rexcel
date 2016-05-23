@@ -11,6 +11,15 @@ vcapply <- function(X, FUN, ...) {
   vapply(X, FUN, character(1), ...)
 }
 
+## I know this needs a better name
+## or to be unified with vcapply
+vcapply2 <- function(l, nm) {
+  ret <- lapply(l, `[[`, nm)
+  ret <- lapply(ret, `%||%`, NA_character_)
+  unlist(ret)
+}
+
+
 attr_bool <- function(x, missing=NA) {
   if (is.null(x)) missing else as.logical(as.integer(x))
 }

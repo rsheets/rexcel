@@ -1,16 +1,10 @@
 xlsx_read_Content_Types <- function(path) {
   ct <- xlsx_read_file(path, "[Content_Types].xml")
   node_att <- lapply(xml2::xml_contents(ct), xml_attrs_list)
-  ## some version of this should probably go in utils.R eventually?
-  f <- function(l, nm) {
-    ret <- lapply(l, `[[`, nm)
-    ret <- lapply(ret, `%||%`, NA_character_)
-    unlist(ret)
-  }
   tibble::data_frame(
-    PartName = f(node_att, "PartName"),
-    Extension = f(node_att, "Extension"),
-    ContentType = f(node_att, "ContentType")
+    PartName = vcapply2(node_att, "PartName"),
+    Extension = vcapply2(node_att, "Extension"),
+    ContentType = vcapply2(node_att, "ContentType")
   )
 }
 
