@@ -52,12 +52,7 @@ rexcel_workbook <- function(path) {
   ##  ... and so on
 
   ## [Content_Types].xml
-  ct <- xlsx_read_file(path, "[Content_Types].xml") %>%
-    xml2::xml_contents() %>%
-    xml2::xml_attrs() %>%
-    purrr::map(as.list) %>%
-    dplyr::bind_rows() %>%
-    dplyr::select(PartName, Extension, ContentType)
+  ct <- xlsx_read_Content_Types(path)
   #setdiff(manifest$Name, gsub("^\\/", "", ct$PartName))
   #intersect(gsub("^\\/", "", ct$PartName), manifest$Name)
   ## ct is a tbl associating content types with extensions or specific files
