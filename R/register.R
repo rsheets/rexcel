@@ -64,16 +64,9 @@ rexcel_workbook <- function(path) {
   ## this appears to be always boring? omit it
 
   ## xl/workbook.xml
-  xl_workbook <- xlsx_read_file(path, "xl/workbook.xml")
-  sheets <- xl_workbook %>%
-    xml2::xml_find_one("//d1:sheets", xml2::xml_ns(.)) %>%
-    xml2::xml_contents() %>%
-    xml2::xml_attrs() %>%
-    purrr::map(as.list) %>%
-    dplyr::bind_rows() %>%
-    dplyr::mutate(sheetId = as.integer(sheetId))
-  ## sheets is a tbl with one row per worksheet and these variables:
-  ## state: "visible" (or what else ... "invisible"?)
+  xl_workbook <- xlsx_read_workbook_JENNY(path)
+  ## xl_workbook is a tbl with one row per worksheet and these variables:
+  ## state: "visible" (or what else ... "invisible"?), ?sometimes?
   ## name: e.g. "Africa" (assume this is name of the tab)
   ## sheetID: integer (assume this is order perceived by user)
   ## id: character, e.g. "rId5" (a key that comes up in other tables)
@@ -180,17 +173,19 @@ rexcel_workbook <- function(path) {
   ## everything from sheets tbl already formed
   ## workbook_rels prepend xl/ to Target
   ## join to sheets on Id
-  sheets_df <- workbook_rels %>%
+  sheets <- workbook_rels %>%
     dplyr::mutate(Target = file.path("xl", Target)) %>%
-    dplyr::right_join(sheets, by = c("Id" = "id")) %>%
-    dplyr::select(sheetId, name, Id, Target, state, Type)
+    dplyr::right_join(xl_workbook, by = c("Id" = "id")) %>%
+    dplyr::select(
+      dplyr::one_of(c("sheetId", "name", "Id", "Target", "state", "Type"))
+      )
 
   dplyr::lst(xlsx_path = path,
       reg_time = Sys.time(),
       manifest,
       content_types = ct,
+      xl_workbook,
       sheets,
-      sheets_df,
       shared_strings,
       styles =
         dplyr::lst(fonts, fills, borders, cell_style_xfs, cell_xfs,

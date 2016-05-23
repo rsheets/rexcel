@@ -20,6 +20,23 @@ xlsx_read_workbook <- function(path) {
   list(rels=rels, sheets=sheets, defined_names=defined_names)
 }
 
+xlsx_read_workbook_JENNY <- function(path) {
+  ## philosophical difference from xlsx_read_workbook():
+  ## consult a single file
+  xl_workbook <- xlsx_read_file(path, "xl/workbook.xml")
+  ## I use this method of namespace avoidance in order to handle
+  ## xlsx like Ekaterinburg_IP.xlsx from here
+  ## https://github.com/hadley/readxl/issues/80
+  sheets <- xml2::xml_find_one(xl_workbook, ".//*[local-name() = 'sheets']")
+  sheets_att <- lapply(xml2::xml_contents(sheets), xml_attrs_list)
+  tibble::data_frame(
+    name = vcapply2(sheets_att, "name"),
+    state = vcapply2(sheets_att, "state"),
+    sheetId = as.integer(vcapply2(sheets_att, "sheetId")),
+    id = vcapply2(sheets_att, "id")
+  )
+}
+
 ## 18.2.20 sheets
 xlsx_ct_sheets <- function(xml, ns, rels) {
   dat <- process_container(xml, "d1:sheets", ns, xlsx_ct_sheet)
