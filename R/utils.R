@@ -159,3 +159,42 @@ is_xlsx <- function(path) {
 }
 
 rm_xml_ns <- function(x) gsub(".*:(.*)", "\\1", x)
+
+construct_xml_ns <- function(...) {
+  ddd <- list(...)
+  ns <- vapply(ddd, `[[`, character(1), 1)
+  structure(ns, class = "xml_namespace")
+}
+
+ns_equal_to_ref <- function(xml, ref_ns) {
+  if (inherits(xml, "xml_node")) {
+    ns <- xml2::xml_ns(xml2::xml_root(xml))
+    return(identical(ns[order(names(ns))], ref_ns[order(names(ref_ns))]))
+  }
+  FALSE
+}
+
+## TO DO: replace with the real parser from cellranger once it's exposed
+## https://github.com/rsheets/cellranger/issues/22
+extract_sheet <- function(x) {
+  rx <- "^(?:(?:^\\[([^\\]]+)\\])?(?:'?([^']+)'?!)?([a-zA-Z0-9:\\-$\\[\\]]+)|(.*))$"
+  ## from rematch package
+  m <- regexpr(rx, x, perl = TRUE)
+  res <- cbind(ifelse(m == -1, NA_character_,
+                      substr(x, m, m + attr(m, "match.length") - 1)))
+  res <- cbind(res,
+               rbind(vapply(
+                 seq_len(NCOL(attr(m, "capture.start"))),
+                 function(i) {
+                   start <- attr(m, "capture.start")[,i]
+                   len <- attr(m, "capture.length")[,i]
+                   end <- start + len - 1
+                   res <- substr(x, start, end)
+                   res[ start == -1 ] <- NA_character_
+                   res
+                 },
+                 character(length(m))
+               ))
+  )
+  res[ , 3]
+}
