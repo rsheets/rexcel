@@ -23,3 +23,5 @@ Suggests:
     testthat,
 RoxygenNote: 5.0.1.9000
 VignetteBuilder: knitr
+Remotes:
+    hadley/xml2@248e9fb
