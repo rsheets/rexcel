@@ -5,3 +5,4 @@ example.xlsx
 tests/testthat/readxl
 tests/testthat/*.xlsx
 inst/doc
+~$*.xlsx
