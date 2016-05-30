@@ -12,7 +12,7 @@
 
 <meta name="author" content="Jennifer Bryan" />
 
-<meta name="date" content="2016-05-20" />
+<meta name="date" content="2016-05-30" />
 
 <title>Read an Excel Sheet</title>
 
@@ -68,25 +68,40 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 
 
-<h1 class="title toc-ignore">Read an Excel Sheet</h1>
+<h1 class="title">Read an Excel Sheet</h1>
 <h4 class="author"><em>Jennifer Bryan</em></h4>
-<h4 class="date"><em>2016-05-20</em></h4>
+<h4 class="date"><em>2016-05-30</em></h4>
 
 
 
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(rprojroot)</code></pre></div>
-<pre><code>## Warning: package 'rprojroot' was built under R version 3.2.4</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">devtools::<span class="kw">load_all</span>(<span class="kw">find_package_root_file</span>())</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(rprojroot)
+devtools::<span class="kw">load_all</span>(<span class="kw">find_package_root_file</span>())</code></pre></div>
 <pre><code>## Loading rexcel</code></pre>
 <p><em>Using a function I wrote while exploring all the files that make up an xlsx.</em></p>
 <p>Apply it to mini gapminder.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">mini_gap_path &lt;-<span class="st"> </span><span class="kw">system.file</span>(<span class="st">&quot;sheets&quot;</span>, <span class="st">&quot;mini-gap.xlsx&quot;</span>, <span class="dt">package =</span> <span class="st">&quot;rexcel&quot;</span>)
-<span class="kw">rexcel_workbook</span>(mini_gap_path)</code></pre></div>
+mini_gap_workbook &lt;-<span class="st"> </span><span class="kw">rexcel_workbook</span>(mini_gap_path)
+<span class="kw">str</span>(mini_gap_workbook, <span class="dt">max.level =</span> <span class="dv">1</span>)</code></pre></div>
+<pre><code>## List of 11
+##  $ xlsx_path     : chr &quot;/Users/jenny/rrr/rexcel/inst/sheets/mini-gap.xlsx&quot;
+##  $ reg_time      : POSIXct[1:1], format: &quot;2016-05-30 14:57:04&quot;
+##  $ manifest      :Classes 'tbl_df', 'tbl' and 'data.frame':  21 obs. of  3 variables:
+##  $ content_types :Classes 'tbl_df', 'tbl' and 'data.frame':  15 obs. of  3 variables:
+##  $ sheets        :Classes 'tbl_df', 'tbl' and 'data.frame':  5 obs. of  4 variables:
+##  $ defined_names : NULL
+##  $ workbook_rels :Classes 'tbl_df', 'tbl' and 'data.frame':  7 obs. of  3 variables:
+##  $ shared_strings: atomic [1:33] country continent year lifeExp ...
+##   ..- attr(*, &quot;count&quot;)= int 80
+##   ..- attr(*, &quot;uniqueCount&quot;)= int 33
+##  $ styles        :List of 8
+##  $ worksheet_rels:Classes 'tbl_df', 'tbl' and 'data.frame':  5 obs. of  4 variables:
+##  $ sheets_df     :Classes 'tbl_df', 'tbl' and 'data.frame':  5 obs. of  6 variables:</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">mini_gap_workbook</code></pre></div>
 <pre><code>## $xlsx_path
 ## [1] &quot;/Users/jenny/rrr/rexcel/inst/sheets/mini-gap.xlsx&quot;
 ## 
 ## $reg_time
-## [1] &quot;2016-05-20 15:18:34 PDT&quot;
+## [1] &quot;2016-05-30 14:57:04 PDT&quot;
 ## 
 ## $manifest
 ## Source: local data frame [21 x 3]
@@ -130,25 +145,30 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 ## $sheets
 ## Source: local data frame [5 x 4]
 ## 
-##     state     name sheetId    id
-##     &lt;chr&gt;    &lt;chr&gt;   &lt;int&gt; &lt;chr&gt;
-## 1 visible   Africa       1  rId3
-## 2 visible Americas       2  rId4
-## 3 visible     Asia       3  rId5
-## 4 visible   Europe       4  rId6
-## 5 visible  Oceania       5  rId7
+##       name   state sheet_id    id
+##      &lt;chr&gt;   &lt;chr&gt;    &lt;int&gt; &lt;chr&gt;
+## 1   Africa visible        1  rId3
+## 2 Americas visible        2  rId4
+## 3     Asia visible        3  rId5
+## 4   Europe visible        4  rId6
+## 5  Oceania visible        5  rId7
 ## 
-## $sheets_df
-## Source: local data frame [5 x 5]
+## $defined_names
+## NULL
 ## 
-##   sheetId     name    Id                   Target
-##     &lt;int&gt;    &lt;chr&gt; &lt;chr&gt;                    &lt;chr&gt;
-## 1       1   Africa  rId3 xl/worksheets/sheet4.xml
-## 2       2 Americas  rId4 xl/worksheets/sheet3.xml
-## 3       3     Asia  rId5 xl/worksheets/sheet5.xml
-## 4       4   Europe  rId6 xl/worksheets/sheet1.xml
-## 5       5  Oceania  rId7 xl/worksheets/sheet2.xml
-## Variables not shown: Type &lt;chr&gt;.
+## $workbook_rels
+## Source: local data frame [7 x 3]
+## 
+##      id
+##   &lt;chr&gt;
+## 1  rId2
+## 2  rId1
+## 3  rId4
+## 4  rId3
+## 5  rId6
+## 6  rId5
+## 7  rId7
+## Variables not shown: type &lt;chr&gt;, target &lt;chr&gt;.
 ## 
 ## $shared_strings
 ##  [1] &quot;country&quot;                &quot;continent&quot;             
@@ -203,40 +223,55 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 ## NULL
 ## 
 ## 
-## $workbook_rels
-## Source: local data frame [7 x 3]
-## 
-##      Id                Target
-##   &lt;chr&gt;                 &lt;chr&gt;
-## 1  rId2     sharedStrings.xml
-## 2  rId1            styles.xml
-## 3  rId4 worksheets/sheet3.xml
-## 4  rId3 worksheets/sheet4.xml
-## 5  rId6 worksheets/sheet1.xml
-## 6  rId5 worksheets/sheet5.xml
-## 7  rId7 worksheets/sheet2.xml
-## Variables not shown: Type &lt;chr&gt;.
-## 
 ## $worksheet_rels
-## $worksheet_rels[[1]]
-## {xml_nodeset (1)}
-## [1] &lt;Relationship Id=&quot;rId1&quot; Type=&quot;http://schemas.openxmlformats.org/offi ...
+## Source: local data frame [5 x 4]
 ## 
-## $worksheet_rels[[2]]
-## {xml_nodeset (1)}
-## [1] &lt;Relationship Id=&quot;rId1&quot; Type=&quot;http://schemas.openxmlformats.org/offi ...
+##   worksheet    id
+##       &lt;chr&gt; &lt;chr&gt;
+## 1    sheet1  rId1
+## 2    sheet2  rId1
+## 3    sheet3  rId1
+## 4    sheet4  rId1
+## 5    sheet5  rId1
+## Variables not shown: type &lt;chr&gt;, target &lt;chr&gt;.
 ## 
-## $worksheet_rels[[3]]
-## {xml_nodeset (1)}
-## [1] &lt;Relationship Id=&quot;rId1&quot; Type=&quot;http://schemas.openxmlformats.org/offi ...
+## $sheets_df
+## Source: local data frame [5 x 6]
 ## 
-## $worksheet_rels[[4]]
-## {xml_nodeset (1)}
-## [1] &lt;Relationship Id=&quot;rId1&quot; Type=&quot;http://schemas.openxmlformats.org/offi ...
-## 
-## $worksheet_rels[[5]]
-## {xml_nodeset (1)}
-## [1] &lt;Relationship Id=&quot;rId1&quot; Type=&quot;http://schemas.openxmlformats.org/offi ...</code></pre>
+##   sheet_id     name    id                   target   state
+##      &lt;int&gt;    &lt;chr&gt; &lt;chr&gt;                    &lt;chr&gt;   &lt;chr&gt;
+## 1        1   Africa  rId3 xl/worksheets/sheet4.xml visible
+## 2        2 Americas  rId4 xl/worksheets/sheet3.xml visible
+## 3        3     Asia  rId5 xl/worksheets/sheet5.xml visible
+## 4        4   Europe  rId6 xl/worksheets/sheet1.xml visible
+## 5        5  Oceania  rId7 xl/worksheets/sheet2.xml visible
+## Variables not shown: type &lt;chr&gt;.</code></pre>
+<p>What’s here?</p>
+<ul>
+<li><code>xlsx_path</code>: path to the xlsx</li>
+<li><code>reg_time</code>: time xlsx was processed</li>
+<li><code>manifest</code>: file list for the xlsx zip archive</li>
+<li><code>content_types</code>: tbl representing <code>[Content_Types].xml</code></li>
+<li><code>sheets</code>: tbl representing <code>xl/workbook.xml</code></li>
+<li><code>sheets_df</code>:
+<ul>
+<li>This is really the only thing I created.</li>
+<li>A tbl with one row per worksheet, from joining <code>sheets</code> and <code>workbook_rels</code></li>
+</ul></li>
+<li><code>shared_strings</code>: character vector representing <code>xl/sharedStrings.xml</code></li>
+<li><code>styles</code>: list of tbls from <code>xl/styles.xml</code> (ok, I admit, I stopped after parsing fonts)</li>
+<li><code>workbook_rels</code>:
+<ul>
+<li>tbl that links target files to <code>Id</code>s, also gives file type</li>
+<li>example: tells you that <code>Id = rId4</code> refers to <code>Target</code> file <code>xl/worksheets/sheetX.xml</code></li>
+<li>comes from <code>xl/_rels/workbook.xml.rels</code></li>
+</ul></li>
+<li><code>worksheet_rels</code>:
+<ul>
+<li><em>I’m still figuring this one out but it’s about files or external resources (potentially) referred to from worksheets</em></li>
+<li>comes from files like<code>xl/worksheets/_rels/(sheet[0-9]+).xml.rels</code></li>
+</ul></li>
+</ul>
 <p>Apply it to formula and formatting sheet.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">ff_path &lt;-<span class="st"> </span><span class="kw">system.file</span>(<span class="st">&quot;sheets&quot;</span>, <span class="st">&quot;gs-test-formula-formatting.xlsx&quot;</span>,
                        <span class="dt">package =</span> <span class="st">&quot;rexcel&quot;</span>)
@@ -245,7 +280,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 ## [1] &quot;/Users/jenny/rrr/rexcel/inst/sheets/gs-test-formula-formatting.xlsx&quot;
 ## 
 ## $reg_time
-## [1] &quot;2016-05-20 15:18:34 PDT&quot;
+## [1] &quot;2016-05-30 14:57:04 PDT&quot;
 ## 
 ## $manifest
 ## Source: local data frame [9 x 3]
@@ -279,17 +314,22 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 ## $sheets
 ## Source: local data frame [1 x 4]
 ## 
-##     state   name sheetId    id
-##     &lt;chr&gt;  &lt;chr&gt;   &lt;int&gt; &lt;chr&gt;
-## 1 visible Sheet1       1  rId3
+##     name   state sheet_id    id
+##    &lt;chr&gt;   &lt;chr&gt;    &lt;int&gt; &lt;chr&gt;
+## 1 Sheet1 visible        1  rId3
 ## 
-## $sheets_df
-## Source: local data frame [1 x 5]
+## $defined_names
+## NULL
 ## 
-##   sheetId   name    Id                   Target
-##     &lt;int&gt;  &lt;chr&gt; &lt;chr&gt;                    &lt;chr&gt;
-## 1       1 Sheet1  rId3 xl/worksheets/sheet1.xml
-## Variables not shown: Type &lt;chr&gt;.
+## $workbook_rels
+## Source: local data frame [3 x 3]
+## 
+##      id
+##   &lt;chr&gt;
+## 1  rId1
+## 2  rId2
+## 3  rId3
+## Variables not shown: type &lt;chr&gt;, target &lt;chr&gt;.
 ## 
 ## $shared_strings
 ##  [1] &quot;integer&quot;           &quot;number_formatted&quot;  &quot;number_rounded&quot;   
@@ -333,21 +373,818 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 ## NULL
 ## 
 ## 
+## $worksheet_rels
+## Source: local data frame [2 x 5]
+## 
+##   worksheet    id
+##       &lt;chr&gt; &lt;chr&gt;
+## 1    sheet1  rId1
+## 2    sheet1  rId2
+## Variables not shown: type &lt;chr&gt;, target &lt;chr&gt;, targetmode &lt;chr&gt;.
+## 
+## $sheets_df
+## Source: local data frame [1 x 6]
+## 
+##   sheet_id   name    id                   target   state
+##      &lt;int&gt;  &lt;chr&gt; &lt;chr&gt;                    &lt;chr&gt;   &lt;chr&gt;
+## 1        1 Sheet1  rId3 xl/worksheets/sheet1.xml visible
+## Variables not shown: type &lt;chr&gt;.</code></pre>
+<p>Apply it to the Ekaterinburg sheet from <a href="https://github.com/hadley/readxl/issues/80">readxl/#80</a> and the “resaved in Excel” version.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">ek_path &lt;-<span class="st"> </span><span class="kw">system.file</span>(<span class="st">&quot;sheets&quot;</span>, <span class="st">&quot;Ekaterinburg_IP_9.xlsx&quot;</span>, <span class="dt">package =</span> <span class="st">&quot;rexcel&quot;</span>)
+<span class="kw">rexcel_workbook</span>(ek_path)</code></pre></div>
+<pre><code>## $xlsx_path
+## [1] &quot;/Users/jenny/rrr/rexcel/inst/sheets/Ekaterinburg_IP_9.xlsx&quot;
+## 
+## $reg_time
+## [1] &quot;2016-05-30 14:57:04 PDT&quot;
+## 
+## $manifest
+## Source: local data frame [8 x 3]
+## 
+##                                 Name  Length                Date
+##                                &lt;chr&gt;   &lt;dbl&gt;              &lt;time&gt;
+## 1                    xl/workbook.xml     314 2014-10-23 16:38:00
+## 2                        _rels/.rels     296 2014-10-23 16:38:00
+## 3               xl/sharedStrings.xml   41835 2014-10-23 16:38:00
+## 4         xl/_rels/workbook.xml.rels     603 2014-10-23 16:38:00
+## 5                      xl/styles.xml    4614 2014-10-23 16:38:00
+## 6            xl/worksheets/sheet.xml 1922092 2014-10-23 16:38:00
+## 7 xl/worksheets/_rels/sheet.xml.rels     322 2014-10-23 16:38:00
+## 8                [Content_Types].xml     736 2014-10-23 16:38:00
+## 
+## $content_types
+## Source: local data frame [5 x 3]
+## 
+##                   PartName Extension
+##                      &lt;chr&gt;     &lt;chr&gt;
+## 1                     &lt;NA&gt;       xml
+## 2                     &lt;NA&gt;      rels
+## 3    /xl/sharedStrings.xml      &lt;NA&gt;
+## 4           /xl/styles.xml      &lt;NA&gt;
+## 5 /xl/worksheets/sheet.xml      &lt;NA&gt;
+## Variables not shown: ContentType &lt;chr&gt;.
+## 
+## $sheets
+## Source: local data frame [1 x 4]
+## 
+##             name state sheet_id                id
+##            &lt;chr&gt; &lt;chr&gt;    &lt;int&gt;             &lt;chr&gt;
+## 1 СПАРК - Список  &lt;NA&gt;        1 R6082ddd3e995440f
+## 
+## $defined_names
+## NULL
+## 
 ## $workbook_rels
 ## Source: local data frame [3 x 3]
 ## 
-##      Id                Target
-##   &lt;chr&gt;                 &lt;chr&gt;
-## 1  rId1            styles.xml
-## 2  rId2     sharedStrings.xml
-## 3  rId3 worksheets/sheet1.xml
-## Variables not shown: Type &lt;chr&gt;.
+##                                                                          type
+##                                                                         &lt;chr&gt;
+## 1 http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedS
+## 2  http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles
+## 3 http://schemas.openxmlformats.org/officeDocument/2006/relationships/workshe
+## Variables not shown: target &lt;chr&gt;, id &lt;chr&gt;.
+## 
+## $shared_strings
+##   [1] &quot;&quot;                                           
+##   [2] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+##   [3] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+##   [4] &quot; Исключен из Статрегистра ИП от 01.07.2014 &quot;
+##   [5] &quot; Исключен из Статрегистра ИП от 01.07.2014 &quot;
+##   [6] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+##   [7] &quot; Исключен из Статрегистра ИП от 31.03.2014 &quot;
+##   [8] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+##   [9] &quot; Исключен из Статрегистра ИП от 28.02.2014 &quot;
+##  [10] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [11] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [12] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [13] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [14] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [15] &quot; Исключен из Статрегистра ИП от 01.07.2014 &quot;
+##  [16] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [17] &quot; Исключен из Статрегистра ИП от 28.02.2014 &quot;
+##  [18] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [19] &quot; Исключен из Статрегистра ИП от 28.02.2014 &quot;
+##  [20] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [21] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [22] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+##  [23] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+##  [24] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [25] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [26] &quot; Исключен из Статрегистра ИП от 31.03.2014 &quot;
+##  [27] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [28] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [29] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [30] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+##  [31] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [32] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [33] &quot; Исключен из Статрегистра ИП от 28.02.2014 &quot;
+##  [34] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [35] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [36] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [37] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [38] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+##  [39] &quot; Исключен из Статрегистра ИП от 27.02.2013 &quot;
+##  [40] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [41] &quot; Исключен из Статрегистра ИП от 31.03.2014 &quot;
+##  [42] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+##  [43] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [44] &quot; Исключен из Статрегистра ИП от 28.02.2014 &quot;
+##  [45] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+##  [46] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [47] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+##  [48] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [49] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [50] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [51] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [52] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+##  [53] &quot; Исключен из Статрегистра ИП от 31.03.2014 &quot;
+##  [54] &quot; Исключен из Статрегистра ИП от 31.03.2014 &quot;
+##  [55] &quot; Исключен из Статрегистра ИП от 31.03.2014 &quot;
+##  [56] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [57] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [58] &quot; Исключен из Статрегистра ИП от 28.02.2014 &quot;
+##  [59] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+##  [60] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+##  [61] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [62] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [63] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [64] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [65] &quot; Исключен из Статрегистра ИП от 01.07.2014 &quot;
+##  [66] &quot; Исключен из Статрегистра ИП от 01.07.2014 &quot;
+##  [67] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [68] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [69] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [70] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [71] &quot; Исключен из Статрегистра ИП от 28.02.2014 &quot;
+##  [72] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [73] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [74] &quot; Исключен из Статрегистра ИП от 01.07.2014 &quot;
+##  [75] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [76] &quot; Исключен из Статрегистра ИП от 28.02.2014 &quot;
+##  [77] &quot; Исключен из Статрегистра ИП от 31.03.2014 &quot;
+##  [78] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [79] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+##  [80] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+##  [81] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [82] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [83] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+##  [84] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [85] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [86] &quot; Исключен из Статрегистра ИП от 31.03.2014 &quot;
+##  [87] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [88] &quot; Исключен из Статрегистра ИП от 31.03.2014 &quot;
+##  [89] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [90] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+##  [91] &quot; Исключен из Статрегистра ИП от 01.07.2014 &quot;
+##  [92] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [93] &quot; Исключен из Статрегистра ИП от 31.03.2014 &quot;
+##  [94] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [95] &quot; Исключен из Статрегистра ИП от 27.02.2013 &quot;
+##  [96] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [97] &quot; Исключен из Статрегистра ИП от 31.03.2014 &quot;
+##  [98] &quot; Исключен из Статрегистра ИП от 31.03.2014 &quot;
+##  [99] &quot; Исключен из Статрегистра ИП от 28.02.2014 &quot;
+## [100] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+## [101] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+## [102] &quot; Исключен из Статрегистра ИП от 28.02.2014 &quot;
+## [103] &quot; Исключен из Статрегистра ИП от 01.07.2014 &quot;
+## [104] &quot; Исключен из Статрегистра ИП от 01.07.2014 &quot;
+## [105] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+## [106] &quot; Исключен из Статрегистра ИП от 31.03.2014 &quot;
+## [107] &quot; Исключен из Статрегистра ИП от 31.03.2014 &quot;
+## [108] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+## [109] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+## [110] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+## [111] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+## [112] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+## [113] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+## [114] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+## [115] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+## [116] &quot; Исключен из Статрегистра ИП от 28.02.2014 &quot;
+## [117] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+## [118] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+## [119] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+## [120] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+## [121] &quot; Исключен из Статрегистра ИП от 27.02.2013 &quot;
+## [122] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+## [123] &quot; Исключен из Статрегистра ИП от 31.03.2014 &quot;
+## [124] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+## [125] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+## [126] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+## [127] &quot; Исключен из Статрегистра ИП от 01.07.2014 &quot;
+## [128] &quot; Исключен из Статрегистра ИП от 31.03.2014 &quot;
+## [129] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+## [130] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+## [131] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+## [132] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+## [133] &quot; Исключен из Статрегистра ИП от 27.02.2013 &quot;
+## [134] &quot; Исключен из Статрегистра ИП от 31.03.2014 &quot;
+## [135] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+## [136] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+## [137] &quot; Исключен из Статрегистра ИП от 01.07.2014 &quot;
+## [138] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+## [139] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+## [140] &quot; Исключен из Статрегистра ИП от 01.07.2014 &quot;
+## [141] &quot; Исключен из Статрегистра ИП от 31.05.2007 &quot;
+## [142] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+## [143] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+## [144] &quot; Исключен из Статрегистра ИП от 31.03.2014 &quot;
+## [145] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+## [146] &quot; Исключен из Статрегистра ИП от 31.03.2014 &quot;
+## [147] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+## [148] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+## [149] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+## [150] &quot; Исключен из Статрегистра ИП от 31.03.2014 &quot;
+## [151] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+## [152] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+## [153] &quot; Исключен из Статрегистра ИП от 31.03.2014 &quot;
+## [154] &quot; Исключен из Статрегистра ИП от 31.03.2014 &quot;
+## [155] &quot; Исключен из Статрегистра ИП от 27.02.2013 &quot;
+## [156] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+## [157] &quot; Исключен из Статрегистра ИП от 28.02.2014 &quot;
+## [158] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+## [159] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+## [160] &quot; Исключен из Статрегистра ИП от 28.02.2014 &quot;
+## [161] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+## [162] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+## [163] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+## [164] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+## [165] &quot; Исключен из Статрегистра ИП от 01.07.2014 &quot;
+## attr(,&quot;count&quot;)
+## [1] 2191
+## attr(,&quot;uniqueCount&quot;)
+## [1] 165
+## 
+## $styles
+## $styles$fonts
+## Source: local data frame [5 x 6]
+## 
+##      sz    color    name family charset scheme
+##   &lt;chr&gt;    &lt;chr&gt;   &lt;chr&gt;  &lt;chr&gt;   &lt;chr&gt;  &lt;chr&gt;
+## 1    10        1 Calibri      2     204  minor
+## 2    10        1 Calibri      2     204  minor
+## 3    14        3 Calibri      2     204  minor
+## 4    10 FF0000FF Calibri      2     204  minor
+## 5    10        1 Calibri      2     204  minor
+## 
+## $styles$fills
+## NULL
+## 
+## $styles$borders
+## NULL
+## 
+## $styles$cell_style_xfs
+## NULL
+## 
+## $styles$cell_xfs
+## NULL
+## 
+## $styles$cell_styles
+## NULL
+## 
+## $styles$num_fmts
+## NULL
+## 
+## $styles$dxfs
+## NULL
+## 
 ## 
 ## $worksheet_rels
-## $worksheet_rels[[1]]
-## {xml_nodeset (2)}
-## [1] &lt;Relationship Id=&quot;rId1&quot; Type=&quot;http://schemas.openxmlformats.org/offi ...
-## [2] &lt;Relationship Id=&quot;rId2&quot; Type=&quot;http://schemas.openxmlformats.org/offi ...</code></pre>
+## Source: local data frame [1 x 5]
+## 
+##                            worksheet
+##                                &lt;chr&gt;
+## 1 xl/worksheets/_rels/sheet.xml.rels
+## Variables not shown: type &lt;chr&gt;, target &lt;chr&gt;, targetmode &lt;chr&gt;, id &lt;chr&gt;.
+## 
+## $sheets_df
+## Source: local data frame [1 x 6]
+## 
+##   sheet_id           name                id                      target
+##      &lt;int&gt;          &lt;chr&gt;             &lt;chr&gt;                       &lt;chr&gt;
+## 1        1 СПАРК - Список R6082ddd3e995440f xl//xl/worksheets/sheet.xml
+## Variables not shown: state &lt;chr&gt;, type &lt;chr&gt;.</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">ek2_path &lt;-<span class="st"> </span><span class="kw">system.file</span>(<span class="st">&quot;sheets&quot;</span>, <span class="st">&quot;Ekaterinburg_IP_9-RESAVED.xlsx&quot;</span>,
+                        <span class="dt">package =</span> <span class="st">&quot;rexcel&quot;</span>)
+<span class="kw">rexcel_workbook</span>(ek_path)</code></pre></div>
+<pre><code>## $xlsx_path
+## [1] &quot;/Users/jenny/rrr/rexcel/inst/sheets/Ekaterinburg_IP_9.xlsx&quot;
+## 
+## $reg_time
+## [1] &quot;2016-05-30 14:57:05 PDT&quot;
+## 
+## $manifest
+## Source: local data frame [8 x 3]
+## 
+##                                 Name  Length                Date
+##                                &lt;chr&gt;   &lt;dbl&gt;              &lt;time&gt;
+## 1                    xl/workbook.xml     314 2014-10-23 16:38:00
+## 2                        _rels/.rels     296 2014-10-23 16:38:00
+## 3               xl/sharedStrings.xml   41835 2014-10-23 16:38:00
+## 4         xl/_rels/workbook.xml.rels     603 2014-10-23 16:38:00
+## 5                      xl/styles.xml    4614 2014-10-23 16:38:00
+## 6            xl/worksheets/sheet.xml 1922092 2014-10-23 16:38:00
+## 7 xl/worksheets/_rels/sheet.xml.rels     322 2014-10-23 16:38:00
+## 8                [Content_Types].xml     736 2014-10-23 16:38:00
+## 
+## $content_types
+## Source: local data frame [5 x 3]
+## 
+##                   PartName Extension
+##                      &lt;chr&gt;     &lt;chr&gt;
+## 1                     &lt;NA&gt;       xml
+## 2                     &lt;NA&gt;      rels
+## 3    /xl/sharedStrings.xml      &lt;NA&gt;
+## 4           /xl/styles.xml      &lt;NA&gt;
+## 5 /xl/worksheets/sheet.xml      &lt;NA&gt;
+## Variables not shown: ContentType &lt;chr&gt;.
+## 
+## $sheets
+## Source: local data frame [1 x 4]
+## 
+##             name state sheet_id                id
+##            &lt;chr&gt; &lt;chr&gt;    &lt;int&gt;             &lt;chr&gt;
+## 1 СПАРК - Список  &lt;NA&gt;        1 R6082ddd3e995440f
+## 
+## $defined_names
+## NULL
+## 
+## $workbook_rels
+## Source: local data frame [3 x 3]
+## 
+##                                                                          type
+##                                                                         &lt;chr&gt;
+## 1 http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedS
+## 2  http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles
+## 3 http://schemas.openxmlformats.org/officeDocument/2006/relationships/workshe
+## Variables not shown: target &lt;chr&gt;, id &lt;chr&gt;.
+## 
+## $shared_strings
+##   [1] &quot;&quot;                                           
+##   [2] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+##   [3] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+##   [4] &quot; Исключен из Статрегистра ИП от 01.07.2014 &quot;
+##   [5] &quot; Исключен из Статрегистра ИП от 01.07.2014 &quot;
+##   [6] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+##   [7] &quot; Исключен из Статрегистра ИП от 31.03.2014 &quot;
+##   [8] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+##   [9] &quot; Исключен из Статрегистра ИП от 28.02.2014 &quot;
+##  [10] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [11] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [12] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [13] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [14] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [15] &quot; Исключен из Статрегистра ИП от 01.07.2014 &quot;
+##  [16] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [17] &quot; Исключен из Статрегистра ИП от 28.02.2014 &quot;
+##  [18] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [19] &quot; Исключен из Статрегистра ИП от 28.02.2014 &quot;
+##  [20] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [21] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [22] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+##  [23] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+##  [24] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [25] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [26] &quot; Исключен из Статрегистра ИП от 31.03.2014 &quot;
+##  [27] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [28] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [29] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [30] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+##  [31] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [32] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [33] &quot; Исключен из Статрегистра ИП от 28.02.2014 &quot;
+##  [34] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [35] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [36] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [37] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [38] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+##  [39] &quot; Исключен из Статрегистра ИП от 27.02.2013 &quot;
+##  [40] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [41] &quot; Исключен из Статрегистра ИП от 31.03.2014 &quot;
+##  [42] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+##  [43] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [44] &quot; Исключен из Статрегистра ИП от 28.02.2014 &quot;
+##  [45] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+##  [46] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [47] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+##  [48] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [49] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [50] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [51] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [52] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+##  [53] &quot; Исключен из Статрегистра ИП от 31.03.2014 &quot;
+##  [54] &quot; Исключен из Статрегистра ИП от 31.03.2014 &quot;
+##  [55] &quot; Исключен из Статрегистра ИП от 31.03.2014 &quot;
+##  [56] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [57] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [58] &quot; Исключен из Статрегистра ИП от 28.02.2014 &quot;
+##  [59] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+##  [60] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+##  [61] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [62] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [63] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [64] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [65] &quot; Исключен из Статрегистра ИП от 01.07.2014 &quot;
+##  [66] &quot; Исключен из Статрегистра ИП от 01.07.2014 &quot;
+##  [67] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [68] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [69] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [70] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [71] &quot; Исключен из Статрегистра ИП от 28.02.2014 &quot;
+##  [72] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [73] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [74] &quot; Исключен из Статрегистра ИП от 01.07.2014 &quot;
+##  [75] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [76] &quot; Исключен из Статрегистра ИП от 28.02.2014 &quot;
+##  [77] &quot; Исключен из Статрегистра ИП от 31.03.2014 &quot;
+##  [78] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [79] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+##  [80] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+##  [81] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [82] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [83] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+##  [84] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [85] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [86] &quot; Исключен из Статрегистра ИП от 31.03.2014 &quot;
+##  [87] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [88] &quot; Исключен из Статрегистра ИП от 31.03.2014 &quot;
+##  [89] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+##  [90] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+##  [91] &quot; Исключен из Статрегистра ИП от 01.07.2014 &quot;
+##  [92] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [93] &quot; Исключен из Статрегистра ИП от 31.03.2014 &quot;
+##  [94] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [95] &quot; Исключен из Статрегистра ИП от 27.02.2013 &quot;
+##  [96] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+##  [97] &quot; Исключен из Статрегистра ИП от 31.03.2014 &quot;
+##  [98] &quot; Исключен из Статрегистра ИП от 31.03.2014 &quot;
+##  [99] &quot; Исключен из Статрегистра ИП от 28.02.2014 &quot;
+## [100] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+## [101] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+## [102] &quot; Исключен из Статрегистра ИП от 28.02.2014 &quot;
+## [103] &quot; Исключен из Статрегистра ИП от 01.07.2014 &quot;
+## [104] &quot; Исключен из Статрегистра ИП от 01.07.2014 &quot;
+## [105] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+## [106] &quot; Исключен из Статрегистра ИП от 31.03.2014 &quot;
+## [107] &quot; Исключен из Статрегистра ИП от 31.03.2014 &quot;
+## [108] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+## [109] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+## [110] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+## [111] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+## [112] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+## [113] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+## [114] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+## [115] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+## [116] &quot; Исключен из Статрегистра ИП от 28.02.2014 &quot;
+## [117] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+## [118] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+## [119] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+## [120] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+## [121] &quot; Исключен из Статрегистра ИП от 27.02.2013 &quot;
+## [122] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+## [123] &quot; Исключен из Статрегистра ИП от 31.03.2014 &quot;
+## [124] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+## [125] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+## [126] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+## [127] &quot; Исключен из Статрегистра ИП от 01.07.2014 &quot;
+## [128] &quot; Исключен из Статрегистра ИП от 31.03.2014 &quot;
+## [129] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+## [130] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+## [131] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+## [132] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+## [133] &quot; Исключен из Статрегистра ИП от 27.02.2013 &quot;
+## [134] &quot; Исключен из Статрегистра ИП от 31.03.2014 &quot;
+## [135] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+## [136] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+## [137] &quot; Исключен из Статрегистра ИП от 01.07.2014 &quot;
+## [138] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+## [139] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+## [140] &quot; Исключен из Статрегистра ИП от 01.07.2014 &quot;
+## [141] &quot; Исключен из Статрегистра ИП от 31.05.2007 &quot;
+## [142] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+## [143] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+## [144] &quot; Исключен из Статрегистра ИП от 31.03.2014 &quot;
+## [145] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+## [146] &quot; Исключен из Статрегистра ИП от 31.03.2014 &quot;
+## [147] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+## [148] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+## [149] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+## [150] &quot; Исключен из Статрегистра ИП от 31.03.2014 &quot;
+## [151] &quot; Исключен из Статрегистра ИП от 31.01.2014 &quot;
+## [152] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+## [153] &quot; Исключен из Статрегистра ИП от 31.03.2014 &quot;
+## [154] &quot; Исключен из Статрегистра ИП от 31.03.2014 &quot;
+## [155] &quot; Исключен из Статрегистра ИП от 27.02.2013 &quot;
+## [156] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+## [157] &quot; Исключен из Статрегистра ИП от 28.02.2014 &quot;
+## [158] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+## [159] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+## [160] &quot; Исключен из Статрегистра ИП от 28.02.2014 &quot;
+## [161] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+## [162] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+## [163] &quot; Исключен из Статрегистра ИП от 31.12.2013 &quot;
+## [164] &quot; Исключен из Статрегистра ИП от 01.09.2014 &quot;
+## [165] &quot; Исключен из Статрегистра ИП от 01.07.2014 &quot;
+## attr(,&quot;count&quot;)
+## [1] 2191
+## attr(,&quot;uniqueCount&quot;)
+## [1] 165
+## 
+## $styles
+## $styles$fonts
+## Source: local data frame [5 x 6]
+## 
+##      sz    color    name family charset scheme
+##   &lt;chr&gt;    &lt;chr&gt;   &lt;chr&gt;  &lt;chr&gt;   &lt;chr&gt;  &lt;chr&gt;
+## 1    10        1 Calibri      2     204  minor
+## 2    10        1 Calibri      2     204  minor
+## 3    14        3 Calibri      2     204  minor
+## 4    10 FF0000FF Calibri      2     204  minor
+## 5    10        1 Calibri      2     204  minor
+## 
+## $styles$fills
+## NULL
+## 
+## $styles$borders
+## NULL
+## 
+## $styles$cell_style_xfs
+## NULL
+## 
+## $styles$cell_xfs
+## NULL
+## 
+## $styles$cell_styles
+## NULL
+## 
+## $styles$num_fmts
+## NULL
+## 
+## $styles$dxfs
+## NULL
+## 
+## 
+## $worksheet_rels
+## Source: local data frame [1 x 5]
+## 
+##                            worksheet
+##                                &lt;chr&gt;
+## 1 xl/worksheets/_rels/sheet.xml.rels
+## Variables not shown: type &lt;chr&gt;, target &lt;chr&gt;, targetmode &lt;chr&gt;, id &lt;chr&gt;.
+## 
+## $sheets_df
+## Source: local data frame [1 x 6]
+## 
+##   sheet_id           name                id                      target
+##      &lt;int&gt;          &lt;chr&gt;             &lt;chr&gt;                       &lt;chr&gt;
+## 1        1 СПАРК - Список R6082ddd3e995440f xl//xl/worksheets/sheet.xml
+## Variables not shown: state &lt;chr&gt;, type &lt;chr&gt;.</code></pre>
+<p>Apply it to a sheet created to play with defined ranges.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">dn_path &lt;-<span class="st"> </span><span class="kw">system.file</span>(<span class="st">&quot;sheets&quot;</span>, <span class="st">&quot;defined-names.xlsx&quot;</span>, <span class="dt">package =</span> <span class="st">&quot;rexcel&quot;</span>)
+<span class="kw">rexcel_workbook</span>(dn_path)</code></pre></div>
+<pre><code>## $xlsx_path
+## [1] &quot;/Users/jenny/rrr/rexcel/inst/sheets/defined-names.xlsx&quot;
+## 
+## $reg_time
+## [1] &quot;2016-05-30 14:57:05 PDT&quot;
+## 
+## $manifest
+## Source: local data frame [10 x 3]
+## 
+##                          Name Length       Date
+##                         &lt;chr&gt;  &lt;dbl&gt;     &lt;time&gt;
+## 1         [Content_Types].xml   1168 1980-01-01
+## 2                 _rels/.rels    588 1980-01-01
+## 3  xl/_rels/workbook.xml.rels    698 1980-01-01
+## 4             xl/workbook.xml   1699 1980-01-01
+## 5        xl/sharedStrings.xml    574 1980-01-01
+## 6         xl/theme/theme1.xml   6788 1980-01-01
+## 7               xl/styles.xml   1399 1980-01-01
+## 8    xl/worksheets/sheet1.xml   4062 1980-01-01
+## 9           docProps/core.xml    589 1980-01-01
+## 10           docProps/app.xml    776 1980-01-01
+## 
+## $content_types
+## Source: local data frame [9 x 3]
+## 
+##                    PartName Extension
+##                       &lt;chr&gt;     &lt;chr&gt;
+## 1                      &lt;NA&gt;       xml
+## 2                      &lt;NA&gt;      rels
+## 3          /xl/workbook.xml      &lt;NA&gt;
+## 4 /xl/worksheets/sheet1.xml      &lt;NA&gt;
+## 5      /xl/theme/theme1.xml      &lt;NA&gt;
+## 6            /xl/styles.xml      &lt;NA&gt;
+## 7     /xl/sharedStrings.xml      &lt;NA&gt;
+## 8        /docProps/core.xml      &lt;NA&gt;
+## 9         /docProps/app.xml      &lt;NA&gt;
+## Variables not shown: ContentType &lt;chr&gt;.
+## 
+## $sheets
+## Source: local data frame [1 x 4]
+## 
+##     name state sheet_id    id
+##    &lt;chr&gt; &lt;chr&gt;    &lt;int&gt; &lt;chr&gt;
+## 1 Sheet1  &lt;NA&gt;        1  rId1
+## 
+## $defined_names
+## Source: local data frame [6 x 3]
+## 
+##        name         refers_to sheet_id
+##       &lt;chr&gt;             &lt;chr&gt;    &lt;int&gt;
+## 1 continent Sheet1!$B$2:$B$11       NA
+## 2   country Sheet1!$A$2:$A$11       NA
+## 3 gdpPercap Sheet1!$F$2:$F$11       NA
+## 4   lifeExp Sheet1!$D$2:$D$11       NA
+## 5       pop Sheet1!$E$2:$E$11       NA
+## 6      year Sheet1!$C$2:$C$11       NA
+## 
+## $workbook_rels
+## Source: local data frame [4 x 3]
+## 
+##      id
+##   &lt;chr&gt;
+## 1  rId3
+## 2  rId4
+## 3  rId1
+## 4  rId2
+## Variables not shown: type &lt;chr&gt;, target &lt;chr&gt;.
+## 
+## $shared_strings
+##  [1] &quot;country&quot;      &quot;continent&quot;    &quot;year&quot;         &quot;lifeExp&quot;     
+##  [5] &quot;pop&quot;          &quot;gdpPercap&quot;    &quot;Algeria&quot;      &quot;Africa&quot;      
+##  [9] &quot;Angola&quot;       &quot;Benin&quot;        &quot;Argentina&quot;    &quot;Americas&quot;    
+## [13] &quot;Bolivia&quot;      &quot;Brazil&quot;       &quot;Canada&quot;       &quot;Chile&quot;       
+## [17] &quot;Botswana&quot;     &quot;Burkina Faso&quot;
+## attr(,&quot;count&quot;)
+## [1] 26
+## attr(,&quot;uniqueCount&quot;)
+## [1] 18
+## 
+## $styles
+## $styles$fonts
+## Source: local data frame [2 x 3]
+## 
+##      sz    color  name
+##   &lt;chr&gt;    &lt;chr&gt; &lt;chr&gt;
+## 1    10 FF000000 Arial
+## 2    10     &lt;NA&gt; Arial
+## 
+## $styles$fills
+## NULL
+## 
+## $styles$borders
+## NULL
+## 
+## $styles$cell_style_xfs
+## NULL
+## 
+## $styles$cell_xfs
+## NULL
+## 
+## $styles$cell_styles
+## NULL
+## 
+## $styles$num_fmts
+## NULL
+## 
+## $styles$dxfs
+## NULL
+## 
+## 
+## $worksheet_rels
+## NULL
+## 
+## $sheets_df
+## Source: local data frame [1 x 6]
+## 
+##   sheet_id   name    id                   target state
+##      &lt;int&gt;  &lt;chr&gt; &lt;chr&gt;                    &lt;chr&gt; &lt;chr&gt;
+## 1        1 Sheet1  rId1 xl/worksheets/sheet1.xml  &lt;NA&gt;
+## Variables not shown: type &lt;chr&gt;.</code></pre>
+<p>Apply it to a sheet created to explore tricky worksheet names.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">gabe_path &lt;-<span class="st"> </span><span class="kw">system.file</span>(<span class="st">&quot;sheets&quot;</span>, <span class="st">&quot;gabe.xlsx&quot;</span>, <span class="dt">package =</span> <span class="st">&quot;rexcel&quot;</span>)
+<span class="kw">rexcel_workbook</span>(gabe_path)</code></pre></div>
+<pre><code>## $xlsx_path
+## [1] &quot;/Users/jenny/rrr/rexcel/inst/sheets/gabe.xlsx&quot;
+## 
+## $reg_time
+## [1] &quot;2016-05-30 14:57:05 PDT&quot;
+## 
+## $manifest
+## Source: local data frame [12 x 3]
+## 
+##                          Name Length       Date
+##                         &lt;chr&gt;  &lt;dbl&gt;     &lt;time&gt;
+## 1         [Content_Types].xml   1356 1980-01-01
+## 2                 _rels/.rels    733 1980-01-01
+## 3  xl/_rels/workbook.xml.rels    839 1980-01-01
+## 4             xl/workbook.xml   1702 1980-01-01
+## 5               xl/styles.xml   1260 1980-01-01
+## 6    xl/worksheets/sheet2.xml   1103 1980-01-01
+## 7         xl/theme/theme1.xml   6788 1980-01-01
+## 8    xl/worksheets/sheet1.xml   1171 1980-01-01
+## 9     docProps/thumbnail.jpeg  14312 1980-01-01
+## 10       xl/sharedStrings.xml    183 1980-01-01
+## 11           docProps/app.xml    834 1980-01-01
+## 12          docProps/core.xml    635 1980-01-01
+## 
+## $content_types
+## Source: local data frame [11 x 3]
+## 
+##                     PartName Extension
+##                        &lt;chr&gt;     &lt;chr&gt;
+## 1                       &lt;NA&gt;       xml
+## 2                       &lt;NA&gt;      rels
+## 3                       &lt;NA&gt;      jpeg
+## 4           /xl/workbook.xml      &lt;NA&gt;
+## 5  /xl/worksheets/sheet1.xml      &lt;NA&gt;
+## 6  /xl/worksheets/sheet2.xml      &lt;NA&gt;
+## 7       /xl/theme/theme1.xml      &lt;NA&gt;
+## 8             /xl/styles.xml      &lt;NA&gt;
+## 9      /xl/sharedStrings.xml      &lt;NA&gt;
+## 10        /docProps/core.xml      &lt;NA&gt;
+## 11         /docProps/app.xml      &lt;NA&gt;
+## Variables not shown: ContentType &lt;chr&gt;.
+## 
+## $sheets
+## Source: local data frame [2 x 4]
+## 
+##             name state sheet_id    id
+##            &lt;chr&gt; &lt;chr&gt;    &lt;int&gt; &lt;chr&gt;
+## 1 Gabe's S''heet  &lt;NA&gt;        2  rId1
+## 2     HiGabe!!!!  &lt;NA&gt;        1  rId2
+## 
+## $defined_names
+## Source: local data frame [4 x 3]
+## 
+##      name                     refers_to sheet_id
+##     &lt;chr&gt;                         &lt;chr&gt;    &lt;int&gt;
+## 1   A_one      'Gabe''s S''''heet'!$A$1       NA
+## 2   A_one             'HiGabe!!!!'!$A$1       NA
+## 3 numbers 'Gabe''s S''''heet'!$A$2:$A$6       NA
+## 4 numbers        'HiGabe!!!!'!$A$2:$A$6       NA
+## 
+## $workbook_rels
+## Source: local data frame [5 x 3]
+## 
+##      id
+##   &lt;chr&gt;
+## 1  rId3
+## 2  rId4
+## 3  rId5
+## 4  rId1
+## 5  rId2
+## Variables not shown: type &lt;chr&gt;, target &lt;chr&gt;.
+## 
+## $shared_strings
+## [1] &quot;numbers&quot;
+## attr(,&quot;count&quot;)
+## [1] 2
+## attr(,&quot;uniqueCount&quot;)
+## [1] 1
+## 
+## $styles
+## $styles$fonts
+## Source: local data frame [1 x 5]
+## 
+##      sz color    name family scheme
+##   &lt;chr&gt; &lt;chr&gt;   &lt;chr&gt;  &lt;chr&gt;  &lt;chr&gt;
+## 1    12     1 Calibri      2  minor
+## 
+## $styles$fills
+## NULL
+## 
+## $styles$borders
+## NULL
+## 
+## $styles$cell_style_xfs
+## NULL
+## 
+## $styles$cell_xfs
+## NULL
+## 
+## $styles$cell_styles
+## NULL
+## 
+## $styles$num_fmts
+## NULL
+## 
+## $styles$dxfs
+## NULL
+## 
+## 
+## $worksheet_rels
+## NULL
+## 
+## $sheets_df
+## Source: local data frame [2 x 6]
+## 
+##   sheet_id           name    id                   target state
+##      &lt;int&gt;          &lt;chr&gt; &lt;chr&gt;                    &lt;chr&gt; &lt;chr&gt;
+## 1        2 Gabe's S''heet  rId1 xl/worksheets/sheet1.xml  &lt;NA&gt;
+## 2        1     HiGabe!!!!  rId2 xl/worksheets/sheet2.xml  &lt;NA&gt;
+## Variables not shown: type &lt;chr&gt;.</code></pre>
 <p><em>Here I’m exploring the existing sheet reading functionality, using the vignette format. This is not an actual vignette!</em></p>
 <p>Peeling the many-layered onion that is <code>rexcel_read()</code> until I get at the XML for a worksheet. Wish me luck.</p>
 <p>We’ll work with an example sheet created for <code>googlesheets</code> that has alot of formulas and formatting going.</p>
@@ -380,7 +1217,11 @@ dat$rels   ## ?files in the zip archive?</code></pre></div>
 <pre><code>##  [1] &quot;integer&quot;           &quot;number_formatted&quot;  &quot;number_rounded&quot;   
 ##  [4] &quot;character&quot;         &quot;formula&quot;           &quot;formula_formatted&quot;
 ##  [7] &quot;one&quot;               &quot;three&quot;             &quot;four&quot;             
-## [10] &quot;five&quot;</code></pre>
+## [10] &quot;five&quot;             
+## attr(,&quot;count&quot;)
+## [1] 10
+## attr(,&quot;uniqueCount&quot;)
+## [1] 10</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">(date_offset &lt;-<span class="st"> </span><span class="kw">xlsx_date_offset</span>(path))</code></pre></div>
 <pre><code>## [1] &quot;1899-12-30&quot;</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">style_xlsx &lt;-<span class="st"> </span><span class="kw">xlsx_read_style</span>(path)

@@ -13,11 +13,13 @@ rexcel_workbook(path)
 a list
 }
 \description{
-This is just Jenny getting to know xlsx! Function returns alot of the same
-information as rexcel_read_workbook() but with several notable exceptions.
-Returns a list, not a proper linen::workbook. Much less processing is done --
+Jenny is getting to know xlsx by writing this. Maybe it will evolve into some
+sort of an "Excel doctor" function. It covers alot of the same ground as
+\code{\link{rexcel_read_workbook}()} with several notable exceptions. Returns
+a list, not a proper linen::workbook. Much less processing is done --
 basically only whats needed to some reasonable R object, usually a data
-frame.
+frame. "Read one file at a time, make one object from each file" is the
+general philosophy.
 }
 \examples{
 mini_gap_path <- system.file("sheets", "mini-gap.xlsx", package = "rexcel")

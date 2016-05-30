@@ -1,15 +1,35 @@
+## ----setup, include = FALSE, cache = FALSE-------------------------------
+knitr::opts_chunk$set(error = TRUE)  
+
 ## ------------------------------------------------------------------------
 library(rprojroot)
 devtools::load_all(find_package_root_file())
 
 ## ------------------------------------------------------------------------
 mini_gap_path <- system.file("sheets", "mini-gap.xlsx", package = "rexcel")
-rexcel_workbook(mini_gap_path)
+mini_gap_workbook <- rexcel_workbook(mini_gap_path)
+str(mini_gap_workbook, max.level = 1)
+mini_gap_workbook
 
 ## ------------------------------------------------------------------------
 ff_path <- system.file("sheets", "gs-test-formula-formatting.xlsx",
                        package = "rexcel")
 rexcel_workbook(ff_path)
+
+## ------------------------------------------------------------------------
+ek_path <- system.file("sheets", "Ekaterinburg_IP_9.xlsx", package = "rexcel")
+rexcel_workbook(ek_path)
+ek2_path <- system.file("sheets", "Ekaterinburg_IP_9-RESAVED.xlsx",
+                        package = "rexcel")
+rexcel_workbook(ek_path)
+
+## ------------------------------------------------------------------------
+dn_path <- system.file("sheets", "defined-names.xlsx", package = "rexcel")
+rexcel_workbook(dn_path)
+
+## ------------------------------------------------------------------------
+gabe_path <- system.file("sheets", "gabe.xlsx", package = "rexcel")
+rexcel_workbook(gabe_path)
 
 ## ------------------------------------------------------------------------
 (ff_path <- system.file("sheets", "gs-test-formula-formatting.xlsx",

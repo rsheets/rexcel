@@ -13,6 +13,10 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+```{r setup, include = FALSE, cache = FALSE}  
+knitr::opts_chunk$set(error = TRUE)  
+```
+
 ```{r}
 library(rprojroot)
 devtools::load_all(find_package_root_file())
@@ -26,6 +30,7 @@ Apply it to mini gapminder.
 mini_gap_path <- system.file("sheets", "mini-gap.xlsx", package = "rexcel")
 mini_gap_workbook <- rexcel_workbook(mini_gap_path)
 str(mini_gap_workbook, max.level = 1)
+mini_gap_workbook
 ```
 
 What's here?
@@ -56,6 +61,31 @@ Apply it to formula and formatting sheet.
 ff_path <- system.file("sheets", "gs-test-formula-formatting.xlsx",
                        package = "rexcel")
 rexcel_workbook(ff_path)
+```
+
+
+Apply it to the Ekaterinburg sheet from [readxl/#80](https://github.com/hadley/readxl/issues/80) and the "resaved in Excel" version.
+
+```{r}
+ek_path <- system.file("sheets", "Ekaterinburg_IP_9.xlsx", package = "rexcel")
+rexcel_workbook(ek_path)
+ek2_path <- system.file("sheets", "Ekaterinburg_IP_9-RESAVED.xlsx",
+                        package = "rexcel")
+rexcel_workbook(ek_path)
+```
+
+Apply it to a sheet created to play with defined ranges.
+
+```{r}
+dn_path <- system.file("sheets", "defined-names.xlsx", package = "rexcel")
+rexcel_workbook(dn_path)
+```
+
+Apply it to a sheet created to explore tricky worksheet names.
+
+```{r}
+gabe_path <- system.file("sheets", "gabe.xlsx", package = "rexcel")
+rexcel_workbook(gabe_path)
 ```
 
 *Here I'm exploring the existing sheet reading functionality, using the vignette format. This is not an actual vignette!*
