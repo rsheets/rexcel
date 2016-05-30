@@ -16,7 +16,7 @@ xlsx_ct_comments <- function(xml, ns) {
 }
 
 xlsx_ct_authors <- function(xml, ns) {
-  vcapply(xml2::xml_children(xml2::xml_find_one(xml, "d1:authors", ns)),
+  vcapply(xml2::xml_children(xml2::xml_find_first(xml, "d1:authors", ns)),
           xml2::xml_text)
 }
 
@@ -26,7 +26,7 @@ xlsx_ct_comment_list <- function(xml, ns, authors) {
 
 xlsx_ct_comment <- function(x, ns, authors) {
   at <- as.list(xml2::xml_attrs(x))
-  text <- xlsx_ct_rst(xml2::xml_find_one(x, "d1:text", ns), ns)
+  text <- xlsx_ct_rst(xml2::xml_find_first(x, "d1:text", ns), ns)
   tibble::data_frame(
     ref = attr_character(at$ref),
     author = authors[attr_integer(at$authorId) + 1L],

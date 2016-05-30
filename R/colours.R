@@ -3,7 +3,7 @@ col_apply_tint <- function(col, tint) {
     tint <- rep(tint, length(col))
   }
   i <- tint < 0
-  hsl <- rgb2hsl(col2rgb(col))
+  hsl <- rgb2hsl(grDevices::col2rgb(col))
   if (any(i)) {
     hsl[3L, i] <- hsl[3L, i] * (1 + tint)
   }

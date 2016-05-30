@@ -135,7 +135,7 @@ xlsx_ct_col <- function(xml, ns) {
 
 ## 18.3.1.55 mergeCells (Merge Cells)
 xlsx_read_merged <- function(xml, ns) {
-  merged <- xml2::xml_children(xml2::xml_find_one(xml, "d1:mergeCells", ns))
+  merged <- xml2::xml_children(xml2::xml_find_first(xml, "d1:mergeCells", ns))
   lapply(merged, xlsx_ct_merge_cell)
 }
 
@@ -146,7 +146,7 @@ xlsx_ct_merge_cell <- function(x) {
 
 ## 18.3.1.80 sheetData (Sheet Data)
 xlsx_read_sheet_data <- function(xml, ns, strings) {
-  rows <- xml2::xml_children(xml2::xml_find_one(xml, "d1:sheetData", ns))
+  rows <- xml2::xml_children(xml2::xml_find_first(xml, "d1:sheetData", ns))
   dat <- lapply(rows, xlsx_ct_row, ns, strings)
 
   cells <- rbind_df(unlist(lapply(dat, "[[", "cells"), FALSE),
@@ -220,10 +220,10 @@ xlsx_ct_cell <- function(xml, ns, strings) {
   if (identical(type, "inlineStr")) { # avoid missingness
     formula <- NA_character_
     ## value here _must_ be present, so no conditional (vs below)
-    value <- xlsx_ct_rst(xml2::xml_find_one(xml, "d1:is", ns), ns)
+    value <- xlsx_ct_rst(xml2::xml_find_first(xml, "d1:is", ns), ns)
   } else {
-    formula <- xml2::xml_text(xml2::xml_find_one(xml, "d1:f", ns))
-    v <- xml2::xml_find_one(xml, "d1:v", ns)
+    formula <- xml2::xml_text(xml2::xml_find_first(xml, "d1:f", ns))
+    v <- xml2::xml_find_first(xml, "d1:v", ns)
     value <- if (inherits(v, "xml_missing")) NULL else xml2::xml_text(v)
 
     ## String substitutions from the string table:
@@ -262,7 +262,7 @@ xlsx_ct_worksheet_views <- function(xml, ns) {
 
 ## 18.3.1.87 sheetView
 xlsx_ct_worksheet_view <- function(xml, ns) {
-  pane <- xml2::xml_find_one(xml, "./d1:pane", ns)
+  pane <- xml2::xml_find_first(xml, "./d1:pane", ns)
   if (inherits(pane, "xml_missing")) NULL else xlsx_ct_pane(pane)
 }
 

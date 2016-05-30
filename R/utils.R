@@ -41,7 +41,7 @@ attr_character <- function(x, missing=NA_character_) {
 }
 
 process_container <- function(xml, xpath, ns, fun, ..., classes=NULL) {
-  els <- xml2::xml_children(xml2::xml_find_one(xml, xpath, ns))
+  els <- xml2::xml_children(xml2::xml_find_first(xml, xpath, ns))
   if (isTRUE(classes)) {
     if (length(els) == 0L) {
       classes <- vcapply(fun(NULL, ns, ...), storage.mode)
@@ -74,7 +74,7 @@ rbind_df <- function(x, classes=NULL) {
   ul <- function(i, x) {
     if (preserve[[i]]) x else unlist(x)
   }
-  tmp <- setNames(lapply(seq_along(nms), function(i) ul(i, xx[i, ])), nms)
+  tmp <- stats::setNames(lapply(seq_along(nms), function(i) ul(i, xx[i, ])), nms)
   tibble::as_data_frame(tmp)
 }
 
@@ -105,7 +105,7 @@ path_join <- function(a, b) {
   if (na == 1L && nb != 1L) {
     a <- rep_len(a, nb)
   } else if (nb == 1L && na != 1L) {
-    b <- rel_len(b, na)
+    b <- rep_len(b, na)
   } else if (na != nb && na != 1L && nb != 1L) {
     stop("Can't recycle vectors together")
   }

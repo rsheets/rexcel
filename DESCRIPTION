@@ -3,11 +3,11 @@ Title: R/Excel Linen Driver
 Version: 0.0.1
 Author: Rich FitzJohn and Jenny Bryan
 Maintainer: Rich FitzJohn <rich.fitzjohn@gmail.com>
-Description: rexcel
+Description: rexcel now is part of a complete sentence.
 License: GPL-3
 LazyData: true
-URL: https://github.com/jennybc/rexcel
-BugReports: https://github.com/jennybc/rexcel/issues
+URL: https://github.com/rsheets/rexcel
+BugReports: https://github.com/rsheets/rexcel/issues
 Imports:
     cellranger,
     linen (>= 0.0.3),
