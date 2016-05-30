@@ -1,10 +1,12 @@
 #' Low-level function to expose contents of xlsx
 #'
-#' This is just Jenny getting to know xlsx! Function returns alot of the same
-#' information as rexcel_read_workbook() but with several notable exceptions.
-#' Returns a list, not a proper linen::workbook. Much less processing is done --
+#' Jenny is getting to know xlsx by writing this. Maybe it will evolve into some
+#' sort of an "Excel doctor" function. It covers alot of the same ground as
+#' \code{\link{rexcel_read_workbook}()} with several notable exceptions. Returns
+#' a list, not a proper linen::workbook. Much less processing is done --
 #' basically only whats needed to some reasonable R object, usually a data
-#' frame.
+#' frame. "Read one file at a time, make one object from each file" is the
+#' general philosophy.
 #'
 #' @param path
 #'
@@ -40,6 +42,10 @@ rexcel_workbook <- function(path) {
   ## xl/styles.xml
   ## xl/_rels/workbook.xml.rels
 
+  ## TO DO: look into these files that appear in defined_names.xlsx
+  ## docProps/core.xml
+  ## docProps/app.xml
+
   ## ** worksheets-related ***
   ## xl/worksheets/sheet1.xml
   ## xl/worksheets/sheet2.xml
@@ -64,12 +70,33 @@ rexcel_workbook <- function(path) {
   ## this appears to be always boring? omit it
 
   ## xl/workbook.xml
-  xl_workbook <- xlsx_read_workbook_JENNY(path)
-  ## xl_workbook is a tbl with one row per worksheet and these variables:
-  ## state: "visible" (or what else ... "invisible"?), ?sometimes?
+  sheets <- xlsx_read_workbook_sheets(path)
+  ## sheets is a tbl with one row per worksheet and these variables:
   ## name: e.g. "Africa" (assume this is name of the tab)
-  ## sheetID: integer (assume this is order perceived by user)
+  ## state: "visible" (or what else ... "invisible"?), might be NA
+  ## sheet_id: integer (assume this is order perceived by user)
   ## id: character, e.g. "rId5" (a key that comes up in other tables)
+
+  defined_names <- xlsx_read_workbook_defined_names(path)
+  ## defined_names is a tbl with one row per named range and these variables:
+  ## name: name of the named range
+  ## refers_to: string representation of the cell area reference, e.g. Sheet1!$B$2:$B$11
+  ## sheet_id: integer (I can't get my hands on a sheet that has actually this)
+  ## defined_names will be NULL if there are no named ranges
+  ## TO DO:
+  ## it's possible there should be more info, because I've seen named range xml
+  ## that is more complicated
+  ## https://github.com/rsheets/cellranger/issues/23#issuecomment-221898917
+
+  ## xl/_rels/workbook.xml.rels
+  workbook_rels <- xlsx_read_workbook_rels(path)
+  ## workbook_rels is a tibble, each row a file, with variables
+  ## id: character, e.g. "rId5" (a key that occurs elsewhere)
+  ## target: a file path relative to xl/ (maybe prepend xl/?)
+  ## type: a long namespace-y string, the last bit of which tells you
+  ## if the associated file is sharedStrings, styles, or a worksheet, e.g.,
+  ## http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet
+  ##   (maybe just take the last bit?)
 
   ## xl/sharedStrings.xml
   shared_strings <- xlsx_read_shared_strings(path)
@@ -78,8 +105,14 @@ rexcel_workbook <- function(path) {
 
   ## xl/styles.xml
   styles <- xlsx_read_file(path, "xl/styles.xml")
+  ## again, ekaterinburg has different namespace
+  ## this is a mess; discuss with rich
   ns <- xml2::xml_ns(styles)
-
+  alt_ns <-
+    construct_xml_ns(x = "http://schemas.openxmlformats.org/spreadsheetml/2006/main")
+  if (ns_equal_to_ref(styles, alt_ns)) {
+    ns <- xml2::xml_ns_rename(ns, x = "d1")
+  }
   font_nodes <- styles %>%
     xml2::xml_find_all("//d1:fonts/d1:font", ns) %>%
     purrr::map(xml2::xml_children)
@@ -105,40 +138,8 @@ rexcel_workbook <- function(path) {
   num_fmts <- NULL
   dxfs <- NULL
 
-  ## xl/_rels/workbook.xml.rels
-  workbook_rels <- xlsx_read_file(path, "xl/_rels/workbook.xml.rels") %>%
-    xml2::xml_contents() %>%
-    xml2::xml_attrs() %>%
-    purrr::map(as.list) %>%
-    dplyr::bind_rows() %>%
-    dplyr::select(Id, Target, Type)
-  ## workbook_rels is a tibble, each row a file, with variables
-  ## Id: character, e.g. "rId5" (a key that came up already in sheets above)
-  ## Target: a file path relative to xl/
-  ## Type: a long namespace-y string, the last bit of which tells you
-  ## if the associated file is sharedStrings, styles, or a worksheet, e.g.,
-  ## http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet
-
   ## xl/worksheets/_rels/sheet1.xml.rels and friends
-  fnames <- manifest %>%
-    dplyr::filter(grepl("rels", Name), grepl("sheet", Name)) %>%
-    .$Name
-  nms <- gsub("xl/worksheets/_rels/(sheet[0-9]+).xml.rels", "\\1", fnames)
-  wr <- fnames %>%
-    purrr::map(xlsx_read_file, path = path)
-  ns <- xml2::xml_ns(wr[[1]])
-  worksheet_rels <- wr %>%
-    purrr::map(xml2::xml_find_all, xpath = "//d1:Relationship", ns = ns) %>%
-    setNames(nms)
-  f <- function(x, ns) {
-    x %>%
-      purrr::map(xml2::xml_attrs, ns = ns) %>%
-      purrr::map(as.list) %>%
-      dplyr::bind_rows()
-  }
-  worksheet_rels <- worksheet_rels %>%
-    purrr::map(f, ns = ns) %>%
-    dplyr::bind_rows(.id = "worksheet")
+  worksheet_rels <- xlsx_read_worksheet_rels(path)
   ## worksheet_rels is a tibble, each row a file ... so far one row per
   ## worksheet, though that might not hold in general, with variables
   ## worksheet: character, e.g. "sheet1" (I added this!)
@@ -166,25 +167,26 @@ rexcel_workbook <- function(path) {
   ## everything from sheets tbl already formed
   ## workbook_rels prepend xl/ to Target
   ## join to sheets on Id
-  sheets <- workbook_rels %>%
-    dplyr::mutate(Target = file.path("xl", Target)) %>%
-    dplyr::right_join(xl_workbook, by = c("Id" = "id")) %>%
+  sheets_df <- workbook_rels %>%
+    dplyr::mutate(target = file.path("xl", target)) %>%
+    dplyr::right_join(sheets, by = c("id" = "id")) %>%
     dplyr::select(
-      dplyr::one_of(c("sheetId", "name", "Id", "Target", "state", "Type"))
-      )
+      dplyr::one_of(c("sheet_id", "name", "id", "target", "state", "type"))
+    )
 
   dplyr::lst(xlsx_path = path,
       reg_time = Sys.time(),
       manifest,
       content_types = ct,
-      xl_workbook,
       sheets,
+      defined_names,
+      workbook_rels,
       shared_strings,
       styles =
         dplyr::lst(fonts, fills, borders, cell_style_xfs, cell_xfs,
                    cell_styles, num_fmts, dxfs),
-      workbook_rels,
-      worksheet_rels
+      worksheet_rels,
+      sheets_df
   )
   ## TODO: obviously this should return a workbook object!
 }

@@ -40,6 +40,8 @@ attr_character <- function(x, missing=NA_character_) {
   if (is.null(a)) b else a
 }
 
+none <- function(x) !any(x)
+
 process_container <- function(xml, xpath, ns, fun, ..., classes=NULL) {
   els <- xml2::xml_children(xml2::xml_find_first(xml, xpath, ns))
   if (isTRUE(classes)) {
