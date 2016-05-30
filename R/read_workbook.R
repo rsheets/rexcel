@@ -89,29 +89,28 @@ xlsx_read_workbook_rels <- function(path) {
 
 xlsx_read_worksheet_rels <- function(path) {
   manifest <- xlsx_list_files(path)
-  holds_sheet_rels <-
+  holds_ws_rels <-
     grepl("xl/worksheets/_rels/sheet[0-9]*.xml.rels", manifest$Name)
-  if (none(holds_sheet_rels)) {
+  if (none(holds_ws_rels)) {
     return(NULL)
   }
-  sheet_rels_fnames <- manifest$Name[holds_sheet_rels]
-  nms <- gsub("xl/worksheets/_rels/(sheet[0-9]+).xml.rels", "\\1",
-              sheet_rels_fnames)
-  wr <- sheet_rels_fnames %>%
-    purrr::map(xlsx_read_file, path = path)
-  worksheet_rels <- wr %>%
-    purrr::map(xml2::xml_find_all, xpath = "//d1:Relationship") %>%
-    stats::setNames(nms)
+  ws_rels_fnames <- manifest$Name[holds_ws_rels]
+  nms <- gsub("xl/worksheets/_rels/(sheet[0-9]*).xml.rels", "\\1",
+              ws_rels_fnames)
+  worksheet_rels <- lapply(ws_rels_fnames, xlsx_read_file, path = path)
+  worksheet_rels <-
+    lapply(worksheet_rels, xml2::xml_find_all, xpath = "//d1:Relationship")
+  names(worksheet_rels) <- nms
   f <- function(x) {
     x %>%
-      purrr::map(xml2::xml_attrs) %>%
-      purrr::map(as.list) %>%
+      xml2::xml_attrs() %>%
+      lapply(as.list) %>%
       dplyr::bind_rows()
   }
-  worksheet_rels %>%
-    purrr::map(f) %>%
-    dplyr::bind_rows(.id = "worksheet") %>%
-    stats::setNames(tolower(names(.)))
+  worksheet_rels <- lapply(worksheet_rels, f) %>%
+    dplyr::bind_rows(.id = "worksheet")
+  names(worksheet_rels) <- tolower(names(worksheet_rels))
+  worksheet_rels
 }
 
 xlsx_read_workbook <- function(path) {

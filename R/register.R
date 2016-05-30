@@ -8,7 +8,7 @@
 #' frame. "Read one file at a time, make one object from each file" is the
 #' general philosophy.
 #'
-#' @param path
+#' @param path path to xlsx
 #'
 #' @return a list
 #' @keywords internaln
@@ -20,6 +20,7 @@
 #' ff_path <- system.file("sheets", "gs-test-formula-formatting.xlsx",
 #'                        package = "rexcel")
 #' rexcel_workbook(ff_path)
+#' @export
 rexcel_workbook <- function(path) {
   ## TO DO:
   ## if path is actually a workbook
@@ -115,15 +116,15 @@ rexcel_workbook <- function(path) {
   }
   font_nodes <- styles %>%
     xml2::xml_find_all("//d1:fonts/d1:font", ns) %>%
-    purrr::map(xml2::xml_children)
+    lapply(xml2::xml_children)
   f <- function(font_node, ns) {
     nms <- xml2::xml_name(font_node, ns) %>% rm_xml_ns()
-    vals <- xml2::xml_attrs(font_node, ns) %>% purrr::map(unname)
-    setNames(vals, nms) %>%
-      purrr::keep(~length(.x) > 0)
+    vals <- xml2::xml_attrs(font_node, ns) %>% lapply(unname)
+    names(vals) <- nms
+    vals[lengths(vals) > 0]
   }
   fonts <- font_nodes %>%
-    purrr::map(f, ns = ns) %>%
+    lapply(f, ns = ns) %>%
     dplyr::bind_rows()
   ## fonts is a tbl with one row per font and variables such as
   ## sz, color, name

@@ -2,5 +2,5 @@
 #'
 #' @name rexcel
 #' @docType package
-#' @importFrom purrr %>%
+#' @importFrom dplyr %>%
 NULL

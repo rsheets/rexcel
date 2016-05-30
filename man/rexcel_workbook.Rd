@@ -7,7 +7,7 @@
 rexcel_workbook(path)
 }
 \arguments{
-\item{path}{}
+\item{path}{path to xlsx}
 }
 \value{
 a list

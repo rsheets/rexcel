@@ -28,7 +28,7 @@ str(mini_gap_workbook, max.level = 1)
 ```
 ## List of 11
 ##  $ xlsx_path     : chr "/Users/jenny/rrr/rexcel/inst/sheets/mini-gap.xlsx"
-##  $ reg_time      : POSIXct[1:1], format: "2016-05-30 14:57:04"
+##  $ reg_time      : POSIXct[1:1], format: "2016-05-30 15:23:09"
 ##  $ manifest      :Classes 'tbl_df', 'tbl' and 'data.frame':	21 obs. of  3 variables:
 ##  $ content_types :Classes 'tbl_df', 'tbl' and 'data.frame':	15 obs. of  3 variables:
 ##  $ sheets        :Classes 'tbl_df', 'tbl' and 'data.frame':	5 obs. of  4 variables:
@@ -51,7 +51,7 @@ mini_gap_workbook
 ## [1] "/Users/jenny/rrr/rexcel/inst/sheets/mini-gap.xlsx"
 ## 
 ## $reg_time
-## [1] "2016-05-30 14:57:04 PDT"
+## [1] "2016-05-30 15:23:09 PDT"
 ## 
 ## $manifest
 ## Source: local data frame [21 x 3]
@@ -234,7 +234,7 @@ rexcel_workbook(ff_path)
 ## [1] "/Users/jenny/rrr/rexcel/inst/sheets/gs-test-formula-formatting.xlsx"
 ## 
 ## $reg_time
-## [1] "2016-05-30 14:57:04 PDT"
+## [1] "2016-05-30 15:23:09 PDT"
 ## 
 ## $manifest
 ## Source: local data frame [9 x 3]
@@ -359,7 +359,7 @@ rexcel_workbook(ek_path)
 ## [1] "/Users/jenny/rrr/rexcel/inst/sheets/Ekaterinburg_IP_9.xlsx"
 ## 
 ## $reg_time
-## [1] "2016-05-30 14:57:04 PDT"
+## [1] "2016-05-30 15:23:09 PDT"
 ## 
 ## $manifest
 ## Source: local data frame [8 x 3]
@@ -615,9 +615,9 @@ rexcel_workbook(ek_path)
 ## $worksheet_rels
 ## Source: local data frame [1 x 5]
 ## 
-##                            worksheet
-##                                <chr>
-## 1 xl/worksheets/_rels/sheet.xml.rels
+##   worksheet
+##       <chr>
+## 1     sheet
 ## Variables not shown: type <chr>, target <chr>, targetmode <chr>, id <chr>.
 ## 
 ## $sheets_df
@@ -640,7 +640,7 @@ rexcel_workbook(ek_path)
 ## [1] "/Users/jenny/rrr/rexcel/inst/sheets/Ekaterinburg_IP_9.xlsx"
 ## 
 ## $reg_time
-## [1] "2016-05-30 14:57:05 PDT"
+## [1] "2016-05-30 15:23:09 PDT"
 ## 
 ## $manifest
 ## Source: local data frame [8 x 3]
@@ -896,9 +896,9 @@ rexcel_workbook(ek_path)
 ## $worksheet_rels
 ## Source: local data frame [1 x 5]
 ## 
-##                            worksheet
-##                                <chr>
-## 1 xl/worksheets/_rels/sheet.xml.rels
+##   worksheet
+##       <chr>
+## 1     sheet
 ## Variables not shown: type <chr>, target <chr>, targetmode <chr>, id <chr>.
 ## 
 ## $sheets_df
@@ -923,7 +923,7 @@ rexcel_workbook(dn_path)
 ## [1] "/Users/jenny/rrr/rexcel/inst/sheets/defined-names.xlsx"
 ## 
 ## $reg_time
-## [1] "2016-05-30 14:57:05 PDT"
+## [1] "2016-05-30 15:23:09 PDT"
 ## 
 ## $manifest
 ## Source: local data frame [10 x 3]
@@ -1054,7 +1054,7 @@ rexcel_workbook(gabe_path)
 ## [1] "/Users/jenny/rrr/rexcel/inst/sheets/gabe.xlsx"
 ## 
 ## $reg_time
-## [1] "2016-05-30 14:57:05 PDT"
+## [1] "2016-05-30 15:23:09 PDT"
 ## 
 ## $manifest
 ## Source: local data frame [12 x 3]
