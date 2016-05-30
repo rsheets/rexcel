@@ -32,7 +32,7 @@ attr_character <- function(x, missing=NA_character_) {
 }
 
 process_container <- function(xml, xpath, ns, fun, ..., classes=NULL) {
-  els <- xml2::xml_children(xml2::xml_find_one(xml, xpath, ns))
+  els <- xml2::xml_children(xml2::xml_find_first(xml, xpath, ns))
   if (isTRUE(classes)) {
     if (length(els) == 0L) {
       classes <- vcapply(fun(NULL, ns, ...), storage.mode)

@@ -34,7 +34,7 @@ xlsx_read_shared_strings <- function(path) {
 ## NOTE: Ignoring rPh and phoneticPr which might be part of this
 ## element.  Terribly anglocentric :(
 xlsx_ct_rst <- function(x, ns) {
-  t <- xml2::xml_find_one(x, "d1:t", ns)
+  t <- xml2::xml_find_first(x, "d1:t", ns)
   r <- xml2::xml_find_all(x, "d1:r", ns)
   if (length(r) == 0L) {
     ## Treat as plain text.

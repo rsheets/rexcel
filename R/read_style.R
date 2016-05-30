@@ -110,7 +110,7 @@ xlsx_read_theme <- function(path) {
     return(NULL)
   }
   ns <- xml2::xml_ns(xml)
-  tmp <- xml2::xml_find_one(xml, "/a:theme/a:themeElements/a:clrScheme", ns)
+  tmp <- xml2::xml_find_first(xml, "/a:theme/a:themeElements/a:clrScheme", ns)
 
   ## Empirical ordering, based on one random website.  I have not
   ## found the support for this in the actual spec yet and have seen a
@@ -120,7 +120,7 @@ xlsx_read_theme <- function(path) {
            paste0("accent", 1:6),
            "hlink", "folHlink")
   f <- function(x, xml, ns) {
-    tmp <- xml2::xml_find_one(xml, paste0(".//a:", x), ns)
+    tmp <- xml2::xml_find_first(xml, paste0(".//a:", x), ns)
     nd <- xml2::xml_children(tmp)[[1L]]
     at <- switch(xml2::xml_name(nd), sysClr="lastClr", srgbClr="val")
     paste0("#", xml2::xml_attr(nd, at, ns))
@@ -164,28 +164,28 @@ xlsx_ct_fonts <- function(xml, ns, theme, index) {
 ## Note that some of the elements here are defined in the "Shared
 ## Strings" section of the spec.  Others I have not tracked down yet.
 xlsx_ct_font <- function(x, ns, theme, index) {
-  name <- xml2::xml_text(xml2::xml_find_one(x, "d1:name/@val", ns))
+  name <- xml2::xml_text(xml2::xml_find_first(x, "d1:name/@val", ns))
   ## ignoring charset
-  family <- xlsx_st_font_family(xml2::xml_find_one(x, "d1:family", ns))
+  family <- xlsx_st_font_family(xml2::xml_find_first(x, "d1:family", ns))
 
-  b <- xlsx_ct_boolean_property(xml2::xml_find_one(x, "d1:b", ns))
-  i <- xlsx_ct_boolean_property(xml2::xml_find_one(x, "d1:i", ns))
-  strike <- xlsx_ct_boolean_property(xml2::xml_find_one(x, "d1:strike", ns))
-  outline <- xlsx_ct_boolean_property(xml2::xml_find_one(x, "d1:outline", ns))
-  shadow <- xlsx_ct_boolean_property(xml2::xml_find_one(x, "d1:shadow", ns))
-  condense <- xlsx_ct_boolean_property(xml2::xml_find_one(x, "d1:condense", ns))
-  extend <- xlsx_ct_boolean_property(xml2::xml_find_one(x, "d1:extend", ns))
+  b <- xlsx_ct_boolean_property(xml2::xml_find_first(x, "d1:b", ns))
+  i <- xlsx_ct_boolean_property(xml2::xml_find_first(x, "d1:i", ns))
+  strike <- xlsx_ct_boolean_property(xml2::xml_find_first(x, "d1:strike", ns))
+  outline <- xlsx_ct_boolean_property(xml2::xml_find_first(x, "d1:outline", ns))
+  shadow <- xlsx_ct_boolean_property(xml2::xml_find_first(x, "d1:shadow", ns))
+  condense <- xlsx_ct_boolean_property(xml2::xml_find_first(x, "d1:condense", ns))
+  extend <- xlsx_ct_boolean_property(xml2::xml_find_first(x, "d1:extend", ns))
 
-  color <- xlsx_ct_color(xml2::xml_find_one(x, "d1:color", ns), theme, index)
-  sz <- xlsx_ct_font_size(xml2::xml_find_one(x, "d1:sz", ns))
+  color <- xlsx_ct_color(xml2::xml_find_first(x, "d1:color", ns), theme, index)
+  sz <- xlsx_ct_font_size(xml2::xml_find_first(x, "d1:sz", ns))
 
-  u <- xlsx_ct_underline_property(xml2::xml_find_one(x, "d1:u", ns))
+  u <- xlsx_ct_underline_property(xml2::xml_find_first(x, "d1:u", ns))
   ## This one here is either baseline, superscript or subscript.  So
   ## probably not terribly useful and fairly confuse-able with
   ## _actual_ vertical alignment.
 
-  ## vertAlign <- xml2::xml_text(xml2::xml_find_one(x, "d1:vertAlign/@val", ns))
-  scheme <- xml2::xml_text(xml2::xml_find_one(x, "d1:scheme/@val", ns))
+  ## vertAlign <- xml2::xml_text(xml2::xml_find_first(x, "d1:vertAlign/@val", ns))
+  scheme <- xml2::xml_text(xml2::xml_find_first(x, "d1:scheme/@val", ns))
 
   tibble::data_frame(name, family,
                      b, i, strike, outline, shadow, condense, extend,
@@ -243,8 +243,8 @@ xlsx_ct_pattern_fill <- function(x, ns, theme, index) {
   ## This is very weird because all of the attribute patternType,
   ## fgColor and bgColor are optional.
   pattern_type <- xml2::xml_attr(x, "patternType")
-  fg <- xlsx_ct_color(xml2::xml_find_one(x, "./d1:fgColor", ns), theme, index)
-  bg <- xlsx_ct_color(xml2::xml_find_one(x, "./d1:bgColor", ns), theme, index)
+  fg <- xlsx_ct_color(xml2::xml_find_first(x, "./d1:fgColor", ns), theme, index)
+  bg <- xlsx_ct_color(xml2::xml_find_first(x, "./d1:bgColor", ns), theme, index)
   c(type="pattern", pattern_type=pattern_type, fg=fg, bg=bg)
 }
 
@@ -327,7 +327,7 @@ xlsx_ct_border <- function(x, ns, theme, index) {
   outline <- attr_bool(xml2::xml_attr(x, "outline"), FALSE)
 
   f <- function(path) {
-    xlsx_ct_border_pr(xml2::xml_find_one(x, path, ns), ns, theme, index)
+    xlsx_ct_border_pr(xml2::xml_find_first(x, path, ns), ns, theme, index)
   }
 
   tmp <- list(list(outline = outline),
@@ -371,7 +371,7 @@ xlsx_ct_border_pr <- function(x, ns, theme, index) {
   present <- !inherits(x, "xml_missing")
   if (present) {
     style <- xml2::xml_attr(x, "style")
-    color <- xlsx_ct_color(xml2::xml_find_one(x, "d1:color", ns), theme, index)
+    color <- xlsx_ct_color(xml2::xml_find_first(x, "d1:color", ns), theme, index)
   } else {
     color <- style <- NA_character_
   }
@@ -418,7 +418,7 @@ xlsx_ct_xf <- function(x, ns) {
     ## This is a reference against cellStyleXfs
     xf_id = attr_integer(at$xfId) + 1L)
 
-  alignment <- xlsx_ct_alignment(xml2::xml_find_one(x, "d1:alignment", ns))
+  alignment <- xlsx_ct_alignment(xml2::xml_find_first(x, "d1:alignment", ns))
   if (!isTRUE(apply_alignment)) {
     alignment[] <- lapply(alignment, as_na)
   }
@@ -587,7 +587,7 @@ xlsx_pattern_type <- function() {
 
 ## 18.8.27 indexedColors (Color Indexes)
 xlsx_ct_indexed_colors <- function(xml, ns) {
-  indexed_colors <- xml2::xml_find_one(xml, "//d1:indexedColors", ns)
+  indexed_colors <- xml2::xml_find_first(xml, "//d1:indexedColors", ns)
   if (inherits(indexed_colors, "xml_missing")) {
     indexed <- xlsx_indexed_cols()
   } else {
