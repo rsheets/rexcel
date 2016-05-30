@@ -23,6 +23,7 @@ xlsx_read_shared_strings <- function(path) {
     return(character(0))
   }
   ns <- xml2::xml_ns(xml)
+  ## to deal w/ less common namespacing, e.g. Ekaterinburg sheet
   alt_ns <-
     construct_xml_ns(x = "http://schemas.openxmlformats.org/spreadsheetml/2006/main")
   if (ns_equal_to_ref(xml, alt_ns)) {
@@ -31,7 +32,8 @@ xlsx_read_shared_strings <- function(path) {
   string_items <- xml2::xml_children(xml)
   ret <- vcapply(string_items, xlsx_ct_rst, ns)
   ## these gymnastics are necessary to preserve attribute names
-  at <- lapply(as.list(xml2::xml_attrs(xml)), as.integer)
+  at <- as.list(xml2::xml_attrs(xml)[c("count", "uniqueCount")])
+  at <- lapply(at, as.integer)
   attributes(ret) <- at
   ret
 }
