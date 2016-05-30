@@ -6,8 +6,8 @@ Maintainer: Rich FitzJohn <rich.fitzjohn@gmail.com>
 Description: rexcel
 License: GPL-3
 LazyData: true
-URL: https://github.com/jennybc/rexcel
-BugReports: https://github.com/jennybc/rexcel/issues
+URL: https://github.com/rsheets/rexcel
+BugReports: https://github.com/rsheets/rexcel/issues
 Imports:
     cellranger,
     linen (>= 0.0.3),
@@ -17,3 +17,6 @@ Imports:
 Suggests:
     testthat
 RoxygenNote: 5.0.1
+Remotes:
+    hadley/xml2
+
