@@ -153,10 +153,10 @@ is_xlsx <- function(path) {
   ## http://officeopenxml.com/anatomyofOOXML-xlsx.php
   ## https://msdn.microsoft.com/en-us/library/office/gg278316.aspx#MinWBScenario
   files <- xlsx_list_files(path)
-  has_content_types <- "[Content_Types].xml" %in% files$Name
-  has_rels <- "_rels/.rels" %in% files$Name
-  has_workbook_xml <- "xl/workbook.xml" %in% files$Name
-  has_sheet <- any(grepl("xl/worksheets/sheet[0-9]*.xml", files$Name))
+  has_content_types <- "[Content_Types].xml" %in% files$name
+  has_rels <- "_rels/.rels" %in% files$name
+  has_workbook_xml <- "xl/workbook.xml" %in% files$name
+  has_sheet <- any(grepl("xl/worksheets/sheet[0-9]*.xml", files$name))
   has_content_types && has_rels && has_workbook_xml && has_sheet
 }
 

@@ -2,9 +2,9 @@ xlsx_read_Content_Types <- function(path) {
   ct <- xlsx_read_file(path, "[Content_Types].xml")
   node_att <- lapply(xml2::xml_contents(ct), xml_attrs_list)
   tibble::data_frame(
-    PartName = vcapply2(node_att, "PartName"),
-    Extension = vcapply2(node_att, "Extension"),
-    ContentType = vcapply2(node_att, "ContentType")
+    part_name = vcapply2(node_att, "PartName"),
+    extension = vcapply2(node_att, "Extension"),
+    content_type = vcapply2(node_att, "ContentType")
   )
 }
 
@@ -39,8 +39,9 @@ xlsx_read_workbook_defined_names <- function(path) {
   ## inst/sheets/defined_names.xlsx
   ## --> node value gives cell ref (Rich found this in refersTo attr)
   ## --> attributes refersTo, sheetId don't even exist
+  ## --> localSheetId attribute appears when there are duplicated names (gabe.xlsx)
   ##
-  ## this is an attempt to accomodate both but Jenny doesn't have an actual
+  ## this is an attempt to accomodate all forms but Jenny doesn't have an actual
   ## example of the first form to look at
   dn_nodes <- xml2::xml_find_all(xml, "//*[local-name() = 'definedName']")
   ## why do I write this weird XPath?
@@ -61,11 +62,13 @@ xlsx_read_workbook_defined_names <- function(path) {
 
   ## may just be NAs
   sheet_id <- as.integer(vcapply2(dn_att, "sheetId"))
+  local_sheet_id <- as.integer(vcapply2(dn_att, "localSheetId"))
 
   tibble::data_frame(
      name = vcapply2(dn_att, "name"),
      refers_to,
-     sheet_id
+     sheet_id,
+     local_sheet_id
   )
 }
 
@@ -77,12 +80,13 @@ xlsx_read_workbook_rels <- function(path) {
   }
   rel_nodes <- xml2::xml_children(xml)
   rels <- rbind_df(lapply(rel_nodes, xml_attrs_list))
+
   names(rels) <- tolower(names(rels))
-  rels
+  rels[c("target", "id", "type")]
   ## MAYBE TODOs, if decide to do more processing:
   ##
   ## prepend target with "xl/"
-  ## but check the type and don't to if an external reference
+  ## but check the type and don't do if it's an external reference
   ##
   ## just take the last bit of type, i.e.basename(type),
 }
@@ -90,11 +94,11 @@ xlsx_read_workbook_rels <- function(path) {
 xlsx_read_worksheet_rels <- function(path) {
   manifest <- xlsx_list_files(path)
   holds_ws_rels <-
-    grepl("xl/worksheets/_rels/sheet[0-9]*.xml.rels", manifest$Name)
+    grepl("xl/worksheets/_rels/sheet[0-9]*.xml.rels", manifest$name)
   if (none(holds_ws_rels)) {
     return(NULL)
   }
-  ws_rels_fnames <- manifest$Name[holds_ws_rels]
+  ws_rels_fnames <- manifest$name[holds_ws_rels]
   nms <- gsub("xl/worksheets/_rels/(sheet[0-9]*).xml.rels", "\\1",
               ws_rels_fnames)
   worksheet_rels <- lapply(ws_rels_fnames, xlsx_read_file, path = path)

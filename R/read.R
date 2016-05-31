@@ -153,7 +153,9 @@ xlsx_read_file <- function(path, file) {
 }
 
 xlsx_list_files <- function(path) {
-  tibble::as_data_frame(utils::unzip(path, list = TRUE))
+  ret <- tibble::as_data_frame(utils::unzip(path, list = TRUE))
+  names(ret) <- tolower(names(ret))
+  ret[order(ret$name), ]
 }
 
 xlsx_read_file_if_exists <- function(path, file, missing=NULL) {

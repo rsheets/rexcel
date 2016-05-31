@@ -7,34 +7,62 @@ devtools::load_all(find_package_root_file())
 
 ## ------------------------------------------------------------------------
 mini_gap_path <- system.file("sheets", "mini-gap.xlsx", package = "rexcel")
-mini_gap_workbook <- rexcel_workbook(mini_gap_path)
+ff_path <- system.file("sheets", "gs-test-formula-formatting.xlsx",
+                       package = "rexcel")
+ek_path <- system.file("sheets", "Ekaterinburg_IP_9.xlsx", package = "rexcel")
+ek2_path <- system.file("sheets", "Ekaterinburg_IP_9-RESAVED.xlsx",
+                        package = "rexcel")
+dn_path <- system.file("sheets", "defined-names.xlsx", package = "rexcel")
+gabe_path <- system.file("sheets", "gabe.xlsx", package = "rexcel")
+
+## ------------------------------------------------------------------------
+is_xlsx(mini_gap_path)
+
+## ------------------------------------------------------------------------
+manifest <- xlsx_list_files(mini_gap_path)
+print(manifest, n = Inf)
+
+## ------------------------------------------------------------------------
+print(xlsx_list_files(ek_path), n = Inf)
+
+## ------------------------------------------------------------------------
+print(xlsx_list_files(ek2_path), n = Inf)
+
+## ------------------------------------------------------------------------
+(ct <- xlsx_read_Content_Types(mini_gap_path))
+#setdiff(manifest$name, gsub("^\\/", "", ct$part_name))
+#intersect(gsub("^\\/", "", ct$part_name), manifest$name)
+
+## ------------------------------------------------------------------------
+(sheets <- xlsx_read_workbook_sheets(mini_gap_path))
+
+## ------------------------------------------------------------------------
+xlsx_read_workbook_sheets(ff_path)
+xlsx_read_workbook_sheets(ek_path)
+xlsx_read_workbook_sheets(ek2_path)
+xlsx_read_workbook_sheets(dn_path)
+xlsx_read_workbook_sheets(gabe_path)
+
+## ------------------------------------------------------------------------
+xlsx_read_workbook_defined_names(mini_gap_path)
+xlsx_read_workbook_defined_names(dn_path)
+xlsx_read_workbook_defined_names(gabe_path)
+
+## ------------------------------------------------------------------------
+(workbook_rels <- xlsx_read_workbook_rels(mini_gap_path))
+xlsx_read_workbook_rels(ek_path)
+xlsx_read_workbook_rels(ek2_path)
+
+## ------------------------------------------------------------------------
+(sheets_df <- join_sheets_workbook_rels(sheets, workbook_rels))
+
+## ------------------------------------------------------------------------
+mini_gap_path <- system.file("sheets", "mini-gap.xlsx", package = "rexcel")
+mini_gap_workbook <- rexcel_register(mini_gap_path)
 str(mini_gap_workbook, max.level = 1)
 mini_gap_workbook
 
 ## ------------------------------------------------------------------------
-ff_path <- system.file("sheets", "gs-test-formula-formatting.xlsx",
-                       package = "rexcel")
-rexcel_workbook(ff_path)
-
-## ------------------------------------------------------------------------
-ek_path <- system.file("sheets", "Ekaterinburg_IP_9.xlsx", package = "rexcel")
-rexcel_workbook(ek_path)
-ek2_path <- system.file("sheets", "Ekaterinburg_IP_9-RESAVED.xlsx",
-                        package = "rexcel")
-rexcel_workbook(ek_path)
-
-## ------------------------------------------------------------------------
-dn_path <- system.file("sheets", "defined-names.xlsx", package = "rexcel")
-rexcel_workbook(dn_path)
-
-## ------------------------------------------------------------------------
-gabe_path <- system.file("sheets", "gabe.xlsx", package = "rexcel")
-rexcel_workbook(gabe_path)
-
-## ------------------------------------------------------------------------
-(ff_path <- system.file("sheets", "gs-test-formula-formatting.xlsx",
-                        package = "rexcel"))
-
 ## enter rexcel_read_workbook()
 path <- ff_path
 sheets <- 1L
