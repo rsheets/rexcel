@@ -12,7 +12,7 @@
 
 <meta name="author" content="Jennifer Bryan" />
 
-<meta name="date" content="2016-05-30" />
+<meta name="date" content="2016-06-01" />
 
 <title>Register an Excel Sheet</title>
 
@@ -70,7 +70,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title">Register an Excel Sheet</h1>
 <h4 class="author"><em>Jennifer Bryan</em></h4>
-<h4 class="date"><em>2016-05-30</em></h4>
+<h4 class="date"><em>2016-06-01</em></h4>
 
 
 <div id="TOC">
@@ -83,6 +83,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <li><a href="#named-ranges-from-xlworkbook.xml">Named ranges from xl/workbook.xml</a></li>
 <li><a href="#workbook-rels-from-xl_relsworkbook.xml.rels">Workbook rels from xl/_rels/workbook.xml.rels</a></li>
 <li><a href="#derived-object-sheets_df">Derived object: <code>sheets_df</code></a></li>
+<li><a href="#shared-strings-from-xlsharedstrings.xml">Shared strings from xl/sharedStrings.xml</a></li>
 </ul>
 </div>
 
@@ -92,13 +93,16 @@ devtools::<span class="kw">load_all</span>(<span class="kw">find_package_root_fi
 <p>A walk through the code in <code>rexcel_register()</code>. I wrote this function to make myself better acquainted with the files that make up an xlsx and with <code>rexcel</code>. It could evolve into something useful and/or some of this could be incorporated into <code>rexcel_read_workbook()</code> or <code>rexcel_read_worksheet()</code>.</p>
 <p>Philosophy, at least in theory:</p>
 <ul>
-<li>Don’t error unless it’s an invalid xlsx file. Try to do something useful.</li>
-<li>Read one file at a time.</li>
-<li>If a file exists, read it.</li>
-<li>Process only enough to create the minimal R object.</li>
-<li>Inner functions always take <code>path</code> to xlsx as primary or only argument.</li>
+<li>Don’t error unless it’s an invalid xlsx file. Try to do something useful, even if it’s mostly informative messages about why something can’t be read in.</li>
+<li>Inner functions are typically of this form: <code>xlsx_read_*()</code>.
+<ul>
+<li>They always take <code>path</code> to xlsx as primary or only argument.</li>
+<li>They read from exactly one file.</li>
+<li>We have one to read every file that’s there. <em>probably very untrue, in practice!</em></li>
+</ul></li>
+<li>Process data read from xlsx files only enough to create the minimal R object.</li>
 <li>Inner functions always return a single object.</li>
-<li>Why? So it’s easy to “drop in” on a problematic xlsx or to work on <code>rexcel</code>. I find it hard to do this when low-level functions work with lists that combine different objects and objects that come from different files. If you haven’t run a bunch of other internal code first (or if some of that failed), it’s hard to get into the state you need to be in to troubleshoot.</li>
+<li>Why all of this? So it’s easy to “drop in” on a problematic xlsx or to work on <code>rexcel</code>. I find it hard to do this when low-level functions work with lists that combine different objects and objects that come from different files. If you haven’t run a bunch of other internal code first (or if some of that failed), it’s hard to get into a good place for figuring out what’s wrong.</li>
 </ul>
 <div id="example-sheets" class="section level3">
 <h3>Example sheets</h3>
@@ -159,13 +163,14 @@ gabe_path &lt;-<span class="st"> </span><span class="kw">system.file</span>(<spa
 <li>xl/_rels/workbook.xml.rels</li>
 <li>xl/sharedStrings.xml <em>doesn’t necessarily exist</em></li>
 <li>xl/styles.xml</li>
-<li>docProps/core.xml <em>(seen but not inspected in defined_names.xlsx)</em></li>
-<li>docProps/app.xml <em>(ditto)</em></li>
+<li>docProps/core.xml <em>have never looked at one of these; we have one in defined_names.xlsx</em></li>
+<li>docProps/app.xml <em>ditto</em></li>
 </ul></li>
 <li>Worksheet: one main file per sheet
 <ul>
-<li>xl/worksheets/sheet1.xml, xl/worksheets/sheet2.xml, and so on, is typical</li>
+<li>xl/worksheets/sheet1.xml, xl/worksheets/sheet2.xml, … is typical</li>
 <li>but xl/worksheets/sheet.xml is also possible!</li>
+<li>this is where sheet data actually lives, up to complications like the shared strings</li>
 </ul></li>
 <li>Worksheet: a <code>rels</code> file for each sheet
 <ul>
@@ -174,6 +179,7 @@ gabe_path &lt;-<span class="st"> </span><span class="kw">system.file</span>(<spa
 <li>Worksheet: a file of drawings?
 <ul>
 <li>xl/drawings/worksheetdrawing1.xml and so on</li>
+<li><em>you don’t necessarily have these, but I see them even when there are no “drawings”</em></li>
 </ul></li>
 </ul>
 <p>The Ekaterinburg sheet from <a href="https://github.com/hadley/readxl/issues/80">readxl/#80</a> has unusual structure. It was created by an undisclosed BI system but I include it here because the R packages that <a href="https://poi.apache.org/spreadsheet/index.html">wrap the Apache POI</a> can read it just fine. So we should be able to return something informative for it.</p>
@@ -209,7 +215,7 @@ gabe_path &lt;-<span class="st"> </span><span class="kw">system.file</span>(<spa
 ## 10 xl/worksheets/_rels/sheet1.xml.rels     324 1980-01-01
 ## 11            xl/worksheets/sheet1.xml 1072131 1980-01-01</code></pre>
 <p>We gain <code>docProps/app.xml</code>, <code>docProps/core.xml</code>, and <code>xl/theme/theme1.xml</code> and the single sheet is now referred to as <code>sheet1</code>, not just <code>sheet</code>. Still no drawings, though.</p>
-<p>Conclusion: there is a lot of variety in the manifest.</p>
+<p>Conclusion: there is a lot of variety in the manifest for valid xlsx.</p>
 </div>
 <div id="content_types.xml" class="section level3">
 <h3>[Content_Types].xml</h3>
@@ -218,11 +224,8 @@ gabe_path &lt;-<span class="st"> </span><span class="kw">system.file</span>(<spa
 <li>two “general” rows for the extensions <code>.xml</code> and <code>.rels</code></li>
 <li>other rows for specific files seen in the manifest <em>I gather these override the general types associated with extensions?</em></li>
 </ul>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">(ct &lt;-<span class="st"> </span><span class="kw">xlsx_read_Content_Types</span>(mini_gap_path))</code></pre></div>
-<pre><code>## Source: local data frame [15 x 3]
-## 
-##                             part_name extension
-##                                 &lt;chr&gt;     &lt;chr&gt;
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">(ct &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(<span class="kw">xlsx_read_Content_Types</span>(mini_gap_path)))</code></pre></div>
+<pre><code>##                             part_name extension
 ## 1                                &lt;NA&gt;      rels
 ## 2                                &lt;NA&gt;       xml
 ## 3  /xl/drawings/worksheetdrawing4.xml      &lt;NA&gt;
@@ -238,7 +241,22 @@ gabe_path &lt;-<span class="st"> </span><span class="kw">system.file</span>(<spa
 ## 13          /xl/worksheets/sheet1.xml      &lt;NA&gt;
 ## 14          /xl/worksheets/sheet4.xml      &lt;NA&gt;
 ## 15          /xl/worksheets/sheet2.xml      &lt;NA&gt;
-## Variables not shown: content_type &lt;chr&gt;.</code></pre>
+##                                                                     content_type
+## 1                       application/vnd.openxmlformats-package.relationships+xml
+## 2                                                                application/xml
+## 3                      application/vnd.openxmlformats-officedocument.drawing+xml
+## 4                      application/vnd.openxmlformats-officedocument.drawing+xml
+## 5                      application/vnd.openxmlformats-officedocument.drawing+xml
+## 6                      application/vnd.openxmlformats-officedocument.drawing+xml
+## 7                      application/vnd.openxmlformats-officedocument.drawing+xml
+## 8         application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml
+## 9  application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml
+## 10    application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml
+## 11     application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml
+## 12     application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml
+## 13     application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml
+## 14     application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml
+## 15     application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#setdiff(manifest$name, gsub(&quot;^\\/&quot;, &quot;&quot;, ct$part_name))</span>
 <span class="co">#intersect(gsub(&quot;^\\/&quot;, &quot;&quot;, ct$part_name), manifest$name)</span></code></pre></div>
 </div>
@@ -247,7 +265,7 @@ gabe_path &lt;-<span class="st"> </span><span class="kw">system.file</span>(<spa
 <p>Among many other things in <code>xl/workbook.xml</code>, there is one xml node per worksheet, which we use to make <code>sheets</code>. It’s a tibble with one row per worksheet and these variables:</p>
 <ul>
 <li><code>name</code>: e.g., “Africa” <em>I assume this is name of the tab</em></li>
-<li><code>state</code>: “visible” <em>(or what else … “invisible”?), might be <code>NA</code></em></li>
+<li><code>state</code>: “visible” <em>or what else … “invisible”?; might be <code>NA</code></em></li>
 <li><code>sheet_id</code>: integer <em>I assume this is order perceived by user</em></li>
 <li><code>id</code>: character, e.g., <code>&quot;rId5&quot;</code> <em>a key that comes up elsewhere</em></li>
 </ul>
@@ -297,7 +315,7 @@ gabe_path &lt;-<span class="st"> </span><span class="kw">system.file</span>(<spa
 <div id="named-ranges-from-xlworkbook.xml" class="section level3">
 <h3>Named ranges from xl/workbook.xml</h3>
 <p>Cell ranges can be named in Excel and subsequently used in formulas. These are described in <code>xl/workbook.xml</code> in the <code>definedName</code> nodes. Jenny has seen one node structure in the example she created, which differs from what Rich anticipated (presumably based on the spec?). Furthermore, Ekaterinburg has novel namespacing as well. See the comments in source for <code>xlsx_read_workbook_defined_names()</code> for details. Expect future pain here.</p>
-<p>If a workbook has no named ranges, this will be <code>NULL</code>, e.g., as for mini Gapminder. Currently we have two example sheets with named ranges, <code>defined-names.xlsx</code> and <code>gabe.xlsx</code>. <code>defined-names.xlsx</code> was a planned example sheet and <code>gabe.xlsx</code> was an accident, but is interesting because it shows what happens when there are replicated range names.</p>
+<p>If a workbook has no named ranges, this will be <code>NULL</code>, e.g., as for mini Gapminder. Currently we have two example sheets with named ranges, <code>defined-names.xlsx</code> and <code>gabe.xlsx</code>. <code>defined-names.xlsx</code> was a planned example sheet. <code>gabe.xlsx</code> was intended just to explore weird worksheet names but, since it was copied from <code>defined-names.xlsx</code> and then worksheets got copied again, it incidentally shows what happens when there are replicated range names.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">xlsx_read_workbook_defined_names</span>(mini_gap_path)</code></pre></div>
 <pre><code>## NULL</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">xlsx_read_workbook_defined_names</span>(dn_path)</code></pre></div>
@@ -323,9 +341,9 @@ gabe_path &lt;-<span class="st"> </span><span class="kw">system.file</span>(<spa
 <p><code>defined_names</code> is a tibble with one row per named range and these variables:</p>
 <ul>
 <li><code>name</code>: name of the named range</li>
-<li><code>refers_to</code>: string representation of the cell area reference, e.g., <code>Sheet1!$B$2:$B$11</code></li>
-<li><code>sheet_id</code>: integer <em>(I can’t get my hands on a sheet that has actually this)</em></li>
-<li><code>local_sheet_id</code>: integer <em>(appears when names are replicated)</em></li>
+<li><code>refers_to</code>: string representation of the cell (area) reference, e.g., <code>Sheet1!$B$2:$B$11</code></li>
+<li><code>sheet_id</code>: integer <em>I can’t get my hands on a sheet that has actually this</em></li>
+<li><code>local_sheet_id</code>: integer <em>appears when names are replicated</em></li>
 </ul>
 </div>
 <div id="workbook-rels-from-xl_relsworkbook.xml.rels" class="section level3">
@@ -366,9 +384,9 @@ gabe_path &lt;-<span class="st"> </span><span class="kw">system.file</span>(<spa
 ## Variables not shown: type &lt;chr&gt;.</code></pre>
 <p><code>workbook_rels</code> is a tibble, each row a file, with variables</p>
 <ul>
-<li><code>target</code>: a file path relative to <code>xl/</code> <em>(maybe prepend xl/?)</em></li>
-<li><code>id</code>: character, e.g., <code>&quot;rId5&quot;</code> <em>(a key that occurs elsewhere)</em></li>
-<li><code>type</code>: a long namespace-y string, the last bit of which tells you if the associated file is <code>sharedStrings</code>, styles, or a worksheet, e.g., <code>http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet</code> <em>(maybe just take the last bit?)</em></li>
+<li><code>target</code>: a file path relative to <code>xl/</code> <em>maybe I should prepend xl/?</em></li>
+<li><code>id</code>: character, e.g., <code>&quot;rId5&quot;</code> <em>a key that occurs elsewhere</em></li>
+<li><code>type</code>: a long namespace-y string, the last bit of which tells you if the associated file is <code>sharedStrings</code>, styles, or a worksheet, e.g., <code>http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet</code> <em>maybe I should retain just the last bit?</em></li>
 </ul>
 </div>
 <div id="derived-object-sheets_df" class="section level3">
@@ -384,12 +402,63 @@ gabe_path &lt;-<span class="st"> </span><span class="kw">system.file</span>(<spa
 ## 3        3     Asia  rId5 xl/worksheets/sheet5.xml visible
 ## 4        4   Europe  rId6 xl/worksheets/sheet1.xml visible
 ## 5        5  Oceania  rId7 xl/worksheets/sheet2.xml visible</code></pre>
+</div>
+<div id="shared-strings-from-xlsharedstrings.xml" class="section level3">
+<h3>Shared strings from xl/sharedStrings.xml</h3>
+<p>Strings do not appear in the main sheet data files but rather appear exactly once in <code>sharedStrings.xml</code> and are then referenced.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">(shared_strings &lt;-<span class="st"> </span><span class="kw">xlsx_read_shared_strings</span>(mini_gap_path))</code></pre></div>
+<pre><code>##  [1] &quot;country&quot;                &quot;continent&quot;             
+##  [3] &quot;year&quot;                   &quot;lifeExp&quot;               
+##  [5] &quot;pop&quot;                    &quot;gdpPercap&quot;             
+##  [7] &quot;Algeria&quot;                &quot;Africa&quot;                
+##  [9] &quot;Angola&quot;                 &quot;Albania&quot;               
+## [11] &quot;Europe&quot;                 &quot;Benin&quot;                 
+## [13] &quot;Austria&quot;                &quot;Argentina&quot;             
+## [15] &quot;Americas&quot;               &quot;Belgium&quot;               
+## [17] &quot;Australia&quot;              &quot;Oceania&quot;               
+## [19] &quot;Bolivia&quot;                &quot;Bosnia and Herzegovina&quot;
+## [21] &quot;New Zealand&quot;            &quot;Bulgaria&quot;              
+## [23] &quot;Brazil&quot;                 &quot;Canada&quot;                
+## [25] &quot;Afghanistan&quot;            &quot;Asia&quot;                  
+## [27] &quot;Bahrain&quot;                &quot;Chile&quot;                 
+## [29] &quot;Bangladesh&quot;             &quot;Botswana&quot;              
+## [31] &quot;Cambodia&quot;               &quot;China&quot;                 
+## [33] &quot;Burkina Faso&quot;          
+## attr(,&quot;count&quot;)
+## [1] 80
+## attr(,&quot;uniqueCount&quot;)
+## [1] 33</code></pre>
+<p><code>shared_strings</code> is a character vector, with attributes <code>count</code> (total # of strings?) and <code>uniqueCount</code> (its own length?).</p>
+<p>Let’s look at some others. <strong>I have no idea what’s going on with Ekaterinburg original vs re-saved!</strong> Why do <code>count</code> and <code>uniqueCount</code> both blow up?</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">xlsx_read_shared_strings</span>(ff_path)</code></pre></div>
+<pre><code>##  [1] &quot;integer&quot;           &quot;number_formatted&quot;  &quot;number_rounded&quot;   
+##  [4] &quot;character&quot;         &quot;formula&quot;           &quot;formula_formatted&quot;
+##  [7] &quot;one&quot;               &quot;three&quot;             &quot;four&quot;             
+## [10] &quot;five&quot;             
+## attr(,&quot;count&quot;)
+## [1] 10
+## attr(,&quot;uniqueCount&quot;)
+## [1] 10</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">str</span>(<span class="kw">xlsx_read_shared_strings</span>(ek_path))</code></pre></div>
+<pre><code>##  atomic [1:165]   Исключен из Статрегистра ИП от 31.01.2014   Исключен из Статрегистра ИП от 31.01.2014   Исключен из Статрегистра ИП от 01.07.2014  ...
+##  - attr(*, &quot;count&quot;)= int 2191
+##  - attr(*, &quot;uniqueCount&quot;)= int 165</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">str</span>(<span class="kw">xlsx_read_shared_strings</span>(ek2_path))</code></pre></div>
+<pre><code>##  atomic [1:11354]  Исключен из Статрегистра ИП от 31.01.2014 Исключен из Статрегистра ИП от 31.01.2014 Исключен из Статрегистра ИП от 01.07.2014 ...
+##  - attr(*, &quot;count&quot;)= int 24114
+##  - attr(*, &quot;uniqueCount&quot;)= int 11354</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">xlsx_read_shared_strings</span>(gabe_path)</code></pre></div>
+<pre><code>## [1] &quot;numbers&quot;
+## attr(,&quot;count&quot;)
+## [1] 2
+## attr(,&quot;uniqueCount&quot;)
+## [1] 1</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">mini_gap_path &lt;-<span class="st"> </span><span class="kw">system.file</span>(<span class="st">&quot;sheets&quot;</span>, <span class="st">&quot;mini-gap.xlsx&quot;</span>, <span class="dt">package =</span> <span class="st">&quot;rexcel&quot;</span>)
 mini_gap_workbook &lt;-<span class="st"> </span><span class="kw">rexcel_register</span>(mini_gap_path)
 <span class="kw">str</span>(mini_gap_workbook, <span class="dt">max.level =</span> <span class="dv">1</span>)</code></pre></div>
 <pre><code>## List of 11
 ##  $ xlsx_path     : chr &quot;/Users/jenny/rrr/rexcel/inst/sheets/mini-gap.xlsx&quot;
-##  $ reg_time      : POSIXct[1:1], format: &quot;2016-05-30 22:38:44&quot;
+##  $ reg_time      : POSIXct[1:1], format: &quot;2016-06-01 23:41:18&quot;
 ##  $ manifest      :Classes 'tbl_df', 'tbl' and 'data.frame':  21 obs. of  3 variables:
 ##  $ content_types :Classes 'tbl_df', 'tbl' and 'data.frame':  15 obs. of  3 variables:
 ##  $ sheets        :Classes 'tbl_df', 'tbl' and 'data.frame':  5 obs. of  4 variables:
@@ -406,7 +475,7 @@ mini_gap_workbook &lt;-<span class="st"> </span><span class="kw">rexcel_register
 ## [1] &quot;/Users/jenny/rrr/rexcel/inst/sheets/mini-gap.xlsx&quot;
 ## 
 ## $reg_time
-## [1] &quot;2016-05-30 22:38:44 PDT&quot;
+## [1] &quot;2016-06-01 23:41:18 PDT&quot;
 ## 
 ## $manifest
 ## Source: local data frame [21 x 3]

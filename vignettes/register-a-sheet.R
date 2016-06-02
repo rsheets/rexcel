@@ -29,7 +29,7 @@ print(xlsx_list_files(ek_path), n = Inf)
 print(xlsx_list_files(ek2_path), n = Inf)
 
 ## ------------------------------------------------------------------------
-(ct <- xlsx_read_Content_Types(mini_gap_path))
+(ct <- as.data.frame(xlsx_read_Content_Types(mini_gap_path)))
 #setdiff(manifest$name, gsub("^\\/", "", ct$part_name))
 #intersect(gsub("^\\/", "", ct$part_name), manifest$name)
 
@@ -55,6 +55,15 @@ xlsx_read_workbook_rels(ek2_path)
 
 ## ------------------------------------------------------------------------
 (sheets_df <- join_sheets_workbook_rels(sheets, workbook_rels))
+
+## ------------------------------------------------------------------------
+(shared_strings <- xlsx_read_shared_strings(mini_gap_path))
+
+## ------------------------------------------------------------------------
+xlsx_read_shared_strings(ff_path)
+str(xlsx_read_shared_strings(ek_path))
+str(xlsx_read_shared_strings(ek2_path))
+xlsx_read_shared_strings(gabe_path)
 
 ## ------------------------------------------------------------------------
 mini_gap_path <- system.file("sheets", "mini-gap.xlsx", package = "rexcel")

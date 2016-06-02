@@ -18,13 +18,14 @@ A walk through the code in `rexcel_register()`. I wrote this function to make my
 
 Philosophy, at least in theory:
 
-  * Don't error unless it's an invalid xlsx file. Try to do something useful.
-  * Read one file at a time.
-  * If a file exists, read it.
-  * Process only enough to create the minimal R object.
-  * Inner functions always take `path` to xlsx as primary or only argument.
+  * Don't error unless it's an invalid xlsx file. Try to do something useful, even if it's mostly informative messages about why something can't be read in.
+  * Inner functions are typically of this form: `xlsx_read_*()`.
+    * They always take `path` to xlsx as primary or only argument.
+    - They read from exactly one file.
+    - We have one to read every file that's there. *probably very untrue, in practice!*
+  * Process data read from xlsx files only enough to create the minimal R object.
   * Inner functions always return a single object.
-  * Why? So it's easy to "drop in" on a problematic xlsx or to work on `rexcel`. I find it hard to do this when low-level functions work with lists that combine different objects and objects that come from different files. If you haven't run a bunch of other internal code first (or if some of that failed), it's hard to get into the state you need to be in to troubleshoot.
+  * Why all of this? So it's easy to "drop in" on a problematic xlsx or to work on `rexcel`. I find it hard to do this when low-level functions work with lists that combine different objects and objects that come from different files. If you haven't run a bunch of other internal code first (or if some of that failed), it's hard to get into a good place for figuring out what's wrong.
 
 ### Example sheets
 
@@ -104,15 +105,17 @@ Overview of manifests I've seen. *TO DO: cross-check/enhance this with some actu
     - xl/_rels/workbook.xml.rels
     - xl/sharedStrings.xml *doesn't necessarily exist*
     - xl/styles.xml
-    - docProps/core.xml *(seen but not inspected in defined_names.xlsx)*
-    - docProps/app.xml *(ditto)*
+    - docProps/core.xml *have never looked at one of these; we have one in defined_names.xlsx*
+    - docProps/app.xml *ditto*
   * Worksheet: one main file per sheet
-    - xl/worksheets/sheet1.xml, xl/worksheets/sheet2.xml, and so on, is typical
+    - xl/worksheets/sheet1.xml, xl/worksheets/sheet2.xml, ... is typical
     - but xl/worksheets/sheet.xml is also possible!
+    - this is where sheet data actually lives, up to complications like the shared strings
   * Worksheet: a `rels` file for each sheet
     - xl/worksheets/_rels/sheet1.xml.rels and so on
   * Worksheet: a file of drawings?
     - xl/drawings/worksheetdrawing1.xml and so on
+    - *you don't necessarily have these, but I see them even when there are no "drawings"*
 
 The Ekaterinburg sheet from [readxl/#80](https://github.com/hadley/readxl/issues/80) has unusual structure. It was created by an undisclosed BI system but I include it here because the R packages that [wrap the Apache POI](https://poi.apache.org/spreadsheet/index.html) can read it just fine. So we should be able to return something informative for it.
 
@@ -165,7 +168,7 @@ print(xlsx_list_files(ek2_path), n = Inf)
 
 We gain `docProps/app.xml`, `docProps/core.xml`, and `xl/theme/theme1.xml` and the single sheet is now referred to as `sheet1`, not just `sheet`. Still no drawings, though.
 
-Conclusion: there is a lot of variety in the manifest.
+Conclusion: there is a lot of variety in the manifest for valid xlsx.
 
 ### [Content_Types].xml
 
@@ -176,14 +179,11 @@ The `ct` object created from `[Content_Types].xml` is a tibble associating conte
 
 
 ```r
-(ct <- xlsx_read_Content_Types(mini_gap_path))
+(ct <- as.data.frame(xlsx_read_Content_Types(mini_gap_path)))
 ```
 
 ```
-## Source: local data frame [15 x 3]
-## 
 ##                             part_name extension
-##                                 <chr>     <chr>
 ## 1                                <NA>      rels
 ## 2                                <NA>       xml
 ## 3  /xl/drawings/worksheetdrawing4.xml      <NA>
@@ -199,7 +199,22 @@ The `ct` object created from `[Content_Types].xml` is a tibble associating conte
 ## 13          /xl/worksheets/sheet1.xml      <NA>
 ## 14          /xl/worksheets/sheet4.xml      <NA>
 ## 15          /xl/worksheets/sheet2.xml      <NA>
-## Variables not shown: content_type <chr>.
+##                                                                     content_type
+## 1                       application/vnd.openxmlformats-package.relationships+xml
+## 2                                                                application/xml
+## 3                      application/vnd.openxmlformats-officedocument.drawing+xml
+## 4                      application/vnd.openxmlformats-officedocument.drawing+xml
+## 5                      application/vnd.openxmlformats-officedocument.drawing+xml
+## 6                      application/vnd.openxmlformats-officedocument.drawing+xml
+## 7                      application/vnd.openxmlformats-officedocument.drawing+xml
+## 8         application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml
+## 9  application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml
+## 10    application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml
+## 11     application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml
+## 12     application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml
+## 13     application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml
+## 14     application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml
+## 15     application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml
 ```
 
 ```r
@@ -212,7 +227,7 @@ The `ct` object created from `[Content_Types].xml` is a tibble associating conte
 Among many other things in `xl/workbook.xml`, there is one xml node per worksheet, which we use to make `sheets`. It's a tibble with one row per worksheet and these variables:
 
   * `name`: e.g., "Africa" *I assume this is name of the tab*
-  * `state`: "visible" *(or what else ... "invisible"?), might be `NA`*
+  * `state`: "visible" *or what else ... "invisible"?; might be `NA`*
   * `sheet_id`: integer *I assume this is order perceived by user*
   * `id`: character, e.g., `"rId5"` *a key that comes up elsewhere*
 
@@ -301,7 +316,7 @@ xlsx_read_workbook_sheets(gabe_path)
 
 Cell ranges can be named in Excel and subsequently used in formulas. These are described in `xl/workbook.xml` in the `definedName` nodes. Jenny has seen one node structure in the example she created, which differs from what Rich anticipated (presumably based on the spec?). Furthermore, Ekaterinburg has novel namespacing as well. See the comments in source for `xlsx_read_workbook_defined_names()` for details. Expect future pain here.
 
-If a workbook has no named ranges, this will be `NULL`, e.g., as for mini Gapminder. Currently we have two example sheets with named ranges, `defined-names.xlsx` and `gabe.xlsx`. `defined-names.xlsx` was a planned example sheet and `gabe.xlsx` was an accident, but is interesting because it shows what happens when there are replicated range names.
+If a workbook has no named ranges, this will be `NULL`, e.g., as for mini Gapminder. Currently we have two example sheets with named ranges, `defined-names.xlsx` and `gabe.xlsx`. `defined-names.xlsx` was a planned example sheet. `gabe.xlsx` was intended just to explore weird worksheet names but, since it was copied from `defined-names.xlsx` and then worksheets got copied again, it incidentally shows what happens when there are replicated range names.
 
 
 ```r
@@ -347,9 +362,9 @@ xlsx_read_workbook_defined_names(gabe_path)
 `defined_names` is a tibble with one row per named range and these variables:
 
   * `name`: name of the named range
-  * `refers_to`: string representation of the cell area reference, e.g., `Sheet1!$B$2:$B$11`
-  * `sheet_id`: integer *(I can't get my hands on a sheet that has actually this)*
-  * `local_sheet_id`: integer *(appears when names are replicated)*
+  * `refers_to`: string representation of the cell (area) reference, e.g., `Sheet1!$B$2:$B$11`
+  * `sheet_id`: integer *I can't get my hands on a sheet that has actually this*
+  * `local_sheet_id`: integer *appears when names are replicated*
 
 ### Workbook rels from xl/_rels/workbook.xml.rels
 
@@ -410,12 +425,12 @@ xlsx_read_workbook_rels(ek2_path)
 
 `workbook_rels` is a tibble, each row a file, with variables
 
-  * `target`: a file path relative to `xl/` *(maybe prepend xl/?)*
-  * `id`: character, e.g., `"rId5"` *(a key that occurs elsewhere)*
+  * `target`: a file path relative to `xl/` *maybe I should prepend xl/?*
+  * `id`: character, e.g., `"rId5"` *a key that occurs elsewhere*
   * `type`: a long namespace-y string, the last bit of which tells you
 if the associated file is `sharedStrings`, styles, or a worksheet, e.g.,
 `http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet`
-*(maybe just take the last bit?)*
+*maybe I should retain just the last bit?*
 
 ### Derived object: `sheets_df`
 
@@ -438,6 +453,91 @@ We depart from the philosophy a bit here to create `sheets_df`, a new tibble wit
 ## 5        5  Oceania  rId7 xl/worksheets/sheet2.xml visible
 ```
 
+### Shared strings from xl/sharedStrings.xml
+
+Strings do not appear in the main sheet data files but rather appear exactly once in `sharedStrings.xml` and are then referenced.
+
+
+```r
+(shared_strings <- xlsx_read_shared_strings(mini_gap_path))
+```
+
+```
+##  [1] "country"                "continent"             
+##  [3] "year"                   "lifeExp"               
+##  [5] "pop"                    "gdpPercap"             
+##  [7] "Algeria"                "Africa"                
+##  [9] "Angola"                 "Albania"               
+## [11] "Europe"                 "Benin"                 
+## [13] "Austria"                "Argentina"             
+## [15] "Americas"               "Belgium"               
+## [17] "Australia"              "Oceania"               
+## [19] "Bolivia"                "Bosnia and Herzegovina"
+## [21] "New Zealand"            "Bulgaria"              
+## [23] "Brazil"                 "Canada"                
+## [25] "Afghanistan"            "Asia"                  
+## [27] "Bahrain"                "Chile"                 
+## [29] "Bangladesh"             "Botswana"              
+## [31] "Cambodia"               "China"                 
+## [33] "Burkina Faso"          
+## attr(,"count")
+## [1] 80
+## attr(,"uniqueCount")
+## [1] 33
+```
+
+`shared_strings` is a character vector, with attributes `count` (total # of strings?) and `uniqueCount` (its own length?).
+
+Let's look at some others. **I have no idea what's going on with Ekaterinburg original vs re-saved!** Why do `count` and `uniqueCount` both blow up?
+
+
+```r
+xlsx_read_shared_strings(ff_path)
+```
+
+```
+##  [1] "integer"           "number_formatted"  "number_rounded"   
+##  [4] "character"         "formula"           "formula_formatted"
+##  [7] "one"               "three"             "four"             
+## [10] "five"             
+## attr(,"count")
+## [1] 10
+## attr(,"uniqueCount")
+## [1] 10
+```
+
+```r
+str(xlsx_read_shared_strings(ek_path))
+```
+
+```
+##  atomic [1:165]   Исключен из Статрегистра ИП от 31.01.2014   Исключен из Статрегистра ИП от 31.01.2014   Исключен из Статрегистра ИП от 01.07.2014  ...
+##  - attr(*, "count")= int 2191
+##  - attr(*, "uniqueCount")= int 165
+```
+
+```r
+str(xlsx_read_shared_strings(ek2_path))
+```
+
+```
+##  atomic [1:11354]  Исключен из Статрегистра ИП от 31.01.2014 Исключен из Статрегистра ИП от 31.01.2014 Исключен из Статрегистра ИП от 01.07.2014 ...
+##  - attr(*, "count")= int 24114
+##  - attr(*, "uniqueCount")= int 11354
+```
+
+```r
+xlsx_read_shared_strings(gabe_path)
+```
+
+```
+## [1] "numbers"
+## attr(,"count")
+## [1] 2
+## attr(,"uniqueCount")
+## [1] 1
+```
+
 
 
 ```r
@@ -449,7 +549,7 @@ str(mini_gap_workbook, max.level = 1)
 ```
 ## List of 11
 ##  $ xlsx_path     : chr "/Users/jenny/rrr/rexcel/inst/sheets/mini-gap.xlsx"
-##  $ reg_time      : POSIXct[1:1], format: "2016-05-30 22:38:44"
+##  $ reg_time      : POSIXct[1:1], format: "2016-06-01 23:41:18"
 ##  $ manifest      :Classes 'tbl_df', 'tbl' and 'data.frame':	21 obs. of  3 variables:
 ##  $ content_types :Classes 'tbl_df', 'tbl' and 'data.frame':	15 obs. of  3 variables:
 ##  $ sheets        :Classes 'tbl_df', 'tbl' and 'data.frame':	5 obs. of  4 variables:
@@ -472,7 +572,7 @@ mini_gap_workbook
 ## [1] "/Users/jenny/rrr/rexcel/inst/sheets/mini-gap.xlsx"
 ## 
 ## $reg_time
-## [1] "2016-05-30 22:38:44 PDT"
+## [1] "2016-06-01 23:41:18 PDT"
 ## 
 ## $manifest
 ## Source: local data frame [21 x 3]
