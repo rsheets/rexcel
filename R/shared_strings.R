@@ -26,7 +26,7 @@ xlsx_read_shared_strings <- function(path) {
   ## to deal w/ less common namespacing, e.g. Ekaterinburg sheet
   alt_ns <-
     construct_xml_ns(x = "http://schemas.openxmlformats.org/spreadsheetml/2006/main")
-  if (ns_equal_to_ref(xml, alt_ns)) {
+  if (ns_equal_to_ref(ns, alt_ns)) {
     ns <- xml2::xml_ns_rename(ns, x = "d1")
   }
   string_items <- xml2::xml_children(xml)

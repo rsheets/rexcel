@@ -168,12 +168,9 @@ construct_xml_ns <- function(...) {
   structure(ns, class = "xml_namespace")
 }
 
-ns_equal_to_ref <- function(xml, ref_ns) {
-  if (inherits(xml, "xml_node")) {
-    ns <- xml2::xml_ns(xml2::xml_root(xml))
-    return(identical(ns[order(names(ns))], ref_ns[order(names(ref_ns))]))
-  }
-  FALSE
+ns_equal_to_ref <- function(ns, ref_ns) {
+  stopifnot(inherits(ns, "xml_namespace"), inherits(ref_ns, "xml_namespace"))
+  identical(ns[order(names(ns))], ref_ns[order(names(ref_ns))])
 }
 
 ## TO DO: replace with the real parser from cellranger once it's exposed
