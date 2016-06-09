@@ -19,7 +19,7 @@ Suggests:
     knitr,
     rmarkdown,
     rprojroot,
-    testthat,
+    testthat
 RoxygenNote: 5.0.1.9000
 VignetteBuilder: knitr
 Remotes:
