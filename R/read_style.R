@@ -132,8 +132,8 @@ xlsx_read_theme <- function(path) {
 
 ## 18.8.23 fonts
 xlsx_ct_fonts <- function(xml, ns, theme, index) {
-  process_container(xml, "d1:fonts", ns, xlsx_ct_font,
-                    theme, index)
+  process_container(xml, xpath = "d1:fonts", ns = ns,
+                    fun = xlsx_ct_font, theme, index)
 }
 
 ## 18.8.22 font

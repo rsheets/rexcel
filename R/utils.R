@@ -11,6 +11,15 @@ vcapply <- function(X, FUN, ...) {
   vapply(X, FUN, character(1), ...)
 }
 
+## I know this needs a better name
+## or to be unified with vcapply
+vcapply2 <- function(l, nm) {
+  ret <- lapply(l, `[[`, nm)
+  ret <- lapply(ret, `%||%`, NA_character_)
+  unlist(ret)
+}
+
+
 attr_bool <- function(x, missing=NA) {
   if (is.null(x)) missing else as.logical(as.integer(x))
 }
@@ -30,6 +39,8 @@ attr_character <- function(x, missing=NA_character_) {
 `%||%` <- function(a, b) {
   if (is.null(a)) b else a
 }
+
+none <- function(x) !any(x)
 
 process_container <- function(xml, xpath, ns, fun, ..., classes=NULL) {
   els <- xml2::xml_children(xml2::xml_find_first(xml, xpath, ns))
@@ -132,4 +143,57 @@ as_na <- function(x) {
   ret <- NA
   storage.mode(ret) <- storage.mode(x)
   ret
+}
+
+is_xlsx <- function(path) {
+  if (!file.exists(path)) {
+    stop("\n", path, "\ndoes not exist")
+  }
+  ## TO DO: verify it's a zip archive? only way I know is unix `file` command
+  ## http://officeopenxml.com/anatomyofOOXML-xlsx.php
+  ## https://msdn.microsoft.com/en-us/library/office/gg278316.aspx#MinWBScenario
+  files <- xlsx_list_files(path)
+  has_content_types <- "[Content_Types].xml" %in% files$name
+  has_rels <- "_rels/.rels" %in% files$name
+  has_workbook_xml <- "xl/workbook.xml" %in% files$name
+  has_sheet <- any(grepl("xl/worksheets/sheet[0-9]*.xml", files$name))
+  has_content_types && has_rels && has_workbook_xml && has_sheet
+}
+
+rm_xml_ns <- function(x) gsub(".*:(.*)", "\\1", x)
+
+construct_xml_ns <- function(...) {
+  ddd <- list(...)
+  ns <- vapply(ddd, `[[`, character(1), 1)
+  structure(ns, class = "xml_namespace")
+}
+
+ns_equal_to_ref <- function(ns, ref_ns) {
+  stopifnot(inherits(ns, "xml_namespace"), inherits(ref_ns, "xml_namespace"))
+  identical(ns[order(names(ns))], ref_ns[order(names(ref_ns))])
+}
+
+## TO DO: replace with the real parser from cellranger once it's exposed
+## https://github.com/rsheets/cellranger/issues/22
+extract_sheet <- function(x) {
+  rx <- "^(?:(?:^\\[([^\\]]+)\\])?(?:'?([^']+)'?!)?([a-zA-Z0-9:\\-$\\[\\]]+)|(.*))$"
+  ## from rematch package
+  m <- regexpr(rx, x, perl = TRUE)
+  res <- cbind(ifelse(m == -1, NA_character_,
+                      substr(x, m, m + attr(m, "match.length") - 1)))
+  res <- cbind(res,
+               rbind(vapply(
+                 seq_len(NCOL(attr(m, "capture.start"))),
+                 function(i) {
+                   start <- attr(m, "capture.start")[,i]
+                   len <- attr(m, "capture.length")[,i]
+                   end <- start + len - 1
+                   res <- substr(x, start, end)
+                   res[ start == -1 ] <- NA_character_
+                   res
+                 },
+                 character(length(m))
+               ))
+  )
+  res[ , 3]
 }

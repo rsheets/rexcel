@@ -22,7 +22,20 @@ xlsx_read_shared_strings <- function(path) {
   if (is.null(xml)) {
     return(character(0))
   }
-  vcapply(xml2::xml_children(xml), xlsx_ct_rst, xml2::xml_ns(xml))
+  ns <- xml2::xml_ns(xml)
+  ## to deal w/ less common namespacing, e.g. Ekaterinburg sheet
+  alt_ns <-
+    construct_xml_ns(x = "http://schemas.openxmlformats.org/spreadsheetml/2006/main")
+  if (ns_equal_to_ref(ns, alt_ns)) {
+    ns <- xml2::xml_ns_rename(ns, x = "d1")
+  }
+  string_items <- xml2::xml_children(xml)
+  ret <- vcapply(string_items, xlsx_ct_rst, ns)
+  ## these gymnastics are necessary to preserve attribute names
+  at <- as.list(xml2::xml_attrs(xml)[c("count", "uniqueCount")])
+  at <- lapply(at, as.integer)
+  attributes(ret) <- at
+  ret
 }
 
 ## 18.4.8 si

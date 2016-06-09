@@ -1,3 +1,122 @@
+xlsx_read_Content_Types <- function(path) {
+  ct <- xlsx_read_file(path, "[Content_Types].xml")
+  node_att <- lapply(xml2::xml_contents(ct), xml_attrs_list)
+  tibble::data_frame(
+    part_name = vcapply2(node_att, "PartName"),
+    extension = vcapply2(node_att, "Extension"),
+    content_type = vcapply2(node_att, "ContentType")
+  )
+}
+
+xlsx_read_workbook_sheets <- function(path) {
+  xml <- xlsx_read_file(path, "xl/workbook.xml")
+  ## why do I write this weird XPath?
+  ## namespace avoidance in order to handle xlsx like
+  ## Ekaterinburg_IP.xlsx from here:
+  ## https://github.com/hadley/readxl/issues/80
+  sheets <- xml2::xml_find_first(xml, ".//*[local-name() = 'sheets']")
+  sheets_att <- lapply(xml2::xml_contents(sheets), xml_attrs_list)
+  tibble::data_frame(
+    name = vcapply2(sheets_att, "name"),
+    state = vcapply2(sheets_att, "state"),
+    sheet_id = as.integer(vcapply2(sheets_att, "sheetId")),
+    id = vcapply2(sheets_att, "id")
+  )
+}
+
+xlsx_read_workbook_defined_names <- function(path) {
+  xml <- xlsx_read_file(path, "xl/workbook.xml")
+
+  ## 18.14.5 definedName
+  ## 18.14.6 definedNames
+
+  ## the definedName nodes can have different XML structure
+  ## Rich had one in mind during his initial pass (or just worked from spec)
+  ## --> all info found in attributes (name, refersTo, sheedId)
+  ## which motivated
+  ## xlsx_ct_external_defined_names()
+  ## Jenny sees a different structure in the example sheet she created
+  ## inst/sheets/defined_names.xlsx
+  ## --> node value gives cell ref (Rich found this in refersTo attr)
+  ## --> attributes refersTo, sheetId don't even exist
+  ## --> localSheetId attribute appears when there are duplicated names (gabe.xlsx)
+  ##
+  ## this is an attempt to accomodate all forms but Jenny doesn't have an actual
+  ## example of the first form to look at
+  dn_nodes <- xml2::xml_find_all(xml, "//*[local-name() = 'definedName']")
+  ## why do I write this weird XPath?
+  ## namespace avoidance in order to handle xlsx like
+  ## Ekaterinburg_IP.xlsx from here:
+  ## https://github.com/hadley/readxl/issues/80
+  if (length(dn_nodes) == 0) {
+    return(NULL)
+  }
+  dn_att <- lapply(dn_nodes, xml_attrs_list)
+
+  ## this is where the spec suggests you will find the cell refs/ranges
+  refers_to <- vcapply2(dn_att, "refersTo")
+  ## and yet Jenny finds them as node text ...
+  if (all(is.na(refers_to))) {
+    refers_to <- xml2::xml_text(dn_nodes)
+  }
+
+  ## may just be NAs
+  sheet_id <- as.integer(vcapply2(dn_att, "sheetId"))
+  local_sheet_id <- as.integer(vcapply2(dn_att, "localSheetId"))
+
+  tibble::data_frame(
+     name = vcapply2(dn_att, "name"),
+     refers_to,
+     sheet_id,
+     local_sheet_id
+  )
+}
+
+xlsx_read_workbook_rels <- function(path) {
+  ## do we really have to worry about this file not existing?
+  xml <- xlsx_read_file_if_exists(path, "xl/_rels/workbook.xml.rels")
+  if (is.null(xml)) {
+    return(NULL)
+  }
+  rel_nodes <- xml2::xml_children(xml)
+  rels <- rbind_df(lapply(rel_nodes, xml_attrs_list))
+
+  names(rels) <- tolower(names(rels))
+  rels[c("target", "id", "type")]
+  ## MAYBE TODOs, if decide to do more processing:
+  ##
+  ## prepend target with "xl/"
+  ## but check the type and don't do if it's an external reference
+  ##
+  ## just take the last bit of type, i.e.basename(type),
+}
+
+xlsx_read_worksheet_rels <- function(path) {
+  manifest <- xlsx_list_files(path)
+  holds_ws_rels <-
+    grepl("xl/worksheets/_rels/sheet[0-9]*.xml.rels", manifest$name)
+  if (none(holds_ws_rels)) {
+    return(NULL)
+  }
+  ws_rels_fnames <- manifest$name[holds_ws_rels]
+  nms <- gsub("xl/worksheets/_rels/(sheet[0-9]*).xml.rels", "\\1",
+              ws_rels_fnames)
+  worksheet_rels <- lapply(ws_rels_fnames, xlsx_read_file, path = path)
+  worksheet_rels <-
+    lapply(worksheet_rels, xml2::xml_find_all, xpath = "//d1:Relationship")
+  names(worksheet_rels) <- nms
+  f <- function(x) {
+    x %>%
+      xml2::xml_attrs() %>%
+      lapply(as.list) %>%
+      dplyr::bind_rows()
+  }
+  worksheet_rels <- lapply(worksheet_rels, f) %>%
+    dplyr::bind_rows(.id = "worksheet")
+  names(worksheet_rels) <- tolower(names(worksheet_rels))
+  worksheet_rels
+}
+
 xlsx_read_workbook <- function(path) {
   ## TODO: Consider what do do when rels is NULL; do we throw?
   rels <- xlsx_read_rels(path, "xl/workbook.xml")
@@ -34,7 +153,7 @@ xlsx_ct_sheet <- function(xml, ns) {
     ref = attr_character(at[["id"]]))
 }
 
-## 18.14.6 definedName
+## 18.14.6 definedNames
 xlsx_ct_external_defined_names <- function(xml, ns) {
   process_container(xml, "d1:definedNames", ns, xlsx_ct_external_defined_name,
                     classes=TRUE)

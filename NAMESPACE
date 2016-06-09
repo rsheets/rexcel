@@ -3,3 +3,5 @@
 export(rexcel_read)
 export(rexcel_read_workbook)
 export(rexcel_readxl)
+export(rexcel_register)
+importFrom(dplyr,"%>%")
