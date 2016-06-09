@@ -16,7 +16,5 @@ Imports:
     xml2 (>= 0.1.2.9000)
 Suggests:
     testthat
-RoxygenNote: 5.0.1
-Remotes:
-    hadley/xml2
-
+RoxygenNote: 5.0.1.9000
+Remotes: hadley/xml2
