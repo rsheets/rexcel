@@ -30,7 +30,7 @@ Philosophy, at least in theory:
   * Inner functions are typically of this form: `xlsx_read_*()`.
     * They always take `path` to xlsx as primary or only argument.
     - They read from exactly one file.
-    - We have one to read every file that's there. *probably very untrue, in practice!*
+    - We have one to read every file that's there. *probably very untrue, in practice! since I create a manifest, I could actually check this ...*
   * Process data read from xlsx files only enough to create the minimal R object.
   * Inner functions always return a single object.
   * Why all of this? So it's easy to "drop in" on a problematic xlsx or to work on `rexcel`. I find it hard to do this when low-level functions work with lists that combine different objects and objects that come from different files. If you haven't run a bunch of other internal code first (or if some of that failed), it's hard to get into a good place for figuring out what's wrong.
@@ -160,12 +160,12 @@ xlsx_read_workbook_defined_names(gabe_path)
 
   * `name`: name of the named range
   * `refers_to`: string representation of the cell (area) reference, e.g., `Sheet1!$B$2:$B$11`
-  * `sheet_id`: integer *I can't get my hands on a sheet that has actually this*
+  * `sheet_id`: integer *I can't get my hands on a sheet that has actually this?*
   * `local_sheet_id`: integer *appears when names are replicated*
 
 ### Workbook rels from xl/_rels/workbook.xml.rels
 
-*We should probably cook up a more interesting example here?*
+*We should probably cook up a more interesting example here.*
 
 Mini Gapminder is interesting because you see the sheets aren't numbered exactly as you'd expect (which is [`hadley/readxl#104`](https://github.com/hadley/readxl/issues/104)). Ekaterinburg is also interesting because `target` has a leading slash and includes the `xl` subdirectory. But the re-saved version looks more conventional.
 
@@ -211,49 +211,138 @@ str(xlsx_read_shared_strings(ek2_path))
 xlsx_read_shared_strings(gabe_path)
 ```
 
+### Styles from xl/styles.xml
+
+Where to begin? I got as far as parsing the fonts. Then decided this, more anything else, was a ridiculous thing to re-do. Rich has made a great start on it. Revisit on a strict as needed basis.
 
 ```{r}
-mini_gap_path <- system.file("sheets", "mini-gap.xlsx", package = "rexcel")
+(styles <- xlsx_read_style(mini_gap_path))
+```
+
+`styles` is a list of `tbl_df`s:
+
+  * fonts: Variables include `name`, `color`, `sz`.
+  * fills: Variables include `pattern_type` and `fg`.
+  * borders: Variables include `outline` and `top_color`.
+  * num_fmts: Variables are `num_format_id` and `format_code`, where the format codes are those things familiar from Excel, such as `"$"#,##0.00`.
+  * *stuff below here seems to index into / synthesize the above?*
+  * cell_style_xfs: tibble of cell styles? Variables include `border_id`, `fill_id`, `font_id`, `num_fmt_id` (see above), `shrink_to_fit`, `text_wrap`.
+  * cell_xfs: *what is this? seems to have same variables as cell_style_xfs. But for mini gapminder, this has 2 rows, whereas cell_style_xfs has only one.*
+  * cell_styles: tibble of cell styles? Variables include `builtin_id`, `name`, `xf_id`.
+  * *Here's a mystery node from mini gapminder style xml: `<dxfs count="0"/>`. What is that even? This is a typical value (it is missing from Ekaterinburg). This node has much more content in the formulas and formatting sheet. Discuss with Rich.*
+
+Again, Ekaterinburg has different namespace for the XML in `styles.xml`. I learned this in my now-abandoned effort to look into the styles myself (I got as far as fonts):
+
+  * Typical xlsx has a default namespace for the styles XML.
+  * But Ekaterinburg uses the same (I think?) namespace, `http://schemas.openxmlformats.org/spreadsheetml/2006/main`, but with prefix `x`. So that would need to be finessed to read styles out of such sheets.
+
+Let's try to read other styles.
+
+```{r}
+xlsx_read_style(ff_path)
+## as explained above, namespace crazy means this won't work
+#xlsx_read_style(ek_path)
+xlsx_read_style(ek2_path)
+xlsx_read_style(dn_path)
+xlsx_read_style(gabe_path)
+```
+
+### Worksheet rels from xl/worksheets/_rels/sheet[0-9]*.xml.rels
+
+There is up to one file per worksheet in `xl/worksheets/_rels/`. From these we make the tibble `worksheet_rels`, where each row corresponds to the file for a worksheet. It is possible for a worksheet to have no associated `rels` file and it is possible for a workbook to have zero worksheet `rels` files, in which case this object will be `NULL`.
+
+When this tibble exists, here are the variables:
+
+  * worksheet: character, e.g. "sheet1". Note: I created this from filename.
+  * id: character, so far typically it's "rId1", except for Ekaterinburg, of course
+  * type: uniformly a long name-spacey string ending in "drawing" or "hyperlink"
+  * target: how to get to the thing. So this could be a relative local path to the "drawing" file. Or it could be a URL.
+  * targetmode: "External" when target is a URL, otherwise seems to not exist or be `NA`
+
+Let's just look at these worksheet rels for all of our examples.
+
+```{r}
+as.data.frame(worksheet_rels <- xlsx_read_worksheet_rels(mini_gap_path))
+as.data.frame(xlsx_read_worksheet_rels(ff_path))
+as.data.frame(xlsx_read_worksheet_rels(ek_path))
+as.data.frame(xlsx_read_worksheet_rels(ek2_path))
+as.data.frame(xlsx_read_worksheet_rels(dn_path))
+as.data.frame(xlsx_read_worksheet_rels(gabe_path))
+```
+
+### Drawings such as xl/drawings/worksheetdrawing1.xml
+
+I am not dealing with this. But want to record that it is typical to see one of these files per worksheet, even where there are no "drawings", e.g., plots. Case in point: mini Gapminder.
+
+```{r}
+subset(xlsx_list_files(mini_gap_path), grepl("drawing", name))
+```
+
+### High-level info from worksheets
+
+OMG we have finally arrived here! I'm coming back to this soon!
+
+### Putting it all together
+
+All of the above is bundled together in the function `rexcel_register()`, which currently returns a list with the assembled components.
+
+```{r}
 mini_gap_workbook <- rexcel_register(mini_gap_path)
 str(mini_gap_workbook, max.level = 1)
 mini_gap_workbook
 ```
 
-What's here?
+Let's review the components:
 
   * `xlsx_path`: path to the xlsx
   * `reg_time`: time xlsx was processed
   * `manifest`: file list for the xlsx zip archive
   * `content_types`: tbl representing `[Content_Types].xml`
   * `sheets`: tbl representing `xl/workbook.xml`
-  * `sheets_df`:
-    - This is really the only thing I created.
-    - A tbl with one row per worksheet, from joining `sheets` and `workbook_rels`
+  * `defined_names`: tbl for named ranges
+  * `workbook_rels`: tbl representing `xl/_rels/workbook.xml.rels`
+    - links target files to `id`s, also gives file type
+    - example: tells you that `id = rId4` refers to `Target` file `xl/worksheets/sheetX.xml`
   * `shared_strings`: character vector representing `xl/sharedStrings.xml`
-  * `styles`: list of tbls from `xl/styles.xml` (ok, I admit, I stopped after parsing fonts)
-  * `workbook_rels`:
-    - tbl that links target files to `Id`s, also gives file type
-    - example: tells you that `Id = rId4` refers to `Target` file `xl/worksheets/sheetX.xml`
-    - comes from `xl/_rels/workbook.xml.rels`
-  * `worksheet_rels`:
-    - *I'm still figuring this one out but it's about files or external resources (potentially) referred to from worksheets*
-    - comes from files like` xl/worksheets/_rels/(sheet[0-9]+).xml.rels`
-  
+  * `styles`: list of tbls from `xl/styles.xml`
+  * `worksheet_rels`: tbl about files or external resources (URLs) that relate to the worksheets. Comes from files like `xl/worksheets/_rels/(sheet[0-9]+).xml.rels`.
+  * `sheets_df`:
+    - This is arguably the only thing I created.
+    - A tbl with one row per worksheet, from joining `sheets` and `workbook_rels`
+
+### Relating this to `rexcel_read_workbook()`
+
+Looking at the innards of `rexcel_read_workboobk()` to compare and contrast.
 
 ```{r}
-## enter rexcel_read_workbook()
-path <- ff_path
-sheets <- 1L
+path <- mini_gap_path
 
-## this gets info about the files inside the zip archive
 dat <- xlsx_read_workbook(path)
-dat$rels   ## ?files in the zip archive?
-dat$sheets ## ?files corresponding to worksheets?
-(sheets <- xlsx_sheet_names(dat)[sheets])
+str(dat, max.level = 1)
+dat$rels
+dat$sheets
+dat$defined_names
 
+## let's look at defined names in a sheet that actually has them
+xlsx_read_workbook(dn_path)$defined_names
+```
+
+`dat$rels` is what I call `workbook_rels`.
+
+`dat$sheets` is almost equivalent to my `sheets_df`.
+
+`dat$defined_names` should be equivalent to my `defined_names`, but Rich did not anticipate the structure of the nodes I am seeing.
+
+```{r}
 (strings <- xlsx_read_shared_strings(path))
 (date_offset <- xlsx_date_offset(path))
+```
 
+`strings` is my `shared_strings`.
+
+I don't have anything like `date_offset`. Should I?
+
+```{r}
 style_xlsx <- xlsx_read_style(path)
 str(style_xlsx, max.level = 1)
 (lookup <- tibble::data_frame(
@@ -261,7 +350,13 @@ str(style_xlsx, max.level = 1)
   fill    = style_xlsx$cell_xfs$fill_id,
   border  = style_xlsx$cell_xfs$border_id,
   num_fmt = style_xlsx$cell_xfs$num_fmt_id))
+```
 
+Interesting. I hadn't absorbed that the font, fill, border, and num_fmt tibbles were synced up like this. Good to know. I should proactively check this when I run `xlsx_read_workbook()` sheets on all the examples systematically.
+
+What are the implications of this? What is the point of `lookup`? Should we make some giant hairy monster tibble for formatting that has rows like the rows of `lookup` but cbinds the formatting info from the different domains?
+
+```{r}
 ## numeric formatting
 n <- max(style_xlsx$num_fmts$num_format_id)
 fmt <- rep(NA_character_, n)
@@ -274,6 +369,9 @@ style <- linen::linen_style(lookup, font = style_xlsx$fonts,
                             num_fmt = num_fmt)
 
 (workbook <- linen::workbook(sheets, style, dat$defined_names))
+
+sheets <- 1L
+(sheets <- xlsx_sheet_names(dat)[sheets])
 ```
 
 Objective 2: Visit and extract information for all requested worksheets.

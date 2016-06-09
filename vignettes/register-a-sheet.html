@@ -12,7 +12,7 @@
 
 <meta name="author" content="Jennifer Bryan" />
 
-<meta name="date" content="2016-06-01" />
+<meta name="date" content="2016-06-09" />
 
 <title>Register an Excel Sheet</title>
 
@@ -68,9 +68,9 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 
 
-<h1 class="title">Register an Excel Sheet</h1>
+<h1 class="title toc-ignore">Register an Excel Sheet</h1>
 <h4 class="author"><em>Jennifer Bryan</em></h4>
-<h4 class="date"><em>2016-06-01</em></h4>
+<h4 class="date"><em>2016-06-09</em></h4>
 
 
 <div id="TOC">
@@ -84,6 +84,12 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <li><a href="#workbook-rels-from-xl_relsworkbook.xml.rels">Workbook rels from xl/_rels/workbook.xml.rels</a></li>
 <li><a href="#derived-object-sheets_df">Derived object: <code>sheets_df</code></a></li>
 <li><a href="#shared-strings-from-xlsharedstrings.xml">Shared strings from xl/sharedStrings.xml</a></li>
+<li><a href="#styles-from-xlstyles.xml">Styles from xl/styles.xml</a></li>
+<li><a href="#worksheet-rels-from-xlworksheets_relssheet0-9.xml.rels">Worksheet rels from xl/worksheets/_rels/sheet[0-9]*.xml.rels</a></li>
+<li><a href="#drawings-such-as-xldrawingsworksheetdrawing1.xml">Drawings such as xl/drawings/worksheetdrawing1.xml</a></li>
+<li><a href="#high-level-info-from-worksheets">High-level info from worksheets</a></li>
+<li><a href="#putting-it-all-together">Putting it all together</a></li>
+<li><a href="#relating-this-to-rexcel_read_workbook">Relating this to <code>rexcel_read_workbook()</code></a></li>
 </ul>
 </div>
 
@@ -98,7 +104,7 @@ devtools::<span class="kw">load_all</span>(<span class="kw">find_package_root_fi
 <ul>
 <li>They always take <code>path</code> to xlsx as primary or only argument.</li>
 <li>They read from exactly one file.</li>
-<li>We have one to read every file that’s there. <em>probably very untrue, in practice!</em></li>
+<li>We have one to read every file that’s there. <em>probably very untrue, in practice! since I create a manifest, I could actually check this …</em></li>
 </ul></li>
 <li>Process data read from xlsx files only enough to create the minimal R object.</li>
 <li>Inner functions always return a single object.</li>
@@ -342,13 +348,13 @@ gabe_path &lt;-<span class="st"> </span><span class="kw">system.file</span>(<spa
 <ul>
 <li><code>name</code>: name of the named range</li>
 <li><code>refers_to</code>: string representation of the cell (area) reference, e.g., <code>Sheet1!$B$2:$B$11</code></li>
-<li><code>sheet_id</code>: integer <em>I can’t get my hands on a sheet that has actually this</em></li>
+<li><code>sheet_id</code>: integer <em>I can’t get my hands on a sheet that has actually this?</em></li>
 <li><code>local_sheet_id</code>: integer <em>appears when names are replicated</em></li>
 </ul>
 </div>
 <div id="workbook-rels-from-xl_relsworkbook.xml.rels" class="section level3">
 <h3>Workbook rels from xl/_rels/workbook.xml.rels</h3>
-<p><em>We should probably cook up a more interesting example here?</em></p>
+<p><em>We should probably cook up a more interesting example here.</em></p>
 <p>Mini Gapminder is interesting because you see the sheets aren’t numbered exactly as you’d expect (which is <a href="https://github.com/hadley/readxl/issues/104"><code>hadley/readxl#104</code></a>). Ekaterinburg is also interesting because <code>target</code> has a leading slash and includes the <code>xl</code> subdirectory. But the re-saved version looks more conventional.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">(workbook_rels &lt;-<span class="st"> </span><span class="kw">xlsx_read_workbook_rels</span>(mini_gap_path))</code></pre></div>
 <pre><code>## Source: local data frame [7 x 3]
@@ -453,12 +459,457 @@ gabe_path &lt;-<span class="st"> </span><span class="kw">system.file</span>(<spa
 ## [1] 2
 ## attr(,&quot;uniqueCount&quot;)
 ## [1] 1</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">mini_gap_path &lt;-<span class="st"> </span><span class="kw">system.file</span>(<span class="st">&quot;sheets&quot;</span>, <span class="st">&quot;mini-gap.xlsx&quot;</span>, <span class="dt">package =</span> <span class="st">&quot;rexcel&quot;</span>)
-mini_gap_workbook &lt;-<span class="st"> </span><span class="kw">rexcel_register</span>(mini_gap_path)
+</div>
+<div id="styles-from-xlstyles.xml" class="section level3">
+<h3>Styles from xl/styles.xml</h3>
+<p>Where to begin? I got as far as parsing the fonts. Then decided this, more anything else, was a ridiculous thing to re-do. Rich has made a great start on it. Revisit on a strict as needed basis.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">(styles &lt;-<span class="st"> </span><span class="kw">xlsx_read_style</span>(mini_gap_path))</code></pre></div>
+<pre><code>## $fonts
+## Source: local data frame [2 x 13]
+## 
+##    name family     b     i strike outline shadow condense extend   color
+##   &lt;chr&gt;  &lt;chr&gt; &lt;lgl&gt; &lt;lgl&gt;  &lt;lgl&gt;   &lt;lgl&gt;  &lt;lgl&gt;    &lt;lgl&gt;  &lt;lgl&gt;   &lt;chr&gt;
+## 1 Arial   &lt;NA&gt; FALSE FALSE  FALSE   FALSE  FALSE    FALSE  FALSE #000000
+## 2  &lt;NA&gt;   &lt;NA&gt; FALSE FALSE  FALSE   FALSE  FALSE    FALSE  FALSE    &lt;NA&gt;
+## Variables not shown: sz &lt;dbl&gt;, u &lt;chr&gt;, scheme &lt;chr&gt;.
+## 
+## $fills
+## Source: local data frame [2 x 4]
+## 
+##      type pattern_type    fg    bg
+##     &lt;chr&gt;        &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;
+## 1 pattern         none  &lt;NA&gt;  &lt;NA&gt;
+## 2 pattern    lightGray  &lt;NA&gt;  &lt;NA&gt;
+## 
+## $borders
+## Source: local data frame [1 x 19]
+## 
+##   outline start_present start_style start_color end_present end_style
+##     &lt;lgl&gt;         &lt;lgl&gt;       &lt;chr&gt;       &lt;chr&gt;       &lt;lgl&gt;     &lt;chr&gt;
+## 1      NA         FALSE        &lt;NA&gt;        &lt;NA&gt;       FALSE      &lt;NA&gt;
+## Variables not shown: end_color &lt;chr&gt;, left_present &lt;lgl&gt;, left_style
+##   &lt;chr&gt;, left_color &lt;chr&gt;, right_present &lt;lgl&gt;, right_style &lt;chr&gt;,
+##   right_color &lt;chr&gt;, top_present &lt;lgl&gt;, top_style &lt;chr&gt;, top_color &lt;chr&gt;,
+##   bottom_present &lt;lgl&gt;, bottom_style &lt;chr&gt;, bottom_color &lt;chr&gt;.
+## 
+## $cell_style_xfs
+## Source: local data frame [1 x 16]
+## 
+##   border_id fill_id font_id num_fmt_id pivot_button quote_prefix
+##       &lt;int&gt;   &lt;int&gt;   &lt;int&gt;      &lt;int&gt;        &lt;lgl&gt;        &lt;lgl&gt;
+## 1        NA      NA       1         NA        FALSE        FALSE
+## Variables not shown: apply_protection &lt;lgl&gt;, xf_id &lt;int&gt;, horizontal
+##   &lt;chr&gt;, vertical &lt;chr&gt;, indent &lt;int&gt;, justify_last_line &lt;lgl&gt;,
+##   reading_order &lt;int&gt;, shrink_to_fit &lt;lgl&gt;, text_rotation &lt;int&gt;, text_wrap
+##   &lt;lgl&gt;.
+## 
+## $cell_xfs
+## Source: local data frame [2 x 16]
+## 
+##   border_id fill_id font_id num_fmt_id pivot_button quote_prefix
+##       &lt;int&gt;   &lt;int&gt;   &lt;int&gt;      &lt;int&gt;        &lt;lgl&gt;        &lt;lgl&gt;
+## 1        NA      NA       1         NA        FALSE        FALSE
+## 2        NA      NA       2         NA        FALSE        FALSE
+## Variables not shown: apply_protection &lt;lgl&gt;, xf_id &lt;int&gt;, horizontal
+##   &lt;chr&gt;, vertical &lt;chr&gt;, indent &lt;int&gt;, justify_last_line &lt;lgl&gt;,
+##   reading_order &lt;int&gt;, shrink_to_fit &lt;lgl&gt;, text_rotation &lt;int&gt;, text_wrap
+##   &lt;lgl&gt;.
+## 
+## $cell_styles
+## Source: local data frame [1 x 6]
+## 
+##   builtin_id custom_builtin hidden i_level   name xf_id
+##        &lt;int&gt;          &lt;lgl&gt;  &lt;lgl&gt;   &lt;int&gt;  &lt;chr&gt; &lt;int&gt;
+## 1          1          FALSE  FALSE      NA Normal     1
+## 
+## $num_fmts
+## Source: local data frame [0 x 2]
+## 
+## Variables not shown: num_format_id &lt;int&gt;, format_code &lt;chr&gt;.</code></pre>
+<p><code>styles</code> is a list of <code>tbl_df</code>s:</p>
+<ul>
+<li>fonts: Variables include <code>name</code>, <code>color</code>, <code>sz</code>.</li>
+<li>fills: Variables include <code>pattern_type</code> and <code>fg</code>.</li>
+<li>borders: Variables include <code>outline</code> and <code>top_color</code>.</li>
+<li>num_fmts: Variables are <code>num_format_id</code> and <code>format_code</code>, where the format codes are those things familiar from Excel, such as <code>&quot;$&quot;#,##0.00</code>.</li>
+<li><em>stuff below here seems to index into / synthesize the above?</em></li>
+<li>cell_style_xfs: tibble of cell styles? Variables include <code>border_id</code>, <code>fill_id</code>, <code>font_id</code>, <code>num_fmt_id</code> (see above), <code>shrink_to_fit</code>, <code>text_wrap</code>.</li>
+<li>cell_xfs: <em>what is this? seems to have same variables as cell_style_xfs. But for mini gapminder, this has 2 rows, whereas cell_style_xfs has only one.</em></li>
+<li>cell_styles: tibble of cell styles? Variables include <code>builtin_id</code>, <code>name</code>, <code>xf_id</code>.</li>
+<li><em>Here’s a mystery node from mini gapminder style xml: <code>&lt;dxfs count=&quot;0&quot;/&gt;</code>. What is that even? This is a typical value (it is missing from Ekaterinburg). This node has much more content in the formulas and formatting sheet. Discuss with Rich.</em></li>
+</ul>
+<p>Again, Ekaterinburg has different namespace for the XML in <code>styles.xml</code>. I learned this in my now-abandoned effort to look into the styles myself (I got as far as fonts):</p>
+<ul>
+<li>Typical xlsx has a default namespace for the styles XML.</li>
+<li>But Ekaterinburg uses the same (I think?) namespace, <code>http://schemas.openxmlformats.org/spreadsheetml/2006/main</code>, but with prefix <code>x</code>. So that would need to be finessed to read styles out of such sheets.</li>
+</ul>
+<p>Let’s try to read other styles.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">xlsx_read_style</span>(ff_path)</code></pre></div>
+<pre><code>## $fonts
+## Source: local data frame [4 x 13]
+## 
+##          name family     b     i strike outline shadow condense extend
+##         &lt;chr&gt;  &lt;chr&gt; &lt;lgl&gt; &lt;lgl&gt;  &lt;lgl&gt;   &lt;lgl&gt;  &lt;lgl&gt;    &lt;lgl&gt;  &lt;lgl&gt;
+## 1       Arial   &lt;NA&gt; FALSE FALSE  FALSE   FALSE  FALSE    FALSE  FALSE
+## 2        &lt;NA&gt;   &lt;NA&gt; FALSE FALSE  FALSE   FALSE  FALSE    FALSE  FALSE
+## 3        &lt;NA&gt;   &lt;NA&gt; FALSE FALSE  FALSE   FALSE  FALSE    FALSE  FALSE
+## 4 Courier New   &lt;NA&gt;  TRUE FALSE  FALSE   FALSE  FALSE    FALSE  FALSE
+## Variables not shown: color &lt;chr&gt;, sz &lt;dbl&gt;, u &lt;chr&gt;, scheme &lt;chr&gt;.
+## 
+## $fills
+## Source: local data frame [2 x 4]
+## 
+##      type pattern_type    fg    bg
+##     &lt;chr&gt;        &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;
+## 1 pattern         none  &lt;NA&gt;  &lt;NA&gt;
+## 2 pattern    lightGray  &lt;NA&gt;  &lt;NA&gt;
+## 
+## $borders
+## Source: local data frame [1 x 19]
+## 
+##   outline start_present start_style start_color end_present end_style
+##     &lt;lgl&gt;         &lt;lgl&gt;       &lt;chr&gt;       &lt;chr&gt;       &lt;lgl&gt;     &lt;chr&gt;
+## 1      NA         FALSE        &lt;NA&gt;        &lt;NA&gt;       FALSE      &lt;NA&gt;
+## Variables not shown: end_color &lt;chr&gt;, left_present &lt;lgl&gt;, left_style
+##   &lt;chr&gt;, left_color &lt;chr&gt;, right_present &lt;lgl&gt;, right_style &lt;chr&gt;,
+##   right_color &lt;chr&gt;, top_present &lt;lgl&gt;, top_style &lt;chr&gt;, top_color &lt;chr&gt;,
+##   bottom_present &lt;lgl&gt;, bottom_style &lt;chr&gt;, bottom_color &lt;chr&gt;.
+## 
+## $cell_style_xfs
+## Source: local data frame [1 x 16]
+## 
+##   border_id fill_id font_id num_fmt_id pivot_button quote_prefix
+##       &lt;int&gt;   &lt;int&gt;   &lt;int&gt;      &lt;int&gt;        &lt;lgl&gt;        &lt;lgl&gt;
+## 1        NA      NA       1         NA        FALSE        FALSE
+## Variables not shown: apply_protection &lt;lgl&gt;, xf_id &lt;int&gt;, horizontal
+##   &lt;chr&gt;, vertical &lt;chr&gt;, indent &lt;int&gt;, justify_last_line &lt;lgl&gt;,
+##   reading_order &lt;int&gt;, shrink_to_fit &lt;lgl&gt;, text_rotation &lt;int&gt;, text_wrap
+##   &lt;lgl&gt;.
+## 
+## $cell_xfs
+## Source: local data frame [16 x 16]
+## 
+##    border_id fill_id font_id num_fmt_id pivot_button quote_prefix
+##        &lt;int&gt;   &lt;int&gt;   &lt;int&gt;      &lt;int&gt;        &lt;lgl&gt;        &lt;lgl&gt;
+## 1         NA      NA       1         NA        FALSE        FALSE
+## 2         NA      NA       2         NA        FALSE        FALSE
+## 3         NA      NA       2          4        FALSE        FALSE
+## 4         NA      NA       2          5        FALSE        FALSE
+## 5         NA      NA       3         NA        FALSE        FALSE
+## 6         NA      NA       2         12        FALSE        FALSE
+## 7         NA      NA       2         11        FALSE        FALSE
+## 8         NA      NA       2          5        FALSE        FALSE
+## 9         NA      NA       2         11        FALSE        FALSE
+## 10        NA      NA       2         12        FALSE        FALSE
+## 11        NA      NA       4         NA        FALSE        FALSE
+## 12        NA      NA       2          3        FALSE        FALSE
+## 13        NA      NA       2         13        FALSE        FALSE
+## 14        NA      NA       2        165        FALSE        FALSE
+## 15        NA      NA       2          4        FALSE        FALSE
+## 16        NA      NA       2          4        FALSE        FALSE
+## Variables not shown: apply_protection &lt;lgl&gt;, xf_id &lt;int&gt;, horizontal
+##   &lt;chr&gt;, vertical &lt;chr&gt;, indent &lt;int&gt;, justify_last_line &lt;lgl&gt;,
+##   reading_order &lt;int&gt;, shrink_to_fit &lt;lgl&gt;, text_rotation &lt;int&gt;, text_wrap
+##   &lt;lgl&gt;.
+## 
+## $cell_styles
+## Source: local data frame [1 x 6]
+## 
+##   builtin_id custom_builtin hidden i_level   name xf_id
+##        &lt;int&gt;          &lt;lgl&gt;  &lt;lgl&gt;   &lt;int&gt;  &lt;chr&gt; &lt;int&gt;
+## 1          1          FALSE  FALSE      NA Normal     1
+## 
+## $num_fmts
+## Source: local data frame [1 x 2]
+## 
+##   num_format_id format_code
+##           &lt;int&gt;       &lt;chr&gt;
+## 1           165 &quot;$&quot;#,##0.00</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## as explained above, namespace crazy means this won't work
+<span class="co">#xlsx_read_style(ek_path)</span>
+<span class="kw">xlsx_read_style</span>(ek2_path)</code></pre></div>
+<pre><code>## $fonts
+## Source: local data frame [5 x 13]
+## 
+##      name family     b     i strike outline shadow condense extend   color
+##     &lt;chr&gt;  &lt;chr&gt; &lt;lgl&gt; &lt;lgl&gt;  &lt;lgl&gt;   &lt;lgl&gt;  &lt;lgl&gt;    &lt;lgl&gt;  &lt;lgl&gt;   &lt;chr&gt;
+## 1 Calibri  Swiss FALSE FALSE  FALSE   FALSE  FALSE    FALSE  FALSE #000000
+## 2 Calibri  Swiss  TRUE FALSE  FALSE   FALSE  FALSE    FALSE  FALSE #000000
+## 3 Calibri  Swiss  TRUE FALSE  FALSE   FALSE  FALSE    FALSE  FALSE #44546A
+## 4 Calibri  Swiss FALSE FALSE  FALSE   FALSE  FALSE    FALSE  FALSE #0000FF
+## 5 Calibri  Swiss FALSE FALSE  FALSE   FALSE  FALSE    FALSE  FALSE #FF0000
+## Variables not shown: sz &lt;dbl&gt;, u &lt;chr&gt;, scheme &lt;chr&gt;.
+## 
+## $fills
+## Source: local data frame [2 x 4]
+## 
+##      type pattern_type    fg    bg
+##     &lt;chr&gt;        &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;
+## 1 pattern         none  &lt;NA&gt;  &lt;NA&gt;
+## 2 pattern      gray125  &lt;NA&gt;  &lt;NA&gt;
+## 
+## $borders
+## Source: local data frame [2 x 19]
+## 
+##   outline start_present start_style start_color end_present end_style
+##     &lt;lgl&gt;         &lt;lgl&gt;       &lt;chr&gt;       &lt;chr&gt;       &lt;lgl&gt;     &lt;chr&gt;
+## 1      NA         FALSE        &lt;NA&gt;        &lt;NA&gt;       FALSE      &lt;NA&gt;
+## 2      NA         FALSE        &lt;NA&gt;        &lt;NA&gt;       FALSE      &lt;NA&gt;
+## Variables not shown: end_color &lt;chr&gt;, left_present &lt;lgl&gt;, left_style
+##   &lt;chr&gt;, left_color &lt;chr&gt;, right_present &lt;lgl&gt;, right_style &lt;chr&gt;,
+##   right_color &lt;chr&gt;, top_present &lt;lgl&gt;, top_style &lt;chr&gt;, top_color &lt;chr&gt;,
+##   bottom_present &lt;lgl&gt;, bottom_style &lt;chr&gt;, bottom_color &lt;chr&gt;.
+## 
+## $cell_style_xfs
+## Source: local data frame [1 x 16]
+## 
+##   border_id fill_id font_id num_fmt_id pivot_button quote_prefix
+##       &lt;int&gt;   &lt;int&gt;   &lt;int&gt;      &lt;int&gt;        &lt;lgl&gt;        &lt;lgl&gt;
+## 1        NA      NA      NA         NA        FALSE        FALSE
+## Variables not shown: apply_protection &lt;lgl&gt;, xf_id &lt;int&gt;, horizontal
+##   &lt;chr&gt;, vertical &lt;chr&gt;, indent &lt;int&gt;, justify_last_line &lt;lgl&gt;,
+##   reading_order &lt;int&gt;, shrink_to_fit &lt;lgl&gt;, text_rotation &lt;int&gt;, text_wrap
+##   &lt;lgl&gt;.
+## 
+## $cell_xfs
+## Source: local data frame [7 x 16]
+## 
+##   border_id fill_id font_id num_fmt_id pivot_button quote_prefix
+##       &lt;int&gt;   &lt;int&gt;   &lt;int&gt;      &lt;int&gt;        &lt;lgl&gt;        &lt;lgl&gt;
+## 1        NA      NA      NA         NA        FALSE        FALSE
+## 2         2      NA       2         50        FALSE        FALSE
+## 3         2      NA      NA         50        FALSE        FALSE
+## 4         2      NA      NA         50        FALSE        FALSE
+## 5        NA      NA       3         50        FALSE        FALSE
+## 6        NA      NA      NA         NA        FALSE        FALSE
+## 7        NA      NA       4         NA        FALSE        FALSE
+## Variables not shown: apply_protection &lt;lgl&gt;, xf_id &lt;int&gt;, horizontal
+##   &lt;chr&gt;, vertical &lt;chr&gt;, indent &lt;int&gt;, justify_last_line &lt;lgl&gt;,
+##   reading_order &lt;int&gt;, shrink_to_fit &lt;lgl&gt;, text_rotation &lt;int&gt;, text_wrap
+##   &lt;lgl&gt;.
+## 
+## $cell_styles
+## Source: local data frame [1 x 6]
+## 
+##   builtin_id custom_builtin hidden i_level   name xf_id
+##        &lt;int&gt;          &lt;lgl&gt;  &lt;lgl&gt;   &lt;int&gt;  &lt;chr&gt; &lt;int&gt;
+## 1          1          FALSE  FALSE      NA Normal     1
+## 
+## $num_fmts
+## Source: local data frame [0 x 2]
+## 
+## Variables not shown: num_format_id &lt;int&gt;, format_code &lt;chr&gt;.</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">xlsx_read_style</span>(dn_path)</code></pre></div>
+<pre><code>## $fonts
+## Source: local data frame [2 x 13]
+## 
+##    name family     b     i strike outline shadow condense extend   color
+##   &lt;chr&gt;  &lt;chr&gt; &lt;lgl&gt; &lt;lgl&gt;  &lt;lgl&gt;   &lt;lgl&gt;  &lt;lgl&gt;    &lt;lgl&gt;  &lt;lgl&gt;   &lt;chr&gt;
+## 1 Arial   &lt;NA&gt; FALSE FALSE  FALSE   FALSE  FALSE    FALSE  FALSE #000000
+## 2 Arial   &lt;NA&gt; FALSE FALSE  FALSE   FALSE  FALSE    FALSE  FALSE    &lt;NA&gt;
+## Variables not shown: sz &lt;dbl&gt;, u &lt;chr&gt;, scheme &lt;chr&gt;.
+## 
+## $fills
+## Source: local data frame [2 x 4]
+## 
+##      type pattern_type    fg    bg
+##     &lt;chr&gt;        &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;
+## 1 pattern         none  &lt;NA&gt;  &lt;NA&gt;
+## 2 pattern      gray125  &lt;NA&gt;  &lt;NA&gt;
+## 
+## $borders
+## Source: local data frame [1 x 19]
+## 
+##   outline start_present start_style start_color end_present end_style
+##     &lt;lgl&gt;         &lt;lgl&gt;       &lt;chr&gt;       &lt;chr&gt;       &lt;lgl&gt;     &lt;chr&gt;
+## 1      NA         FALSE        &lt;NA&gt;        &lt;NA&gt;       FALSE      &lt;NA&gt;
+## Variables not shown: end_color &lt;chr&gt;, left_present &lt;lgl&gt;, left_style
+##   &lt;chr&gt;, left_color &lt;chr&gt;, right_present &lt;lgl&gt;, right_style &lt;chr&gt;,
+##   right_color &lt;chr&gt;, top_present &lt;lgl&gt;, top_style &lt;chr&gt;, top_color &lt;chr&gt;,
+##   bottom_present &lt;lgl&gt;, bottom_style &lt;chr&gt;, bottom_color &lt;chr&gt;.
+## 
+## $cell_style_xfs
+## Source: local data frame [1 x 16]
+## 
+##   border_id fill_id font_id num_fmt_id pivot_button quote_prefix
+##       &lt;int&gt;   &lt;int&gt;   &lt;int&gt;      &lt;int&gt;        &lt;lgl&gt;        &lt;lgl&gt;
+## 1        NA      NA      NA         NA        FALSE        FALSE
+## Variables not shown: apply_protection &lt;lgl&gt;, xf_id &lt;int&gt;, horizontal
+##   &lt;chr&gt;, vertical &lt;chr&gt;, indent &lt;int&gt;, justify_last_line &lt;lgl&gt;,
+##   reading_order &lt;int&gt;, shrink_to_fit &lt;lgl&gt;, text_rotation &lt;int&gt;, text_wrap
+##   &lt;lgl&gt;.
+## 
+## $cell_xfs
+## Source: local data frame [2 x 16]
+## 
+##   border_id fill_id font_id num_fmt_id pivot_button quote_prefix
+##       &lt;int&gt;   &lt;int&gt;   &lt;int&gt;      &lt;int&gt;        &lt;lgl&gt;        &lt;lgl&gt;
+## 1        NA      NA       1         NA        FALSE        FALSE
+## 2        NA      NA       2         NA        FALSE        FALSE
+## Variables not shown: apply_protection &lt;lgl&gt;, xf_id &lt;int&gt;, horizontal
+##   &lt;chr&gt;, vertical &lt;chr&gt;, indent &lt;int&gt;, justify_last_line &lt;lgl&gt;,
+##   reading_order &lt;int&gt;, shrink_to_fit &lt;lgl&gt;, text_rotation &lt;int&gt;, text_wrap
+##   &lt;lgl&gt;.
+## 
+## $cell_styles
+## Source: local data frame [1 x 6]
+## 
+##   builtin_id custom_builtin hidden i_level   name xf_id
+##        &lt;int&gt;          &lt;lgl&gt;  &lt;lgl&gt;   &lt;int&gt;  &lt;chr&gt; &lt;int&gt;
+## 1          1          FALSE  FALSE      NA Normal     1
+## 
+## $num_fmts
+## Source: local data frame [0 x 2]
+## 
+## Variables not shown: num_format_id &lt;int&gt;, format_code &lt;chr&gt;.</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">xlsx_read_style</span>(gabe_path)</code></pre></div>
+<pre><code>## $fonts
+## Source: local data frame [1 x 13]
+## 
+##      name family     b     i strike outline shadow condense extend   color
+##     &lt;chr&gt;  &lt;chr&gt; &lt;lgl&gt; &lt;lgl&gt;  &lt;lgl&gt;   &lt;lgl&gt;  &lt;lgl&gt;    &lt;lgl&gt;  &lt;lgl&gt;   &lt;chr&gt;
+## 1 Calibri  Swiss FALSE FALSE  FALSE   FALSE  FALSE    FALSE  FALSE #000000
+## Variables not shown: sz &lt;dbl&gt;, u &lt;chr&gt;, scheme &lt;chr&gt;.
+## 
+## $fills
+## Source: local data frame [2 x 4]
+## 
+##      type pattern_type    fg    bg
+##     &lt;chr&gt;        &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;
+## 1 pattern         none  &lt;NA&gt;  &lt;NA&gt;
+## 2 pattern      gray125  &lt;NA&gt;  &lt;NA&gt;
+## 
+## $borders
+## Source: local data frame [1 x 19]
+## 
+##   outline start_present start_style start_color end_present end_style
+##     &lt;lgl&gt;         &lt;lgl&gt;       &lt;chr&gt;       &lt;chr&gt;       &lt;lgl&gt;     &lt;chr&gt;
+## 1      NA         FALSE        &lt;NA&gt;        &lt;NA&gt;       FALSE      &lt;NA&gt;
+## Variables not shown: end_color &lt;chr&gt;, left_present &lt;lgl&gt;, left_style
+##   &lt;chr&gt;, left_color &lt;chr&gt;, right_present &lt;lgl&gt;, right_style &lt;chr&gt;,
+##   right_color &lt;chr&gt;, top_present &lt;lgl&gt;, top_style &lt;chr&gt;, top_color &lt;chr&gt;,
+##   bottom_present &lt;lgl&gt;, bottom_style &lt;chr&gt;, bottom_color &lt;chr&gt;.
+## 
+## $cell_style_xfs
+## Source: local data frame [1 x 16]
+## 
+##   border_id fill_id font_id num_fmt_id pivot_button quote_prefix
+##       &lt;int&gt;   &lt;int&gt;   &lt;int&gt;      &lt;int&gt;        &lt;lgl&gt;        &lt;lgl&gt;
+## 1        NA      NA      NA         NA        FALSE        FALSE
+## Variables not shown: apply_protection &lt;lgl&gt;, xf_id &lt;int&gt;, horizontal
+##   &lt;chr&gt;, vertical &lt;chr&gt;, indent &lt;int&gt;, justify_last_line &lt;lgl&gt;,
+##   reading_order &lt;int&gt;, shrink_to_fit &lt;lgl&gt;, text_rotation &lt;int&gt;, text_wrap
+##   &lt;lgl&gt;.
+## 
+## $cell_xfs
+## Source: local data frame [1 x 16]
+## 
+##   border_id fill_id font_id num_fmt_id pivot_button quote_prefix
+##       &lt;int&gt;   &lt;int&gt;   &lt;int&gt;      &lt;int&gt;        &lt;lgl&gt;        &lt;lgl&gt;
+## 1        NA      NA      NA         NA        FALSE        FALSE
+## Variables not shown: apply_protection &lt;lgl&gt;, xf_id &lt;int&gt;, horizontal
+##   &lt;chr&gt;, vertical &lt;chr&gt;, indent &lt;int&gt;, justify_last_line &lt;lgl&gt;,
+##   reading_order &lt;int&gt;, shrink_to_fit &lt;lgl&gt;, text_rotation &lt;int&gt;, text_wrap
+##   &lt;lgl&gt;.
+## 
+## $cell_styles
+## Source: local data frame [1 x 6]
+## 
+##   builtin_id custom_builtin hidden i_level   name xf_id
+##        &lt;int&gt;          &lt;lgl&gt;  &lt;lgl&gt;   &lt;int&gt;  &lt;chr&gt; &lt;int&gt;
+## 1          1          FALSE  FALSE      NA Normal     1
+## 
+## $num_fmts
+## Source: local data frame [0 x 2]
+## 
+## Variables not shown: num_format_id &lt;int&gt;, format_code &lt;chr&gt;.</code></pre>
+</div>
+<div id="worksheet-rels-from-xlworksheets_relssheet0-9.xml.rels" class="section level3">
+<h3>Worksheet rels from xl/worksheets/_rels/sheet[0-9]*.xml.rels</h3>
+<p>There is up to one file per worksheet in <code>xl/worksheets/_rels/</code>. From these we make the tibble <code>worksheet_rels</code>, where each row corresponds to the file for a worksheet. It is possible for a worksheet to have no associated <code>rels</code> file and it is possible for a workbook to have zero worksheet <code>rels</code> files, in which case this object will be <code>NULL</code>.</p>
+<p>When this tibble exists, here are the variables:</p>
+<ul>
+<li>worksheet: character, e.g. “sheet1”. Note: I created this from filename.</li>
+<li>id: character, so far typically it’s “rId1”, except for Ekaterinburg, of course</li>
+<li>type: uniformly a long name-spacey string ending in “drawing” or “hyperlink”</li>
+<li>target: how to get to the thing. So this could be a relative local path to the “drawing” file. Or it could be a URL.</li>
+<li>targetmode: “External” when target is a URL, otherwise seems to not exist or be <code>NA</code></li>
+</ul>
+<p>Let’s just look at these worksheet rels for all of our examples.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">as.data.frame</span>(worksheet_rels &lt;-<span class="st"> </span><span class="kw">xlsx_read_worksheet_rels</span>(mini_gap_path))</code></pre></div>
+<pre><code>##   worksheet   id
+## 1    sheet1 rId1
+## 2    sheet2 rId1
+## 3    sheet3 rId1
+## 4    sheet4 rId1
+## 5    sheet5 rId1
+##                                                                          type
+## 1 http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing
+## 2 http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing
+## 3 http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing
+## 4 http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing
+## 5 http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing
+##                              target
+## 1 ../drawings/worksheetdrawing1.xml
+## 2 ../drawings/worksheetdrawing2.xml
+## 3 ../drawings/worksheetdrawing3.xml
+## 4 ../drawings/worksheetdrawing4.xml
+## 5 ../drawings/worksheetdrawing5.xml</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">as.data.frame</span>(<span class="kw">xlsx_read_worksheet_rels</span>(ff_path))</code></pre></div>
+<pre><code>##   worksheet   id
+## 1    sheet1 rId1
+## 2    sheet1 rId2
+##                                                                            type
+## 1 http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink
+## 2   http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing
+##                              target targetmode
+## 1            http://www.google.com/   External
+## 2 ../drawings/worksheetdrawing1.xml       &lt;NA&gt;</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">as.data.frame</span>(<span class="kw">xlsx_read_worksheet_rels</span>(ek_path))</code></pre></div>
+<pre><code>##   worksheet
+## 1     sheet
+##                                                                            type
+## 1 http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink
+##                      target targetmode                id
+## 1 http://spark-interfax.ru/   External R9d4dace81f1f4cc7</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">as.data.frame</span>(<span class="kw">xlsx_read_worksheet_rels</span>(ek2_path))</code></pre></div>
+<pre><code>##   worksheet   id
+## 1    sheet1 rId1
+##                                                                            type
+## 1 http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink
+##                      target targetmode
+## 1 http://spark-interfax.ru/   External</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">as.data.frame</span>(<span class="kw">xlsx_read_worksheet_rels</span>(dn_path))</code></pre></div>
+<pre><code>## data frame with 0 columns and 0 rows</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">as.data.frame</span>(<span class="kw">xlsx_read_worksheet_rels</span>(gabe_path))</code></pre></div>
+<pre><code>## data frame with 0 columns and 0 rows</code></pre>
+</div>
+<div id="drawings-such-as-xldrawingsworksheetdrawing1.xml" class="section level3">
+<h3>Drawings such as xl/drawings/worksheetdrawing1.xml</h3>
+<p>I am not dealing with this. But want to record that it is typical to see one of these files per worksheet, even where there are no “drawings”, e.g., plots. Case in point: mini Gapminder.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">subset</span>(<span class="kw">xlsx_list_files</span>(mini_gap_path), <span class="kw">grepl</span>(<span class="st">&quot;drawing&quot;</span>, name))</code></pre></div>
+<pre><code>## Source: local data frame [5 x 3]
+## 
+##                                name length                date
+##                               &lt;chr&gt;  &lt;dbl&gt;              &lt;time&gt;
+## 1 xl/drawings/worksheetdrawing1.xml    494 2015-04-25 12:00:00
+## 2 xl/drawings/worksheetdrawing2.xml    494 2015-04-25 12:00:00
+## 3 xl/drawings/worksheetdrawing3.xml    494 2015-04-25 12:00:00
+## 4 xl/drawings/worksheetdrawing4.xml    494 2015-04-25 12:00:00
+## 5 xl/drawings/worksheetdrawing5.xml    494 2015-04-25 12:00:00</code></pre>
+</div>
+<div id="high-level-info-from-worksheets" class="section level3">
+<h3>High-level info from worksheets</h3>
+<p>OMG we have finally arrived here! I’m coming back to this soon!</p>
+</div>
+<div id="putting-it-all-together" class="section level3">
+<h3>Putting it all together</h3>
+<p>All of the above is bundled together in the function <code>rexcel_register()</code>, which currently returns a list with the assembled components.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">mini_gap_workbook &lt;-<span class="st"> </span><span class="kw">rexcel_register</span>(mini_gap_path)
 <span class="kw">str</span>(mini_gap_workbook, <span class="dt">max.level =</span> <span class="dv">1</span>)</code></pre></div>
 <pre><code>## List of 11
 ##  $ xlsx_path     : chr &quot;/Users/jenny/rrr/rexcel/inst/sheets/mini-gap.xlsx&quot;
-##  $ reg_time      : POSIXct[1:1], format: &quot;2016-06-01 23:41:18&quot;
+##  $ reg_time      : POSIXct[1:1], format: &quot;2016-06-09 09:55:44&quot;
 ##  $ manifest      :Classes 'tbl_df', 'tbl' and 'data.frame':  21 obs. of  3 variables:
 ##  $ content_types :Classes 'tbl_df', 'tbl' and 'data.frame':  15 obs. of  3 variables:
 ##  $ sheets        :Classes 'tbl_df', 'tbl' and 'data.frame':  5 obs. of  4 variables:
@@ -467,7 +918,7 @@ mini_gap_workbook &lt;-<span class="st"> </span><span class="kw">rexcel_register
 ##  $ shared_strings: atomic [1:33] country continent year lifeExp ...
 ##   ..- attr(*, &quot;count&quot;)= int 80
 ##   ..- attr(*, &quot;uniqueCount&quot;)= int 33
-##  $ styles        :List of 8
+##  $ styles        :List of 7
 ##  $ worksheet_rels:Classes 'tbl_df', 'tbl' and 'data.frame':  5 obs. of  4 variables:
 ##  $ sheets_df     :Classes 'tbl_df', 'tbl' and 'data.frame':  5 obs. of  5 variables:</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">mini_gap_workbook</code></pre></div>
@@ -475,7 +926,7 @@ mini_gap_workbook &lt;-<span class="st"> </span><span class="kw">rexcel_register
 ## [1] &quot;/Users/jenny/rrr/rexcel/inst/sheets/mini-gap.xlsx&quot;
 ## 
 ## $reg_time
-## [1] &quot;2016-06-01 23:41:18 PDT&quot;
+## [1] &quot;2016-06-09 09:55:44 PDT&quot;
 ## 
 ## $manifest
 ## Source: local data frame [21 x 3]
@@ -569,32 +1020,67 @@ mini_gap_workbook &lt;-<span class="st"> </span><span class="kw">rexcel_register
 ## 
 ## $styles
 ## $styles$fonts
-## Source: local data frame [1 x 3]
+## Source: local data frame [2 x 13]
 ## 
-##      sz    color  name
-##   &lt;chr&gt;    &lt;chr&gt; &lt;chr&gt;
-## 1  10.0 FF000000 Arial
+##    name family     b     i strike outline shadow condense extend   color
+##   &lt;chr&gt;  &lt;chr&gt; &lt;lgl&gt; &lt;lgl&gt;  &lt;lgl&gt;   &lt;lgl&gt;  &lt;lgl&gt;    &lt;lgl&gt;  &lt;lgl&gt;   &lt;chr&gt;
+## 1 Arial   &lt;NA&gt; FALSE FALSE  FALSE   FALSE  FALSE    FALSE  FALSE #000000
+## 2  &lt;NA&gt;   &lt;NA&gt; FALSE FALSE  FALSE   FALSE  FALSE    FALSE  FALSE    &lt;NA&gt;
+## Variables not shown: sz &lt;dbl&gt;, u &lt;chr&gt;, scheme &lt;chr&gt;.
 ## 
 ## $styles$fills
-## NULL
+## Source: local data frame [2 x 4]
+## 
+##      type pattern_type    fg    bg
+##     &lt;chr&gt;        &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;
+## 1 pattern         none  &lt;NA&gt;  &lt;NA&gt;
+## 2 pattern    lightGray  &lt;NA&gt;  &lt;NA&gt;
 ## 
 ## $styles$borders
-## NULL
+## Source: local data frame [1 x 19]
+## 
+##   outline start_present start_style start_color end_present end_style
+##     &lt;lgl&gt;         &lt;lgl&gt;       &lt;chr&gt;       &lt;chr&gt;       &lt;lgl&gt;     &lt;chr&gt;
+## 1      NA         FALSE        &lt;NA&gt;        &lt;NA&gt;       FALSE      &lt;NA&gt;
+## Variables not shown: end_color &lt;chr&gt;, left_present &lt;lgl&gt;, left_style
+##   &lt;chr&gt;, left_color &lt;chr&gt;, right_present &lt;lgl&gt;, right_style &lt;chr&gt;,
+##   right_color &lt;chr&gt;, top_present &lt;lgl&gt;, top_style &lt;chr&gt;, top_color &lt;chr&gt;,
+##   bottom_present &lt;lgl&gt;, bottom_style &lt;chr&gt;, bottom_color &lt;chr&gt;.
 ## 
 ## $styles$cell_style_xfs
-## NULL
+## Source: local data frame [1 x 16]
+## 
+##   border_id fill_id font_id num_fmt_id pivot_button quote_prefix
+##       &lt;int&gt;   &lt;int&gt;   &lt;int&gt;      &lt;int&gt;        &lt;lgl&gt;        &lt;lgl&gt;
+## 1        NA      NA       1         NA        FALSE        FALSE
+## Variables not shown: apply_protection &lt;lgl&gt;, xf_id &lt;int&gt;, horizontal
+##   &lt;chr&gt;, vertical &lt;chr&gt;, indent &lt;int&gt;, justify_last_line &lt;lgl&gt;,
+##   reading_order &lt;int&gt;, shrink_to_fit &lt;lgl&gt;, text_rotation &lt;int&gt;, text_wrap
+##   &lt;lgl&gt;.
 ## 
 ## $styles$cell_xfs
-## NULL
+## Source: local data frame [2 x 16]
+## 
+##   border_id fill_id font_id num_fmt_id pivot_button quote_prefix
+##       &lt;int&gt;   &lt;int&gt;   &lt;int&gt;      &lt;int&gt;        &lt;lgl&gt;        &lt;lgl&gt;
+## 1        NA      NA       1         NA        FALSE        FALSE
+## 2        NA      NA       2         NA        FALSE        FALSE
+## Variables not shown: apply_protection &lt;lgl&gt;, xf_id &lt;int&gt;, horizontal
+##   &lt;chr&gt;, vertical &lt;chr&gt;, indent &lt;int&gt;, justify_last_line &lt;lgl&gt;,
+##   reading_order &lt;int&gt;, shrink_to_fit &lt;lgl&gt;, text_rotation &lt;int&gt;, text_wrap
+##   &lt;lgl&gt;.
 ## 
 ## $styles$cell_styles
-## NULL
+## Source: local data frame [1 x 6]
+## 
+##   builtin_id custom_builtin hidden i_level   name xf_id
+##        &lt;int&gt;          &lt;lgl&gt;  &lt;lgl&gt;   &lt;int&gt;  &lt;chr&gt; &lt;int&gt;
+## 1          1          FALSE  FALSE      NA Normal     1
 ## 
 ## $styles$num_fmts
-## NULL
+## Source: local data frame [0 x 2]
 ## 
-## $styles$dxfs
-## NULL
+## Variables not shown: num_format_id &lt;int&gt;, format_code &lt;chr&gt;.
 ## 
 ## 
 ## $worksheet_rels
@@ -619,261 +1105,207 @@ mini_gap_workbook &lt;-<span class="st"> </span><span class="kw">rexcel_register
 ## 3        3     Asia  rId5 xl/worksheets/sheet5.xml visible
 ## 4        4   Europe  rId6 xl/worksheets/sheet1.xml visible
 ## 5        5  Oceania  rId7 xl/worksheets/sheet2.xml visible</code></pre>
-<p>What’s here?</p>
+<p>Let’s review the components:</p>
 <ul>
 <li><code>xlsx_path</code>: path to the xlsx</li>
 <li><code>reg_time</code>: time xlsx was processed</li>
 <li><code>manifest</code>: file list for the xlsx zip archive</li>
 <li><code>content_types</code>: tbl representing <code>[Content_Types].xml</code></li>
 <li><code>sheets</code>: tbl representing <code>xl/workbook.xml</code></li>
-<li><code>sheets_df</code>:
+<li><code>defined_names</code>: tbl for named ranges</li>
+<li><code>workbook_rels</code>: tbl representing <code>xl/_rels/workbook.xml.rels</code>
 <ul>
-<li>This is really the only thing I created.</li>
-<li>A tbl with one row per worksheet, from joining <code>sheets</code> and <code>workbook_rels</code></li>
+<li>links target files to <code>id</code>s, also gives file type</li>
+<li>example: tells you that <code>id = rId4</code> refers to <code>Target</code> file <code>xl/worksheets/sheetX.xml</code></li>
 </ul></li>
 <li><code>shared_strings</code>: character vector representing <code>xl/sharedStrings.xml</code></li>
-<li><code>styles</code>: list of tbls from <code>xl/styles.xml</code> (ok, I admit, I stopped after parsing fonts)</li>
-<li><code>workbook_rels</code>:
+<li><code>styles</code>: list of tbls from <code>xl/styles.xml</code></li>
+<li><code>worksheet_rels</code>: tbl about files or external resources (URLs) that relate to the worksheets. Comes from files like <code>xl/worksheets/_rels/(sheet[0-9]+).xml.rels</code>.</li>
+<li><code>sheets_df</code>:
 <ul>
-<li>tbl that links target files to <code>Id</code>s, also gives file type</li>
-<li>example: tells you that <code>Id = rId4</code> refers to <code>Target</code> file <code>xl/worksheets/sheetX.xml</code></li>
-<li>comes from <code>xl/_rels/workbook.xml.rels</code></li>
-</ul></li>
-<li><code>worksheet_rels</code>:
-<ul>
-<li><em>I’m still figuring this one out but it’s about files or external resources (potentially) referred to from worksheets</em></li>
-<li>comes from files like<code>xl/worksheets/_rels/(sheet[0-9]+).xml.rels</code></li>
+<li>This is arguably the only thing I created.</li>
+<li>A tbl with one row per worksheet, from joining <code>sheets</code> and <code>workbook_rels</code></li>
 </ul></li>
 </ul>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## enter rexcel_read_workbook()
-path &lt;-<span class="st"> </span>ff_path
-sheets &lt;-<span class="st"> </span>1L
+</div>
+<div id="relating-this-to-rexcel_read_workbook" class="section level3">
+<h3>Relating this to <code>rexcel_read_workbook()</code></h3>
+<p>Looking at the innards of <code>rexcel_read_workboobk()</code> to compare and contrast.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">path &lt;-<span class="st"> </span>mini_gap_path
 
-## this gets info about the files inside the zip archive
 dat &lt;-<span class="st"> </span><span class="kw">xlsx_read_workbook</span>(path)
-dat$rels   ## ?files in the zip archive?</code></pre></div>
-<pre><code>## Source: local data frame [3 x 4]
+<span class="kw">str</span>(dat, <span class="dt">max.level =</span> <span class="dv">1</span>)</code></pre></div>
+<pre><code>## List of 3
+##  $ rels         :Classes 'tbl_df', 'tbl' and 'data.frame':   7 obs. of  4 variables:
+##  $ sheets       :'data.frame':   5 obs. of  7 variables:
+##  $ defined_names:Classes 'tbl_df', 'tbl' and 'data.frame':   0 obs. of  3 variables:</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">dat$rels</code></pre></div>
+<pre><code>## Source: local data frame [7 x 4]
 ## 
 ##      id          type                target               target_abs
 ##   &lt;chr&gt;         &lt;chr&gt;                 &lt;chr&gt;                    &lt;chr&gt;
-## 1  rId1        styles            styles.xml            xl/styles.xml
-## 2  rId2 sharedStrings     sharedStrings.xml     xl/sharedStrings.xml
-## 3  rId3     worksheet worksheets/sheet1.xml xl/worksheets/sheet1.xml</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">dat$sheets ## ?files corresponding to worksheets?</code></pre></div>
-<pre><code>##     name sheet_id   state  ref      type                target
-## 1 Sheet1        1 visible rId3 worksheet worksheets/sheet1.xml
+## 1  rId2 sharedStrings     sharedStrings.xml     xl/sharedStrings.xml
+## 2  rId1        styles            styles.xml            xl/styles.xml
+## 3  rId4     worksheet worksheets/sheet3.xml xl/worksheets/sheet3.xml
+## 4  rId3     worksheet worksheets/sheet4.xml xl/worksheets/sheet4.xml
+## 5  rId6     worksheet worksheets/sheet1.xml xl/worksheets/sheet1.xml
+## 6  rId5     worksheet worksheets/sheet5.xml xl/worksheets/sheet5.xml
+## 7  rId7     worksheet worksheets/sheet2.xml xl/worksheets/sheet2.xml</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">dat$sheets</code></pre></div>
+<pre><code>##       name sheet_id   state  ref      type                target
+## 1   Africa        1 visible rId3 worksheet worksheets/sheet4.xml
+## 2 Americas        2 visible rId4 worksheet worksheets/sheet3.xml
+## 3     Asia        3 visible rId5 worksheet worksheets/sheet5.xml
+## 4   Europe        4 visible rId6 worksheet worksheets/sheet1.xml
+## 5  Oceania        5 visible rId7 worksheet worksheets/sheet2.xml
 ##                 target_abs
-## 1 xl/worksheets/sheet1.xml</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">(sheets &lt;-<span class="st"> </span><span class="kw">xlsx_sheet_names</span>(dat)[sheets])</code></pre></div>
-<pre><code>## [1] &quot;Sheet1&quot;</code></pre>
+## 1 xl/worksheets/sheet4.xml
+## 2 xl/worksheets/sheet3.xml
+## 3 xl/worksheets/sheet5.xml
+## 4 xl/worksheets/sheet1.xml
+## 5 xl/worksheets/sheet2.xml</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">dat$defined_names</code></pre></div>
+<pre><code>## Source: local data frame [0 x 3]
+## 
+## Variables not shown: name &lt;chr&gt;, refers_to &lt;chr&gt;, sheet_id &lt;int&gt;.</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## let's look at defined names in a sheet that actually has them
+<span class="kw">xlsx_read_workbook</span>(dn_path)$defined_names</code></pre></div>
+<pre><code>## Source: local data frame [6 x 3]
+## 
+##        name refers_to sheet_id
+##       &lt;chr&gt;     &lt;chr&gt;    &lt;int&gt;
+## 1 continent      &lt;NA&gt;       NA
+## 2   country      &lt;NA&gt;       NA
+## 3 gdpPercap      &lt;NA&gt;       NA
+## 4   lifeExp      &lt;NA&gt;       NA
+## 5       pop      &lt;NA&gt;       NA
+## 6      year      &lt;NA&gt;       NA</code></pre>
+<p><code>dat$rels</code> is what I call <code>workbook_rels</code>.</p>
+<p><code>dat$sheets</code> is almost equivalent to my <code>sheets_df</code>.</p>
+<p><code>dat$defined_names</code> should be equivalent to my <code>defined_names</code>, but Rich did not anticipate the structure of the nodes I am seeing.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">(strings &lt;-<span class="st"> </span><span class="kw">xlsx_read_shared_strings</span>(path))</code></pre></div>
-<pre><code>##  [1] &quot;integer&quot;           &quot;number_formatted&quot;  &quot;number_rounded&quot;   
-##  [4] &quot;character&quot;         &quot;formula&quot;           &quot;formula_formatted&quot;
-##  [7] &quot;one&quot;               &quot;three&quot;             &quot;four&quot;             
-## [10] &quot;five&quot;             
+<pre><code>##  [1] &quot;country&quot;                &quot;continent&quot;             
+##  [3] &quot;year&quot;                   &quot;lifeExp&quot;               
+##  [5] &quot;pop&quot;                    &quot;gdpPercap&quot;             
+##  [7] &quot;Algeria&quot;                &quot;Africa&quot;                
+##  [9] &quot;Angola&quot;                 &quot;Albania&quot;               
+## [11] &quot;Europe&quot;                 &quot;Benin&quot;                 
+## [13] &quot;Austria&quot;                &quot;Argentina&quot;             
+## [15] &quot;Americas&quot;               &quot;Belgium&quot;               
+## [17] &quot;Australia&quot;              &quot;Oceania&quot;               
+## [19] &quot;Bolivia&quot;                &quot;Bosnia and Herzegovina&quot;
+## [21] &quot;New Zealand&quot;            &quot;Bulgaria&quot;              
+## [23] &quot;Brazil&quot;                 &quot;Canada&quot;                
+## [25] &quot;Afghanistan&quot;            &quot;Asia&quot;                  
+## [27] &quot;Bahrain&quot;                &quot;Chile&quot;                 
+## [29] &quot;Bangladesh&quot;             &quot;Botswana&quot;              
+## [31] &quot;Cambodia&quot;               &quot;China&quot;                 
+## [33] &quot;Burkina Faso&quot;          
 ## attr(,&quot;count&quot;)
-## [1] 10
+## [1] 80
 ## attr(,&quot;uniqueCount&quot;)
-## [1] 10</code></pre>
+## [1] 33</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">(date_offset &lt;-<span class="st"> </span><span class="kw">xlsx_date_offset</span>(path))</code></pre></div>
 <pre><code>## [1] &quot;1899-12-30&quot;</code></pre>
+<p><code>strings</code> is my <code>shared_strings</code>.</p>
+<p>I don’t have anything like <code>date_offset</code>. Should I?</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">style_xlsx &lt;-<span class="st"> </span><span class="kw">xlsx_read_style</span>(path)
 <span class="kw">str</span>(style_xlsx, <span class="dt">max.level =</span> <span class="dv">1</span>)</code></pre></div>
 <pre><code>## List of 7
-##  $ fonts         :Classes 'tbl_df', 'tbl' and 'data.frame':  4 obs. of  13 variables:
+##  $ fonts         :Classes 'tbl_df', 'tbl' and 'data.frame':  2 obs. of  13 variables:
 ##  $ fills         :Classes 'tbl_df', 'tbl' and 'data.frame':  2 obs. of  4 variables:
 ##  $ borders       :Classes 'tbl_df', 'tbl' and 'data.frame':  1 obs. of  19 variables:
 ##  $ cell_style_xfs:Classes 'tbl_df', 'tbl' and 'data.frame':  1 obs. of  16 variables:
-##  $ cell_xfs      :Classes 'tbl_df', 'tbl' and 'data.frame':  16 obs. of  16 variables:
+##  $ cell_xfs      :Classes 'tbl_df', 'tbl' and 'data.frame':  2 obs. of  16 variables:
 ##  $ cell_styles   :Classes 'tbl_df', 'tbl' and 'data.frame':  1 obs. of  6 variables:
-##  $ num_fmts      :Classes 'tbl_df', 'tbl' and 'data.frame':  1 obs. of  2 variables:</code></pre>
+##  $ num_fmts      :Classes 'tbl_df', 'tbl' and 'data.frame':  0 obs. of  2 variables:</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">(lookup &lt;-<span class="st"> </span>tibble::<span class="kw">data_frame</span>(
   <span class="dt">font    =</span> style_xlsx$cell_xfs$font_id,
   <span class="dt">fill    =</span> style_xlsx$cell_xfs$fill_id,
   <span class="dt">border  =</span> style_xlsx$cell_xfs$border_id,
   <span class="dt">num_fmt =</span> style_xlsx$cell_xfs$num_fmt_id))</code></pre></div>
-<pre><code>## Source: local data frame [16 x 4]
+<pre><code>## Source: local data frame [2 x 4]
 ## 
-##     font  fill border num_fmt
-##    &lt;int&gt; &lt;int&gt;  &lt;int&gt;   &lt;int&gt;
-## 1      1    NA     NA      NA
-## 2      2    NA     NA      NA
-## 3      2    NA     NA       4
-## 4      2    NA     NA       5
-## 5      3    NA     NA      NA
-## 6      2    NA     NA      12
-## 7      2    NA     NA      11
-## 8      2    NA     NA       5
-## 9      2    NA     NA      11
-## 10     2    NA     NA      12
-## 11     4    NA     NA      NA
-## 12     2    NA     NA       3
-## 13     2    NA     NA      13
-## 14     2    NA     NA     165
-## 15     2    NA     NA       4
-## 16     2    NA     NA       4</code></pre>
+##    font  fill border num_fmt
+##   &lt;int&gt; &lt;int&gt;  &lt;int&gt;   &lt;int&gt;
+## 1     1    NA     NA      NA
+## 2     2    NA     NA      NA</code></pre>
+<p>Interesting. I hadn’t absorbed that the font, fill, border, and num_fmt tibbles were synced up like this. Good to know. I should proactively check this when I run <code>xlsx_read_workbook()</code> sheets on all the examples systematically.</p>
+<p>What are the implications of this? What is the point of <code>lookup</code>? Should we make some giant hairy monster tibble for formatting that has rows like the rows of <code>lookup</code> but cbinds the formatting info from the different domains?</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## numeric formatting
-n &lt;-<span class="st"> </span><span class="kw">max</span>(style_xlsx$num_fmts$num_format_id)
-fmt &lt;-<span class="st"> </span><span class="kw">rep</span>(<span class="ot">NA_character_</span>, n)
-fmt[<span class="kw">seq_along</span>(<span class="kw">xlsx_format_codes</span>())] &lt;-<span class="st"> </span><span class="kw">xlsx_format_codes</span>()
-fmt[style_xlsx$num_fmts$num_format_id] &lt;-<span class="st"> </span>style_xlsx$num_fmts$format_code
-num_fmt &lt;-<span class="st"> </span>tibble::<span class="kw">data_frame</span>(<span class="dt">num_fmt =</span> fmt)
-style &lt;-<span class="st"> </span>linen::<span class="kw">linen_style</span>(lookup, <span class="dt">font =</span> style_xlsx$fonts,
+n &lt;-<span class="st"> </span><span class="kw">max</span>(style_xlsx$num_fmts$num_format_id)</code></pre></div>
+<pre><code>## Warning in max(style_xlsx$num_fmts$num_format_id): no non-missing arguments
+## to max; returning -Inf</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">fmt &lt;-<span class="st"> </span><span class="kw">rep</span>(<span class="ot">NA_character_</span>, n)</code></pre></div>
+<pre><code>## Warning: NAs introduced by coercion to integer range</code></pre>
+<pre><code>## Error in rep(NA_character_, n): invalid 'times' argument</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">fmt[<span class="kw">seq_along</span>(<span class="kw">xlsx_format_codes</span>())] &lt;-<span class="st"> </span><span class="kw">xlsx_format_codes</span>()</code></pre></div>
+<pre><code>## Error in fmt[seq_along(xlsx_format_codes())] &lt;- xlsx_format_codes(): object 'fmt' not found</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">fmt[style_xlsx$num_fmts$num_format_id] &lt;-<span class="st"> </span>style_xlsx$num_fmts$format_code</code></pre></div>
+<pre><code>## Error in fmt[style_xlsx$num_fmts$num_format_id] &lt;- style_xlsx$num_fmts$format_code: object 'fmt' not found</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">num_fmt &lt;-<span class="st"> </span>tibble::<span class="kw">data_frame</span>(<span class="dt">num_fmt =</span> fmt)</code></pre></div>
+<pre><code>## Error in eval(expr, envir, enclos): object 'fmt' not found</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">style &lt;-<span class="st"> </span>linen::<span class="kw">linen_style</span>(lookup, <span class="dt">font =</span> style_xlsx$fonts,
                             <span class="dt">fill =</span> style_xlsx$fills,
                             <span class="dt">border =</span> style_xlsx$borders,
-                            <span class="dt">num_fmt =</span> num_fmt)
-
-(workbook &lt;-<span class="st"> </span>linen::<span class="kw">workbook</span>(sheets, style, dat$defined_names))</code></pre></div>
-<pre><code>## &lt;workbook&gt;
-##   Public:
-##     add_sheet: function (sheet) 
-##     clone: function (deep = FALSE) 
-##     defined_names: tbl_df, tbl, data.frame
-##     initialize: function (names, style, defined_names) 
-##     names: Sheet1
-##     sheets: list
-##     style: linen_style</code></pre>
+                            <span class="dt">num_fmt =</span> num_fmt)</code></pre></div>
+<pre><code>## Error in linen::linen_style(lookup, font = style_xlsx$fonts, fill = style_xlsx$fills, : object 'num_fmt' not found</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">(workbook &lt;-<span class="st"> </span>linen::<span class="kw">workbook</span>(sheets, style, dat$defined_names))</code></pre></div>
+<pre><code>## Error in inherits(style, &quot;linen_style&quot;): object 'style' not found</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">sheets &lt;-<span class="st"> </span>1L
+(sheets &lt;-<span class="st"> </span><span class="kw">xlsx_sheet_names</span>(dat)[sheets])</code></pre></div>
+<pre><code>## [1] &quot;Africa&quot;</code></pre>
 <p>Objective 2: Visit and extract information for all requested worksheets.</p>
 <p>In this case, I’m just reading the first and only sheet. This loop appears in <code>rexcel_read_workbook()</code> and calls <code>rexcel_read_worksheet()</code> for each requested worksheet. This is the loop and function we eventually exit from and this <code>workbook</code> object is what’s returned.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## enter rexcel_read_worksheet()
 ## rexcel_read_worksheet(path, s, workbook, dat, strings, style, date_offset)
 (sheet &lt;-<span class="st"> </span>sheets[<span class="dv">1</span>])</code></pre></div>
-<pre><code>## [1] &quot;Sheet1&quot;</code></pre>
+<pre><code>## [1] &quot;Africa&quot;</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">(sheet_idx &lt;-<span class="st"> </span><span class="kw">match</span>(sheet, workbook$names))</code></pre></div>
-<pre><code>## [1] 1</code></pre>
+<pre><code>## Error in match(sheet, workbook$names): object 'workbook' not found</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">(sheet_name &lt;-<span class="st"> </span>sheet)</code></pre></div>
-<pre><code>## [1] &quot;Sheet1&quot;</code></pre>
+<pre><code>## [1] &quot;Africa&quot;</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">(target &lt;-<span class="st"> </span><span class="kw">xlsx_internal_sheet_name</span>(sheet, dat))</code></pre></div>
-<pre><code>## [1] &quot;xl/worksheets/sheet1.xml&quot;</code></pre>
+<pre><code>## [1] &quot;xl/worksheets/sheet4.xml&quot;</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">(rels &lt;-<span class="st"> </span><span class="kw">xlsx_read_rels</span>(path, target))</code></pre></div>
-<pre><code>## Source: local data frame [2 x 4]
+<pre><code>## Source: local data frame [1 x 4]
 ## 
-##      id      type                            target
-##   &lt;chr&gt;     &lt;chr&gt;                             &lt;chr&gt;
-## 1  rId1 hyperlink            http://www.google.com/
-## 2  rId2   drawing ../drawings/worksheetdrawing1.xml
+##      id    type                            target
+##   &lt;chr&gt;   &lt;chr&gt;                             &lt;chr&gt;
+## 1  rId1 drawing ../drawings/worksheetdrawing4.xml
 ## Variables not shown: target_abs &lt;chr&gt;.</code></pre>
 <p>Now we drop down into a lower-level non-exported function, <code>xlsx_read_sheet()</code>.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## enter xlsx_read_sheet()
 (file &lt;-<span class="st"> </span><span class="kw">xlsx_internal_sheet_name</span>(sheet_idx, dat))</code></pre></div>
-<pre><code>## [1] &quot;xl/worksheets/sheet1.xml&quot;</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">xml &lt;-<span class="st"> </span><span class="kw">xlsx_read_file</span>(path, file) ## at last! the xml! w00t!
-(ns &lt;-<span class="st"> </span>xml2::<span class="kw">xml_ns</span>(xml)) ## much less w00t now :(</code></pre></div>
-<pre><code>## d1    &lt;-&gt; http://schemas.openxmlformats.org/spreadsheetml/2006/main
-## r     &lt;-&gt; http://schemas.openxmlformats.org/officeDocument/2006/relationships
-## mx    &lt;-&gt; http://schemas.microsoft.com/office/mac/excel/2008/main
-## mc    &lt;-&gt; http://schemas.openxmlformats.org/markup-compatibility/2006
-## mv    &lt;-&gt; urn:schemas-microsoft-com:mac:vml
-## x14   &lt;-&gt; http://schemas.microsoft.com/office/spreadsheetml/2009/9/main
-## x14ac &lt;-&gt; http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac
-## xm    &lt;-&gt; http://schemas.microsoft.com/office/excel/2006/main</code></pre>
+<pre><code>## Error in xlsx_internal_sheet_name(sheet_idx, dat): object 'sheet_idx' not found</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">xml &lt;-<span class="st"> </span><span class="kw">xlsx_read_file</span>(path, file) ## at last! the xml! w00t!</code></pre></div>
+<pre><code>## Error in utils::unzip(path, file, exdir = tmp): invalid 'files' argument</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">(ns &lt;-<span class="st"> </span>xml2::<span class="kw">xml_ns</span>(xml)) ## much less w00t now :(</code></pre></div>
+<pre><code>## Error in xml2::xml_ns(xml): object 'xml' not found</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">(merged &lt;-<span class="st"> </span><span class="kw">xlsx_read_merged</span>(xml, ns))</code></pre></div>
-<pre><code>## list()</code></pre>
+<pre><code>## Error in xml2::xml_find_first(xml, &quot;d1:mergeCells&quot;, ns): object 'xml' not found</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">(view &lt;-<span class="st"> </span><span class="kw">xlsx_ct_worksheet_views</span>(xml, ns))</code></pre></div>
-<pre><code>## NULL</code></pre>
+<pre><code>## Error in xml2::xml_find_all(xml, &quot;./d1:sheetViews/d1:sheetView&quot;, ns): object 'xml' not found</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">(cols &lt;-<span class="st"> </span><span class="kw">xlsx_ct_cols</span>(xml, ns)) <span class="co"># NOTE: not used yet</span></code></pre></div>
-<pre><code>## Source: local data frame [6 x 9]
-## 
-##   best_fit collapsed custom_width hidden   min   max outline_level style
-##      &lt;lgl&gt;     &lt;lgl&gt;        &lt;lgl&gt;  &lt;lgl&gt; &lt;int&gt; &lt;int&gt;         &lt;int&gt; &lt;int&gt;
-## 1    FALSE     FALSE         TRUE  FALSE     1     1            NA    NA
-## 2    FALSE     FALSE         TRUE  FALSE     2     2            NA    NA
-## 3    FALSE     FALSE         TRUE  FALSE     3     3            NA    NA
-## 4    FALSE     FALSE         TRUE  FALSE     4     4            NA    NA
-## 5    FALSE     FALSE         TRUE  FALSE     5     5            NA    NA
-## 6    FALSE     FALSE         TRUE  FALSE     6     6            NA    NA
-## Variables not shown: width &lt;dbl&gt;.</code></pre>
+<pre><code>## Error in xml2::xml_find_first(xml, xpath, ns): object 'xml' not found</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## this is where it's at!
 (cell_dat &lt;-<span class="st"> </span><span class="kw">xlsx_parse_cells</span>(xml, ns, strings, style, date_offset))</code></pre></div>
-<pre><code>## $cells
-## Source: local data frame [2,022 x 5]
-## 
-##      ref style   type formula     value
-##    &lt;chr&gt; &lt;int&gt;  &lt;chr&gt;   &lt;chr&gt;    &lt;list&gt;
-## 1     A1     2   text    &lt;NA&gt; &lt;chr [1]&gt;
-## 2     B1     3   text    &lt;NA&gt; &lt;chr [1]&gt;
-## 3     C1     4   text    &lt;NA&gt; &lt;chr [1]&gt;
-## 4     D1     2   text    &lt;NA&gt; &lt;chr [1]&gt;
-## 5     E1     2   text    &lt;NA&gt; &lt;chr [1]&gt;
-## 6     F1     2   text    &lt;NA&gt; &lt;chr [1]&gt;
-## 7     A2     2 number    &lt;NA&gt; &lt;dbl [1]&gt;
-## 8     B2     3 number    &lt;NA&gt; &lt;dbl [1]&gt;
-## 9     C2     4 number    &lt;NA&gt; &lt;dbl [1]&gt;
-## 10    D2     2   text    &lt;NA&gt; &lt;chr [1]&gt;
-## ..   ...   ...    ...     ...       ...
-## 
-## $rows
-## Source: local data frame [1,000 x 11]
-## 
-##        r spans     s custom_format    ht hidden custom_height
-##    &lt;int&gt; &lt;chr&gt; &lt;int&gt;         &lt;lgl&gt; &lt;dbl&gt;  &lt;lgl&gt;         &lt;lgl&gt;
-## 1      1  &lt;NA&gt;    NA         FALSE    NA  FALSE            NA
-## 2      2  &lt;NA&gt;    NA         FALSE    NA  FALSE            NA
-## 3      3  &lt;NA&gt;    NA         FALSE    NA  FALSE            NA
-## 4      4  &lt;NA&gt;    NA         FALSE    NA  FALSE            NA
-## 5      5  &lt;NA&gt;    NA         FALSE    NA  FALSE            NA
-## 6      6  &lt;NA&gt;    NA         FALSE    NA  FALSE            NA
-## 7      7  &lt;NA&gt;    NA         FALSE    NA  FALSE            NA
-## 8      8  &lt;NA&gt;    NA         FALSE    NA  FALSE            NA
-## 9      9  &lt;NA&gt;    NA         FALSE    NA  FALSE            NA
-## 10    10  &lt;NA&gt;    NA         FALSE    NA  FALSE            NA
-## ..   ...   ...   ...           ...   ...    ...           ...
-## Variables not shown: outline_level &lt;int&gt;, collapsed &lt;lgl&gt;, thick_top
-##   &lt;lgl&gt;, thick_bot &lt;lgl&gt;.</code></pre>
+<pre><code>## Error in xml2::xml_find_first(xml, &quot;d1:sheetData&quot;, ns): object 'xml' not found</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## not even sure what this is
 (rows &lt;-<span class="st"> </span>cell_dat$rows)</code></pre></div>
-<pre><code>## Source: local data frame [1,000 x 11]
-## 
-##        r spans     s custom_format    ht hidden custom_height
-##    &lt;int&gt; &lt;chr&gt; &lt;int&gt;         &lt;lgl&gt; &lt;dbl&gt;  &lt;lgl&gt;         &lt;lgl&gt;
-## 1      1  &lt;NA&gt;    NA         FALSE    NA  FALSE            NA
-## 2      2  &lt;NA&gt;    NA         FALSE    NA  FALSE            NA
-## 3      3  &lt;NA&gt;    NA         FALSE    NA  FALSE            NA
-## 4      4  &lt;NA&gt;    NA         FALSE    NA  FALSE            NA
-## 5      5  &lt;NA&gt;    NA         FALSE    NA  FALSE            NA
-## 6      6  &lt;NA&gt;    NA         FALSE    NA  FALSE            NA
-## 7      7  &lt;NA&gt;    NA         FALSE    NA  FALSE            NA
-## 8      8  &lt;NA&gt;    NA         FALSE    NA  FALSE            NA
-## 9      9  &lt;NA&gt;    NA         FALSE    NA  FALSE            NA
-## 10    10  &lt;NA&gt;    NA         FALSE    NA  FALSE            NA
-## ..   ...   ...   ...           ...   ...    ...           ...
-## Variables not shown: outline_level &lt;int&gt;, collapsed &lt;lgl&gt;, thick_top
-##   &lt;lgl&gt;, thick_bot &lt;lgl&gt;.</code></pre>
+<pre><code>## Error in eval(expr, envir, enclos): object 'cell_dat' not found</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## this is where cells come from  
 (cells &lt;-<span class="st"> </span>linen::<span class="kw">cells</span>(cell_dat$cells$ref, cell_dat$cells$style,
                        cell_dat$cells$type, cell_dat$cells$value,
                        cell_dat$cells$formula))</code></pre></div>
-<pre><code>## Source: local data frame [2,022 x 12]
-## 
-##      ref style     value formula   type is_formula is_value is_blank
-##    &lt;chr&gt; &lt;int&gt;    &lt;list&gt;   &lt;chr&gt;  &lt;chr&gt;      &lt;lgl&gt;    &lt;lgl&gt;    &lt;lgl&gt;
-## 1     A1     2 &lt;chr [1]&gt;    &lt;NA&gt;   text      FALSE     TRUE    FALSE
-## 2     B1     3 &lt;chr [1]&gt;    &lt;NA&gt;   text      FALSE     TRUE    FALSE
-## 3     C1     4 &lt;chr [1]&gt;    &lt;NA&gt;   text      FALSE     TRUE    FALSE
-## 4     D1     2 &lt;chr [1]&gt;    &lt;NA&gt;   text      FALSE     TRUE    FALSE
-## 5     E1     2 &lt;chr [1]&gt;    &lt;NA&gt;   text      FALSE     TRUE    FALSE
-## 6     F1     2 &lt;chr [1]&gt;    &lt;NA&gt;   text      FALSE     TRUE    FALSE
-## 7     A2     2 &lt;dbl [1]&gt;    &lt;NA&gt; number      FALSE     TRUE    FALSE
-## 8     B2     3 &lt;dbl [1]&gt;    &lt;NA&gt; number      FALSE     TRUE    FALSE
-## 9     C2     4 &lt;dbl [1]&gt;    &lt;NA&gt; number      FALSE     TRUE    FALSE
-## 10    D2     2 &lt;chr [1]&gt;    &lt;NA&gt;   text      FALSE     TRUE    FALSE
-## ..   ...   ...       ...     ...    ...        ...      ...      ...
-## Variables not shown: is_bool &lt;lgl&gt;, is_number &lt;lgl&gt;, is_text &lt;lgl&gt;,
-##   is_date &lt;lgl&gt;.</code></pre>
+<pre><code>## Error in linen::cells(cell_dat$cells$ref, cell_dat$cells$style, cell_dat$cells$type, : object 'cell_dat' not found</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## in real life and in other sheets, it's possible comments will be populated
 ## but not in this sheet
 comments &lt;-<span class="st"> </span><span class="ot">NULL</span></code></pre></div>
 <p>Now we gather everything we’ve learned about this worksheet into a <code>linen::worksheet</code> object.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">(ws &lt;-<span class="st"> </span>linen::<span class="kw">worksheet</span>(sheet_name, cols, rows, cells, merged, view, comments,
                         workbook))</code></pre></div>
-<pre><code>## &lt;worksheet: 1000 x 6&gt;
-##  : ABCDEF
-## 1: aaaaaa
-## 2: 000a$$
-## 3: 000 $$
-## 4: 000a$$
-## 5:  00a$$
-## 6: 000a $</code></pre>
+<pre><code>## Error in public_bind_env$initialize(...): object 'rows' not found</code></pre>
 <p>If we had other sheets to read, that would be done now. Ultimately this <code>workbook</code> is returned.</p>
 </div>
 

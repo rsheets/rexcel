@@ -66,25 +66,49 @@ str(xlsx_read_shared_strings(ek2_path))
 xlsx_read_shared_strings(gabe_path)
 
 ## ------------------------------------------------------------------------
-mini_gap_path <- system.file("sheets", "mini-gap.xlsx", package = "rexcel")
+(styles <- xlsx_read_style(mini_gap_path))
+
+## ------------------------------------------------------------------------
+xlsx_read_style(ff_path)
+## as explained above, namespace crazy means this won't work
+#xlsx_read_style(ek_path)
+xlsx_read_style(ek2_path)
+xlsx_read_style(dn_path)
+xlsx_read_style(gabe_path)
+
+## ------------------------------------------------------------------------
+as.data.frame(worksheet_rels <- xlsx_read_worksheet_rels(mini_gap_path))
+as.data.frame(xlsx_read_worksheet_rels(ff_path))
+as.data.frame(xlsx_read_worksheet_rels(ek_path))
+as.data.frame(xlsx_read_worksheet_rels(ek2_path))
+as.data.frame(xlsx_read_worksheet_rels(dn_path))
+as.data.frame(xlsx_read_worksheet_rels(gabe_path))
+
+## ------------------------------------------------------------------------
+subset(xlsx_list_files(mini_gap_path), grepl("drawing", name))
+
+## ------------------------------------------------------------------------
 mini_gap_workbook <- rexcel_register(mini_gap_path)
 str(mini_gap_workbook, max.level = 1)
 mini_gap_workbook
 
 ## ------------------------------------------------------------------------
-## enter rexcel_read_workbook()
-path <- ff_path
-sheets <- 1L
+path <- mini_gap_path
 
-## this gets info about the files inside the zip archive
 dat <- xlsx_read_workbook(path)
-dat$rels   ## ?files in the zip archive?
-dat$sheets ## ?files corresponding to worksheets?
-(sheets <- xlsx_sheet_names(dat)[sheets])
+str(dat, max.level = 1)
+dat$rels
+dat$sheets
+dat$defined_names
 
+## let's look at defined names in a sheet that actually has them
+xlsx_read_workbook(dn_path)$defined_names
+
+## ------------------------------------------------------------------------
 (strings <- xlsx_read_shared_strings(path))
 (date_offset <- xlsx_date_offset(path))
 
+## ------------------------------------------------------------------------
 style_xlsx <- xlsx_read_style(path)
 str(style_xlsx, max.level = 1)
 (lookup <- tibble::data_frame(
@@ -93,6 +117,7 @@ str(style_xlsx, max.level = 1)
   border  = style_xlsx$cell_xfs$border_id,
   num_fmt = style_xlsx$cell_xfs$num_fmt_id))
 
+## ------------------------------------------------------------------------
 ## numeric formatting
 n <- max(style_xlsx$num_fmts$num_format_id)
 fmt <- rep(NA_character_, n)
@@ -105,6 +130,9 @@ style <- linen::linen_style(lookup, font = style_xlsx$fonts,
                             num_fmt = num_fmt)
 
 (workbook <- linen::workbook(sheets, style, dat$defined_names))
+
+sheets <- 1L
+(sheets <- xlsx_sheet_names(dat)[sheets])
 
 ## ------------------------------------------------------------------------
 ## enter rexcel_read_worksheet()
