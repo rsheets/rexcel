@@ -48,58 +48,12 @@ rexcel_register <- function(path) {
   ## result has one row per worksheet
   sheets_df <- join_sheets_workbook_rels(sheets, workbook_rels)
 
-  ## xl/sharedStrings.xml
+  ## back to the slog
   shared_strings <- xlsx_read_shared_strings(path)
-  ## shared_strings is a character of shared strings
-  ## with attributes count (total # of strings?), uniqueCount (its own length?)
-
-  ## xl/styles.xml
-  styles <- xlsx_read_file(path, "xl/styles.xml")
-  ## again, ekaterinburg has different namespace
-  ## this is a mess; discuss with rich
-  ns <- xml2::xml_ns(styles)
-  alt_ns <-
-    construct_xml_ns(x = "http://schemas.openxmlformats.org/spreadsheetml/2006/main")
-  if (ns_equal_to_ref(styles, alt_ns)) {
-    ns <- xml2::xml_ns_rename(ns, x = "d1")
-  }
-  font_nodes <- styles %>%
-    xml2::xml_find_all("//d1:fonts/d1:font", ns) %>%
-    lapply(xml2::xml_children)
-  f <- function(font_node, ns) {
-    nms <- xml2::xml_name(font_node, ns) %>% rm_xml_ns()
-    vals <- xml2::xml_attrs(font_node, ns) %>% lapply(unname)
-    names(vals) <- nms
-    vals[lengths(vals) > 0]
-  }
-  fonts <- font_nodes %>%
-    lapply(f, ns = ns) %>%
-    dplyr::bind_rows()
-  ## fonts is a tbl with one row per font and variables such as
-  ## sz, color, name
-
-  ## I don't feel like parsing the remaining elements of styles for now
-  ## no temptation to duplicate rich's efforts there ... yikes
-  fills <- NULL
-  borders <- NULL
-  cell_style_xfs <- NULL
-  cell_xfs <- NULL
-  cell_styles <- NULL
-  num_fmts <- NULL
-  dxfs <- NULL
-
+  ## reverting to Rich's work here and god bless him for it
+  styles <- xlsx_read_style(path)
   ## xl/worksheets/_rels/sheet1.xml.rels and friends
   worksheet_rels <- xlsx_read_worksheet_rels(path)
-  ## worksheet_rels is a tibble, each row a file ... so far one row per
-  ## worksheet, though that might not hold in general, with variables
-  ## worksheet: character, e.g. "sheet1" (I added this!)
-  ## Id: character, so far uniformly "rId1"
-  ## Type: uniformly a long name-spacey string ending in "drawing" or "hyperlink"
-  ## Target: hmmm .... seems to vary
-  ##    in one example: path to the corresponding worksheetdrawingX.xml file
-  ##    ^^ maybe that's the default? when there's nothing else?
-  ##    in another: "http://www.google.com/", which appears in the sheet
-  ## TargetMode: (seen in one example) "External" for the hyperlink
 
   ## xl/worksheets/sheet1.xml etc.
   #one_sheet <- xlsx_read_file(path, "xl/worksheets/sheet1.xml")
@@ -120,9 +74,7 @@ rexcel_register <- function(path) {
       defined_names,
       workbook_rels,
       shared_strings,
-      styles =
-        dplyr::lst(fonts, fills, borders, cell_style_xfs, cell_xfs,
-                   cell_styles, num_fmts, dxfs),
+      styles,
       worksheet_rels,
       sheets_df
   )
