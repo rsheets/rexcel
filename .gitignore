@@ -6,3 +6,4 @@ tests/testthat/readxl
 tests/testthat/*.xlsx
 inst/doc
 ~$*.xlsx
+tests/testthat/reference/readxl

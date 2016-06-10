@@ -15,6 +15,8 @@ Imports:
     tibble,
     xml2 (>= 0.1.2.9000)
 Suggests:
-    testthat
+    testthat,
+    googlesheets (>= 0.2.0),
+    rprojroot
 RoxygenNote: 5.0.1.9000
 Remotes: hadley/xml2
