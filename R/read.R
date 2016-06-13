@@ -262,8 +262,10 @@ xlsx_date_offset <- function(path) {
   ## See readxl/src/utils.h: dateOffset
   ## See readxl/src/XlsxWorkbook.h: is1904
   xml <- xlsx_read_file(path, "xl/workbook.xml")
-  date1904 <- xml2::xml_find_first(xml, "/d1:workbook/d1:workbookPr/@date1904",
-                                   xml2::xml_ns(xml))
+  ns <- xml2::xml_ns(xml)
+  xpath <- sprintf("/%s/%s/@date1904",
+                   xlsx_name("workbook", ns), xlsx_name("workbookPr", ns))
+  date1904 <- xml2::xml_find_first(xml, xpath, xml2::xml_ns(xml))
   if (inherits(date1904, "xml_missing")) {
     date_is_1904 <- FALSE
   } else {

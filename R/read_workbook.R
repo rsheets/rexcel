@@ -10,9 +10,20 @@ xlsx_read_workbook <- function(path) {
   list(rels=rels, sheets=sheets, defined_names=defined_names)
 }
 
+xlsx_namespace <- function(ns) {
+  url <- "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+  names(ns)[[match(url, ns)]]
+}
+xlsx_name <- function(name, ns) {
+  paste0(xlsx_namespace(ns), ":", name)
+}
+
 ## 18.2.20 sheets
 xlsx_ct_sheets <- function(xml, ns, rels) {
-  dat <- process_container(xml, "d1:sheets", ns, xlsx_ct_sheet)
+  ## Apparently new xml2 has some facilities for dealing with
+  ## namespaces which might make this easier.  Or break everything in
+  ## here.  Or perhaps a little of both.
+  dat <- process_container(xml, xlsx_name("sheets", ns), ns, xlsx_ct_sheet)
 
   if (is.null(rels)) {
     stop("FIXME")
@@ -36,8 +47,8 @@ xlsx_ct_sheet <- function(xml, ns) {
 
 ## 18.14.6 definedName
 xlsx_ct_external_defined_names <- function(xml, ns) {
-  process_container(xml, "d1:definedNames", ns, xlsx_ct_external_defined_name,
-                    classes=TRUE)
+  process_container(xml, xlsx_name("definedNames", ns), ns,
+                    xlsx_ct_external_defined_name, classes=TRUE)
 }
 
 ## 18.14.5 definedName
