@@ -5,7 +5,7 @@
 ## Design
 
 This package implements a **very slow**, but thorough, Excel (xlsx) reader.  If you have a rectangular region of cells to read you will be better off with another Excel reading package such as: [`readxl`](http://cran.r-project.org/package=readxl),
-[`openxlsx`](http://cran.r-project.org/package=readxl),
+[`openxlsx`](http://cran.r-project.org/package=openxlsx),
 [`XLConnect`](http://cran.r-project.org/package=XLConnect),
 [`xlsx`](http://cran.r-project.org/package=xlsx),
 [`gdata`](http://cran.r-project.org/package=gdata), , [`RODBC`](http://cran.r-project.org/package=RODBC), or possibly even
