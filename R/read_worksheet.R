@@ -260,7 +260,15 @@ xlsx_ct_worksheet_views <- function(xml, ns) {
   } else if (length(els) == 1L) {
     xlsx_ct_worksheet_view(els[[1L]], ns)
   } else {
-    stop("CHECK THIS (sheetView > 1)") # TODO: assertion.
+    tmp <- lapply(els, xlsx_ct_worksheet_view, ns)
+    empty <- vlapply(tmp, is.null)
+    if (all(empty)) {
+      NULL
+    } else if (sum(empty) == 1L) {
+      tmp[[which(empty)]]
+    } else {
+      stop("CHECK THIS (sheetView > 1)") # TODO: assertion.
+    }
   }
 }
 
