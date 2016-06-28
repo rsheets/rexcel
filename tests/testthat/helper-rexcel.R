@@ -10,6 +10,9 @@ get_readxl <- function(path = TEST_REF_DIR) {
   if (dir.exists(readxl_path)) {
     return(readxl_path)
   }
+  if (!has_internet()) {
+    return(tempfile())
+  }
   url <- "https://cran.rstudio.com/src/contrib/readxl_0.1.1.tar.gz"
   dest <- tempfile()
   tryCatch(download.file(url, dest),
@@ -17,4 +20,11 @@ get_readxl <- function(path = TEST_REF_DIR) {
   on.exit(file.remove(dest))
   untar(dest, exdir = path)
   readxl_path
+}
+
+## This is not terrifically portable (windows does not support it, but
+## it gives a more graceful behaviour on Linux / OSX when there is no
+## internet)
+has_internet <- function() {
+  !is.null(suppressWarnings(nsl("www.google.com")))
 }

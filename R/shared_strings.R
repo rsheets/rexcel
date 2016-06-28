@@ -34,8 +34,8 @@ xlsx_read_shared_strings <- function(path) {
 ## NOTE: Ignoring rPh and phoneticPr which might be part of this
 ## element.  Terribly anglocentric :(
 xlsx_ct_rst <- function(x, ns) {
-  t <- xml2::xml_find_first(x, "d1:t", ns)
-  r <- xml2::xml_find_all(x, "d1:r", ns)
+  t <- xml2::xml_find_first(x, xlsx_name("t", ns), ns)
+  r <- xml2::xml_find_all(x, xlsx_name("r", ns), ns)
   if (length(r) == 0L) {
     ## Treat as plain text.
     ## 18.4.12 t -- ST_Xstring
@@ -48,7 +48,8 @@ xlsx_ct_rst <- function(x, ns) {
     ## NOTE: we totally ignore sub-string formatting.
     str <- if (inherits(t, "xml_missing")) "" else xml2::xml_text(t)
     if (length(r) > 0L) {
-      str <- paste(c(str, xml2::xml_text(xml2::xml_find_all(r, "d1:t", ns))),
+      str <- paste(c(str, xml2::xml_text(
+                            xml2::xml_find_all(r, xlsx_name("t", ns), ns))),
                    collapse="")
     }
   }

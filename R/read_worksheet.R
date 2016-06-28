@@ -104,7 +104,7 @@ xlsx_ct_cols <- function(xml, ns) {
                custom_width="logical", hidden="logical",
                min="integer", max="integer", outline_level="integer",
                style="integer", width="numeric")
-  process_container(xml, "d1:cols", ns, xlsx_ct_col,
+  process_container(xml, xlsx_name("cols", ns), ns, xlsx_ct_col,
                     classes=classes)
 }
 
@@ -135,7 +135,8 @@ xlsx_ct_col <- function(xml, ns) {
 
 ## 18.3.1.55 mergeCells (Merge Cells)
 xlsx_read_merged <- function(xml, ns) {
-  merged <- xml2::xml_children(xml2::xml_find_first(xml, "d1:mergeCells", ns))
+  merged <- xml2::xml_children(
+    xml2::xml_find_first(xml, xlsx_name("mergeCells", ns), ns))
   lapply(merged, xlsx_ct_merge_cell)
 }
 
@@ -146,7 +147,8 @@ xlsx_ct_merge_cell <- function(x) {
 
 ## 18.3.1.80 sheetData (Sheet Data)
 xlsx_read_sheet_data <- function(xml, ns, strings) {
-  rows <- xml2::xml_children(xml2::xml_find_first(xml, "d1:sheetData", ns))
+  rows <- xml2::xml_children(
+    xml2::xml_find_first(xml, xlsx_name("sheetData", ns), ns))
   dat <- lapply(rows, xlsx_ct_row, ns, strings)
 
   cells <- rbind_df(unlist(lapply(dat, "[[", "cells"), FALSE),
@@ -183,7 +185,7 @@ xlsx_ct_row <- function(xml, ns, strings) {
   if (is.null(xml)) {
     cells <- list()
   } else {
-    cells <- lapply(xml2::xml_find_all(xml, "./d1:c", ns),
+    cells <- lapply(xml2::xml_find_all(xml, xlsx_name("c", ns), ns),
                     xlsx_ct_cell, ns, strings)
   }
 
@@ -220,10 +222,10 @@ xlsx_ct_cell <- function(xml, ns, strings) {
   if (identical(type, "inlineStr")) { # avoid missingness
     formula <- NA_character_
     ## value here _must_ be present, so no conditional (vs below)
-    value <- xlsx_ct_rst(xml2::xml_find_first(xml, "d1:is", ns), ns)
+    value <- xlsx_ct_rst(xml2::xml_find_first(xml, xlsx_name("is", ns), ns), ns)
   } else {
-    formula <- xml2::xml_text(xml2::xml_find_first(xml, "d1:f", ns))
-    v <- xml2::xml_find_first(xml, "d1:v", ns)
+    formula <- xml2::xml_text(xml2::xml_find_first(xml, xlsx_name("f", ns), ns))
+    v <- xml2::xml_find_first(xml, xlsx_name("v", ns), ns)
     value <- if (inherits(v, "xml_missing")) NULL else xml2::xml_text(v)
 
     ## String substitutions from the string table:
@@ -250,19 +252,32 @@ xlsx_ct_cell <- function(xml, ns, strings) {
 
 ## 18.3.1.88 sheetViews
 xlsx_ct_worksheet_views <- function(xml, ns) {
-  els <- xml2::xml_find_all(xml, "./d1:sheetViews/d1:sheetView", ns)
+  xpath <- sprintf("./%s/%s",
+                   xlsx_name("sheetViews", ns), xlsx_name("sheetView", ns))
+  els <- xml2::xml_find_all(xml, xpath, ns)
   if (length(els) == 0L) {
     NULL
   } else if (length(els) == 1L) {
     xlsx_ct_worksheet_view(els[[1L]], ns)
   } else {
-    stop("CHECK THIS (sheetView > 1)") # TODO: assertion.
+    tmp <- lapply(els, xlsx_ct_worksheet_view, ns)
+    empty <- vlapply(tmp, is.null)
+    if (all(empty)) {
+      NULL
+    } else {
+      ## TODO: check the Enron corpus;
+      ##    larry_campbell__21047__EOTT tanks tx NM.xlsx
+      ## for a file where this is the case.  It needs opening in Excel
+      ## to see what this resolves as.  Given we largely ignore these,
+      ## we'll take the first for now.
+      tmp[[which(!empty)[[1L]]]]
+    }
   }
 }
 
 ## 18.3.1.87 sheetView
 xlsx_ct_worksheet_view <- function(xml, ns) {
-  pane <- xml2::xml_find_first(xml, "./d1:pane", ns)
+  pane <- xml2::xml_find_first(xml, xlsx_name("pane", ns), ns)
   if (inherits(pane, "xml_missing")) NULL else xlsx_ct_pane(pane)
 }
 

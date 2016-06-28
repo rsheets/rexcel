@@ -1,14 +1,29 @@
 
 xlsx_read_rels <- function(path, file) {
   xml <- xlsx_read_file_if_exists(path, xlsx_path_rels(file))
-
   if (is.null(xml)) {
     NULL
   } else {
     ## TODO: These are allowed to be external references I think; in
     ## which case the abs path here is not correct.
+    ##
+    ## TODO: In the case where these are absolute references, the
+    ## relative references are incorrect, but doing this properly
+    ## requires some path arithmetic.
+    ##
+    ## NOTE: while this is an "absolute" path, we lack the initial slash...
     ret <- rbind_df(lapply(xml2::xml_children(xml), xlsx_parse_relationship))
-    ret$target_abs <- path_join(dirname(file), ret$target)
+
+    target_abs <- ret$target
+    i <- grepl("^/", target_abs)
+    if (any(i)) {
+      target_abs[i] <- sub("^/", "", target_abs[i])
+    }
+    j <- !i
+    if (any(j)) {
+      target_abs[j] <- path_join(dirname(file), target_abs[j])
+    }
+    ret$target_abs <- target_abs
     ret
   }
 }

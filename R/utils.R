@@ -110,8 +110,13 @@ path_join <- function(a, b) {
 
     tmp <- strsplit(a[j], "/", fixed=TRUE)
     for (k in seq_along(tmp)) {
-      tmp[[k]] <- paste(tmp[[k]][seq_len(length(tmp[[k]]) - len[j][[k]])],
-                        collapse="/")
+      ii <- length(tmp[[k]]) - len[j][[k]]
+      if (ii < 0L) {
+        ii <- 0L
+        ## TODO: this turns up once in the Enron corpus
+        ##   warning("Cannot resolve internal reference; above workbook?")
+      }
+      tmp[[k]] <- paste(tmp[[k]][seq_len(ii)], collapse="/")
     }
     a[j] <- unlist(tmp)
   }
