@@ -264,10 +264,13 @@ xlsx_ct_worksheet_views <- function(xml, ns) {
     empty <- vlapply(tmp, is.null)
     if (all(empty)) {
       NULL
-    } else if (sum(empty) == 1L) {
-      tmp[[which(empty)]]
     } else {
-      stop("CHECK THIS (sheetView > 1)") # TODO: assertion.
+      ## TODO: check the Enron corpus;
+      ##    larry_campbell__21047__EOTT tanks tx NM.xlsx
+      ## for a file where this is the case.  It needs opening in Excel
+      ## to see what this resolves as.  Given we largely ignore these,
+      ## we'll take the first for now.
+      tmp[[which(!empty)[[1L]]]]
     }
   }
 }
