@@ -16,7 +16,8 @@ xlsx_ct_comments <- function(xml, ns) {
 }
 
 xlsx_ct_authors <- function(xml, ns) {
-  xml2::xml_children(xml2::xml_find_first(xml, xlsx_name("authors", ns), ns))
+  authors <-
+    xml2::xml_children(xml2::xml_find_first(xml, xlsx_name("authors", ns), ns))
   vcapply(authors, xml2::xml_text)
 }
 
