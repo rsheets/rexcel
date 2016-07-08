@@ -138,3 +138,18 @@ as_na <- function(x) {
   storage.mode(ret) <- storage.mode(x)
   ret
 }
+
+is_xlsx <- function(path) {
+  if (!file.exists(path)) {
+    stop("\n", path, "\ndoes not exist")
+  }
+  ## TO DO: verify it's a zip archive? only way I know is unix `file` command
+  ## http://officeopenxml.com/anatomyofOOXML-xlsx.php
+  ## https://msdn.microsoft.com/en-us/library/office/gg278316.aspx#MinWBScenario
+  files <- xlsx_list_files(path)
+  has_content_types <- "[Content_Types].xml" %in% files$name
+  has_rels <- "_rels/.rels" %in% files$name
+  has_workbook_xml <- "xl/workbook.xml" %in% files$name
+  has_sheet <- any(grepl("xl/worksheets/sheet[0-9]*.xml", files$name))
+  has_content_types && has_rels && has_workbook_xml && has_sheet
+}

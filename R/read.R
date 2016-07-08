@@ -32,8 +32,10 @@ rexcel_read <- function(path, sheet=1L) {
 ##' @param progress Display a progress bar?
 ##' @export
 rexcel_read_workbook <- function(path, sheets=NULL, progress=TRUE) {
-  if (!file.exists(path)) {
-    stop(sprintf("%s does not exist", path))
+
+  if (!is_xlsx(path)) {
+    stop("`path` does not appear to point to valid xlsx:\n", path,
+         call. = FALSE)
   }
 
   dat <- xlsx_read_workbook(path)
@@ -124,6 +126,12 @@ rexcel_read_worksheet <- function(path, sheet, workbook,
 
   linen::worksheet(sheet_name, cols, rows, cells, merged, view, comments,
                    workbook)
+}
+
+xlsx_list_files <- function(path) {
+  ret <- tibble::as_tibble(utils::unzip(path, list = TRUE))
+  names(ret) <- tolower(names(ret))
+  ret[order(ret$name), ]
 }
 
 xlsx_read_sheet <- function(path, sheet, workbook_dat) {
