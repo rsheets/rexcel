@@ -10,8 +10,9 @@ sheets <- setNames(sheets, basename(sheets))
 ## solution to the non-standard namespacing problem
 ## Jenny: I'm skipping both because even resaved one is large. In due course,
 ## we should create a scaled down version for testing.
+## Jenny: also skipping exp.xlsx for now
 sheets <-
-  sheets[grep("^Ekaterinburg_IP_9", names(sheets), invert = TRUE)]
+  sheets[grep("^Ekaterinburg_IP_9|^exp", names(sheets), invert = TRUE)]
 
 for (sh in sheets) {
   test_that(basename(sh), {
