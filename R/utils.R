@@ -45,14 +45,14 @@ process_container <- function(xml, xpath, ns, fun, ..., classes=NULL) {
 
 ## The function below is a faster version of
 ##
-##   tibble::as_data_frame(do.call("rbind", x, quote=TRUE))
+##   tibble::as_tibble(do.call("rbind", x, quote=TRUE))
 ##
 ## But it avoids constructing a very hard to validate, slow to run
 ## function (on the order of a second), but it's not terrible nice to
 ## look at or understand.
 rbind_df <- function(x, classes=NULL) {
   if (length(x) == 0L) {
-    return(tibble_empty_data_frame(classes))
+    return(empty_tibble(classes))
   }
   nms <- names(x[[1L]])
   xx <- unlist(x, FALSE)
@@ -66,16 +66,16 @@ rbind_df <- function(x, classes=NULL) {
     if (preserve[[i]]) x else unlist(x)
   }
   tmp <- stats::setNames(lapply(seq_along(nms), function(i) ul(i, xx[i, ])), nms)
-  tibble::as_data_frame(tmp)
+  tibble::as_tibble(tmp)
 }
 
-tibble_empty_data_frame <- function(classes) {
+empty_tibble <- function(classes = NULL) {
   if (is.null(classes)) {
     ## NOTE: Once things settle down, this can be dropped.
     stop("deal with me")
-    tibble::data_frame()
+    tibble::tibble()
   } else {
-    tibble::as_data_frame(lapply(classes, vector))
+    tibble::as_tibble(lapply(classes, vector))
   }
 }
 

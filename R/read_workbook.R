@@ -38,7 +38,7 @@ xlsx_ct_sheets <- function(xml, ns, rels) {
 ## 18.2.19 sheet
 xlsx_ct_sheet <- function(xml, ns) {
   at <- as.list(xml2::xml_attrs(xml))
-  tibble::data_frame(
+  tibble::tibble(
     name = attr_character(at$name),
     sheet_id = attr_integer(at$sheetId),
     state = attr_character(at$state, "visible"),
@@ -54,7 +54,7 @@ xlsx_ct_external_defined_names <- function(xml, ns) {
 ## 18.14.5 definedName
 xlsx_ct_external_defined_name <- function(xml, ns) {
   at <- xml_attrs_list(xml)
-  tibble::data_frame(
+  tibble::tibble(
     name = attr_character(at$name),
     refers_to = attr_character(at$refersTo),
     sheet_id = attr_integer(at$sheetId))

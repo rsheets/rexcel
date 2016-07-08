@@ -56,7 +56,7 @@ rexcel_read_workbook <- function(path, sheets=NULL, progress=TRUE) {
   date_offset <- xlsx_date_offset(path)
 
   style_xlsx <- xlsx_read_style(path)
-  lookup <- tibble::data_frame(
+  lookup <- tibble::tibble(
     font    = style_xlsx$cell_xfs$font_id,
     fill    = style_xlsx$cell_xfs$fill_id,
     border  = style_xlsx$cell_xfs$border_id,
@@ -71,7 +71,7 @@ rexcel_read_workbook <- function(path, sheets=NULL, progress=TRUE) {
   } else {
     fmt <- xlsx_format_codes()
   }
-  num_fmt <- tibble::data_frame(num_fmt=fmt)
+  num_fmt <- tibble::tibble(num_fmt=fmt)
   style <- linen::linen_style(lookup, font=style_xlsx$fonts,
                               fill=style_xlsx$fills,
                               border=style_xlsx$borders,

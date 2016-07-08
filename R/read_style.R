@@ -200,9 +200,9 @@ xlsx_ct_font <- function(x, ns, theme, index) {
   scheme <- xml2::xml_text(
     xml2::xml_find_first(x, xlsx_name("scheme/@val", ns), ns))
 
-  tibble::data_frame(name, family,
-                     b, i, strike, outline, shadow, condense, extend,
-                     color, sz, u, scheme)
+  tibble::tibble(name, family,
+                 b, i, strike, outline, shadow, condense, extend,
+                 color, sz, u, scheme)
 }
 
 ## 18.8.18 family
@@ -353,7 +353,7 @@ xlsx_ct_border <- function(x, ns, theme, index) {
               bottom = f(xlsx_name("bottom", ns)))
   tmp <- unlist(tmp, FALSE)
   names(tmp) <- sub(".", "_", names(tmp), fixed=TRUE)
-  tibble::as_data_frame(tmp)
+  tibble::as_tibble(tmp)
 }
 
 ## style (ST_BorderStyle) can be one of (18.18.3, p. 2428):
@@ -420,7 +420,7 @@ xlsx_ct_xf <- function(x, ns) {
     if (isTRUE(a)) b else NA_integer_
   }
 
-  xf <- tibble::data_frame(
+  xf <- tibble::tibble(
     border_id  = apply_border        %&&% attr_integer(at$borderId) + 1L,
     fill_id    = apply_fill          %&&% attr_integer(at$fillId)   + 1L,
     font_id    = apply_font          %&&% attr_integer(at$fontId)   + 1L,
@@ -454,7 +454,7 @@ xlsx_ct_xf <- function(x, ns) {
 ## vertical: bottom | center | distributed | justify | top
 xlsx_ct_alignment <- function(x, ns) {
   at <- xml_attrs_list(x)
-  tibble::data_frame(
+  tibble::tibble(
     horizontal=attr_character(at$horizontal),
     vertical=attr_character(at$vertical),
     indent=attr_integer(at$indent),
@@ -489,7 +489,7 @@ xlsx_ct_cell_style <- function(x, ns) {
   ## use in R).
 
   at <- xml_attrs_list(x)
-  tibble::data_frame(
+  tibble::tibble(
     builtin_id = attr_integer(at$builtinId) + 1L,
     custom_builtin = attr_bool(at$customBuiltin, FALSE),
     hidden = attr_bool(at$hidden, FALSE),
@@ -508,7 +508,7 @@ xlsx_ct_num_fmts <- function(xml, ns) {
 ## 18.8.30 numFmt
 xlsx_ct_num_fmt <- function(x, ns) {
   at <- as.list(xml2::xml_attrs(x))
-  tibble::data_frame(
+  tibble::tibble(
     num_format_id = attr_integer(at$numFmtId) + 1L,
     format_code = attr_character(at$formatCode))
 }

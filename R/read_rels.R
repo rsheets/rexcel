@@ -30,7 +30,7 @@ xlsx_read_rels <- function(path, file) {
 
 xlsx_parse_relationship <- function(x) {
   at <- as.list(xml2::xml_attrs(x))
-  tibble::data_frame(
+  tibble::tibble(
     id = attr_character(at$Id),
     type = basename(at$Type),
     target = at$Target)

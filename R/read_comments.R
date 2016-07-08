@@ -29,7 +29,7 @@ xlsx_ct_comment_list <- function(xml, ns, authors) {
 xlsx_ct_comment <- function(x, ns, authors) {
   at <- as.list(xml2::xml_attrs(x))
   text <- xlsx_ct_rst(xml2::xml_find_first(x, xlsx_name("text", ns), ns), ns)
-  tibble::data_frame(
+  tibble::tibble(
     ref = attr_character(at$ref),
     author = authors[attr_integer(at$authorId) + 1L],
     shape_id = attr_integer(at$shapeId),

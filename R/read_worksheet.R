@@ -120,7 +120,7 @@ xlsx_ct_cols <- function(xml, ns) {
 ## with things like the border and padding thickness, boldness, etc.
 xlsx_ct_col <- function(xml, ns) {
   at <- as.list(xml2::xml_attrs(xml))
-  tibble::data_frame(
+  tibble::tibble(
     best_fit = attr_bool(at$bestFit, FALSE),
     collapsed = attr_bool(at$collapsed, FALSE),
     custom_width = attr_bool(at$customWidth, FALSE),
