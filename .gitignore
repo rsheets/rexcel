@@ -7,3 +7,4 @@ tests/testthat/*.xlsx
 inst/doc
 ~$*.xlsx
 tests/testthat/reference/readxl
+internal/2016-06-09_skype.md
