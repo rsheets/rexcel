@@ -8,7 +8,7 @@ This package implements a **very slow**, but thorough, Excel (xlsx) reader.  If 
 [`openxlsx`](http://cran.r-project.org/package=openxlsx),
 [`XLConnect`](http://cran.r-project.org/package=XLConnect),
 [`xlsx`](http://cran.r-project.org/package=xlsx),
-[`gdata`](http://cran.r-project.org/package=gdata), , [`RODBC`](http://cran.r-project.org/package=RODBC), or possibly even
+[`gdata`](http://cran.r-project.org/package=gdata), [`RODBC`](http://cran.r-project.org/package=RODBC), or possibly even
 [`excel.link`](http://cran.r-project.org/package=excel.link), [`WriteXLS`](http://cran.r-project.org/package=WriteXLS), [`table1xlsx`](http://cran.r-project.org/package=table1xlsx), [`tablaxlsx`](http://cran.r-project.org/package=tablaxlsx) (not clear how current these last 4 are). Mango Solutions has a nice review article, [R: the Excel Connection](http://www.mango-solutions.com/wp/2015/05/r-the-excel-connection/), in which they compare several of the above packages, with a special emphasis on those that can both read and write Excel files (XLConnect, xlsx, openxlsx, excel.link).
 
 Compared with the above packages, `rexcel` tries to read all the data from an Excel sheet using [`linen`](https://github.com/rsheets/linen) as an intermediate representation in R. The eventual goal is to provide a common receptacle for detailed spreadsheet information from both Excel and Google Sheets.  Rather than trying to create a single data.frame in one shot, it allows access to data, formulae and formatting information.  Excel type information is preserved, especially for heterogeneous columns.  It has no non-R dependencies (e.g. on Perl or Java) and should run on any platform regardless of whether Excel is installed.
