@@ -19,3 +19,19 @@ for (sh in sheets) {
     expect_silent(rexcel_read_workbook(sh))
   })
 }
+
+test_that("read one sheet - by name", {
+  filename <- sheets[["mini-gap.xlsx"]]
+  d <- rexcel_read_workbook(filename)
+  for (s in d$names) {
+    expect_equal(d$sheets[[s]]$cells, rexcel_read(filename, s)$cells)
+  }
+})
+
+test_that("read one sheet - by index", {
+  filename <- sheets[["mini-gap.xlsx"]]
+  d <- rexcel_read_workbook(filename)
+  for (s in seq_along(d$names)) {
+    expect_equal(d$sheets[[s]]$cells, rexcel_read(filename, s)$cells)
+  }
+})

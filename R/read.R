@@ -91,10 +91,8 @@ rexcel_read_workbook <- function(path, sheets=NULL, progress=TRUE) {
 rexcel_read_worksheet <- function(path, sheet, workbook,
                                   workbook_dat, strings, style, date_offset) {
   if (is.numeric(sheet)) {
-    sheet_idx <- sheet
     sheet_name <- workbook$names[[sheet]]
   } else if (is.character(sheet)) {
-    sheet_idx <- match(sheet, workbook$names)
     sheet_name <- sheet
   } else {
     stop("Invalid input for sheet")
@@ -103,7 +101,7 @@ rexcel_read_worksheet <- function(path, sheet, workbook,
   target <- xlsx_internal_sheet_name(sheet, workbook_dat)
   rels <- xlsx_read_rels(path, target)
 
-  xml <- xlsx_read_sheet(path, sheet_idx, workbook_dat)
+  xml <- xlsx_read_sheet(path, sheet, workbook_dat)
   ns <- xml2::xml_ns(xml)
 
   merged <- xlsx_read_merged(xml, ns)
