@@ -1,4 +1,5 @@
 # rexcel
+[![Build Status](https://travis-ci.org/rsheets/rexcel.svg?branch=master)](https://travis-ci.org/rsheets/rexcel)
 
 **Warning: This project is an experiment; do not use for anything other than amusement/frustration purposes.**
 

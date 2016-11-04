@@ -1,2 +1,5 @@
 language: r
 cache: packages
+r_github_packages: rsheets/linen
+r_packages: readxl
+warnings_are_errors: true
