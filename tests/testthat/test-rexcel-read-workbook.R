@@ -16,22 +16,22 @@ sheets <-
 
 for (sh in sheets) {
   test_that(basename(sh), {
-    expect_silent(rexcel_read_workbook(sh))
+    expect_silent(rexcel_read_workbook(sh, progress = FALSE))
   })
 }
 
 test_that("read one sheet - by name", {
   filename <- sheets[["mini-gap.xlsx"]]
-  d <- rexcel_read_workbook(filename)
+  d <- rexcel_read_workbook(filename, progress = FALSE)
   for (s in d$names) {
-    expect_equal(d$sheets[[s]]$cells, rexcel_read(filename, s)$cells)
+    expect_equal(d$sheets[[s]]$values(), rexcel_read(filename, s)$values())
   }
 })
 
 test_that("read one sheet - by index", {
   filename <- sheets[["mini-gap.xlsx"]]
-  d <- rexcel_read_workbook(filename)
+  d <- rexcel_read_workbook(filename, progress = FALSE)
   for (s in seq_along(d$names)) {
-    expect_equal(d$sheets[[s]]$cells, rexcel_read(filename, s)$cells)
+    expect_equal(d$sheets[[s]]$values(), rexcel_read(filename, s)$values())
   }
 })
