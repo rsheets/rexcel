@@ -9,8 +9,8 @@ LazyData: true
 URL: https://github.com/rsheets/rexcel
 BugReports: https://github.com/rsheets/rexcel/issues
 Imports:
-    cellranger (>= 1.0.0.9001),
-    linen (>= 0.0.3),
+    cellranger (>= 1.1.0),
+    linen (>= 0.0.4),
     progress,
     tibble (>= 1.1),
     xml2 (>= 1.0.0)
@@ -20,4 +20,6 @@ Suggests:
     rprojroot,
     readxl
 RoxygenNote: 5.0.1.9000
-Remotes: hadley/xml2
+Remotes:
+    hadley/xml2,
+    rsheets/linen
