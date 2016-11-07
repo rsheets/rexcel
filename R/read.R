@@ -68,10 +68,15 @@ rexcel_read_workbook <- function(path, sheets=NULL, progress=TRUE) {
     fmt <- rep(NA_character_, n)
     fmt[seq_along(xlsx_format_codes())] <- xlsx_format_codes()
     fmt[style_xlsx$num_fmts$num_format_id] <- style_xlsx$num_fmts$format_code
+    custom_date <- style_xlsx$num_fmts$num_format_id[
+      grepl("[dmyhs]", style_xlsx$num_fmts$format_code)]
   } else {
     fmt <- xlsx_format_codes()
+    custom_date <- integer(0)
   }
-  num_fmt <- tibble::tibble(num_fmt=fmt)
+  is_date_time <- xlsx_is_date_time(seq_along(fmt), custom_date)
+  num_fmt <- tibble::tibble(num_fmt = fmt, is_date_time = is_date_time)
+
   style <- linen::linen_style(lookup, font=style_xlsx$fonts,
                               fill=style_xlsx$fills,
                               border=style_xlsx$borders,
@@ -209,19 +214,16 @@ xlsx_parse_cells <- function(xml, ns, strings, style_data, date_offset) {
   cells <- sheet_data$cells
   rows <- sheet_data$rows
 
-  ## TODO: Roll this back into the xfs parsing perhaps?  in the (not
-  ## yet existing) compute style part I think.  We can have an
-  ## "is_date" entry there.
-  custom_date <- style_data$num_fmts$num_format_id[
-    grepl("[dmyhs]", style_data$num_fmts$format_code)]
-  is_date_time <- xlsx_is_date_time(style_data$cell_xfs$num_fmt_id, custom_date)
+  is_date_time <- linen::style_lookup(style_data, idt = "num_fmt/is_date_time",
+                                      idx = cells$style)$idt
+  is_date_time[is.na(is_date_time)] <- FALSE
 
+  ## TODO: could/should this not be done when 'cells' is first loaded?
   type <- character(nrow(cells))
   type[!is.na(cells$type) & cells$type == "b"] <- "bool"
   type[!is.na(cells$type) & cells$type == "s" | cells$type == "str"] <- "text"
   i <- is.na(cells$type) | cells$type == "n"
-  j <- is_date_time[cells$style[i]]
-  type[i] <- ifelse(!is.na(j) & j, "date", "number")
+  type[i] <- ifelse(is_date_time[i], "date", "number")
   type[lengths(cells$value) == 0L] <- "blank"
   cells$type <- type
 
