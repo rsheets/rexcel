@@ -53,7 +53,25 @@ xlsx_ct_rst <- function(x, ns) {
                    collapse="")
     }
   }
-  ## TODO: still need to "unescape" these.
+
+  ## NOTE: I am still getting slightly different line endings to
+  ## readxl because I need to convert \n -> \r\n to match
+  ##
+  ## Unescape the strings (ST_Xstring) See 22.9.2.19 [p3786]
+  re <- "_x([[:xdigit:]]{4})_"
+  i <- regexpr(re, str, perl = TRUE)
+  len <- nchar(str)
+  while (i > 0) {
+    repl <- intToUtf8(as.integer(paste0("0x", substr(str, i + 2, i + 5))))
+    str <- sub(re, repl, str)
+    ## This bit of faffery stops an escaped '_' character being
+    ## counted as an unescaped '_' character, and is tested.  This
+    ## would be heaps easier in languages with char-by-char string
+    ## handling
+    j <- regexpr(re, substr(str, i + 1, len))
+    i <- if (j > 0) i + j else j
+  }
+
   str
 }
 
